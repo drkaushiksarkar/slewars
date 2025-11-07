@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const configRoutes_1 = require("./configRoutes");
+const dataRoutes_1 = require("./dataRoutes");
+const mlRoutes_1 = require("./mlRoutes");
+const dhis2Routes_1 = require("./dhis2Routes");
+const router = (0, express_1.Router)();
+router.use("/config", configRoutes_1.configRouter);
+router.use("/data", dataRoutes_1.dataRouter);
+router.use("/ml", mlRoutes_1.mlRouter);
+router.use("/dhis2", dhis2Routes_1.dhis2Router);
+exports.default = router;

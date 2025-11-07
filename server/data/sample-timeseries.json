@@ -1,0 +1,10 @@
+{
+  "sierra-leone": [
+    { "date": "2024-01-01", "cases": 45, "rainfall": 90, "temperature": 27, "humidity": 78 },
+    { "date": "2024-02-01", "cases": 58, "rainfall": 110, "temperature": 28, "humidity": 79 },
+    { "date": "2024-03-01", "cases": 63, "rainfall": 150, "temperature": 29, "humidity": 80 },
+    { "date": "2024-04-01", "cases": 98, "rainfall": 180, "temperature": 30, "humidity": 81 },
+    { "date": "2024-05-01", "cases": 126, "rainfall": 210, "temperature": 31, "humidity": 83 },
+    { "date": "2024-06-01", "cases": 162, "rainfall": 240, "temperature": 32, "humidity": 85 }
+  ]
+}

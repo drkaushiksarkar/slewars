@@ -1,0 +1,12 @@
+[
+  { "features": { "cases": 45, "rainfall": 90, "temperature": 27, "humidity": 78 }, "label": 0 },
+  { "features": { "cases": 58, "rainfall": 110, "temperature": 28, "humidity": 79 }, "label": 0 },
+  { "features": { "cases": 70, "rainfall": 150, "temperature": 29, "humidity": 80 }, "label": 0 },
+  { "features": { "cases": 95, "rainfall": 190, "temperature": 30, "humidity": 82 }, "label": 1 },
+  { "features": { "cases": 120, "rainfall": 210, "temperature": 31, "humidity": 84 }, "label": 1 },
+  { "features": { "cases": 150, "rainfall": 230, "temperature": 32, "humidity": 85 }, "label": 1 },
+  { "features": { "cases": 180, "rainfall": 250, "temperature": 33, "humidity": 86 }, "label": 1 },
+  { "features": { "cases": 210, "rainfall": 280, "temperature": 34, "humidity": 87 }, "label": 1 },
+  { "features": { "cases": 65, "rainfall": 120, "temperature": 28, "humidity": 79 }, "label": 0 },
+  { "features": { "cases": 135, "rainfall": 205, "temperature": 31, "humidity": 84 }, "label": 1 }
+]

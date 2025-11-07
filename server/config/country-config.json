@@ -1,0 +1,31 @@
+{
+  "sierra-leone": {
+    "id": "sierra-leone",
+    "name": "Sierra Leone",
+    "flag": "🇸🇱",
+    "languages": ["English", "Krio"],
+    "timeZone": "Africa/Freetown",
+    "currency": "SLL",
+    "diseases": ["Malaria", "Lassa Fever", "Yellow Fever", "Ebola", "Typhoid"],
+    "regions": ["Eastern", "Northern", "North Western", "Southern", "Western Area"],
+    "climateFactors": ["Tropical Monsoon", "Rainy Season", "High Temperature", "Coastal Climate"],
+    "healthSystemLevels": ["National", "District", "Chiefdom", "Community"],
+    "emergencyContacts": {
+      "national": "119",
+      "health": "117"
+    },
+    "thresholds": {
+      "malaria": { "high": 150, "medium": 75, "low": 20 },
+      "lassaFever": { "high": 30, "medium": 15, "low": 5 }
+    },
+    "map": {
+      "center": [-11.7799, 8.4606],
+      "zoom": 7
+    },
+    "dhis2": {
+      "orgUnit": "Freetown",
+      "dataElements": ["SLE_MALARIA_CASES", "SLE_LASSA_CASES"],
+      "program": "SLE_EWARS"
+    }
+  }
+}
