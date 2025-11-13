@@ -1,27 +1,26 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  AlertTriangle, 
-  TrendingUp, 
-  Clock, 
-  ChevronRight,
-  BarChart2,
-  AlertCircle,
-  MapPin,
-  Calendar,
-  ArrowUpRight,
-  ArrowDownRight,
+import {
   X,
-  Filter,
-  Download
+  CloudRain,
+  Thermometer,
+  Droplets,
+  Bell,
+  AlertTriangle,
+  MapPin,
+  Target,
+  TrendingUp
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useDashboardData } from "@/contexts/DashboardDataContext";
+import DiseaseMap from "./DiseaseMap";
+import { fetchWeatherData } from "@/services/weatherService";
 
 const Overview = () => {
   const [selectedAlert, setSelectedAlert] = React.useState(null);
   const [selectedDisease, setSelectedDisease] = React.useState("all");
   const [timeRange, setTimeRange] = React.useState("7d");
+  const [weatherData, setWeatherData] = React.useState(null);
   const { overview, isLoading, refresh } = useDashboardData();
 
   const alertStats = overview?.alertStats ?? {
@@ -65,74 +64,199 @@ const Overview = () => {
     }
   }, [alerts, selectedAlert]);
 
+  // Fetch weather data on mount
+  React.useEffect(() => {
+    const loadWeatherData = async () => {
+      try {
+        const data = await fetchWeatherData();
+        setWeatherData(data);
+      } catch (error) {
+        console.error('Error loading weather data:', error);
+      }
+    };
+
+    loadWeatherData();
+
+    // Refresh every 30 minutes
+    const interval = setInterval(loadWeatherData, 30 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div className="space-y-6">
-      {/* Alert Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="bg-card p-6 rounded-lg border"
+      {/* Dropdowns Row */}
+      <div className="flex items-center space-x-3">
+        <select
+          className="flex-1 rounded-md border border-input bg-background px-4 py-2"
         >
-          <div className="flex items-center justify-between">
-            <h3 className="font-medium">Total Alerts</h3>
-            <AlertTriangle className="h-5 w-5 text-yellow-500" />
-          </div>
-          <p className="text-3xl font-bold mt-2">{alertStats.total}</p>
-          <div className="flex items-center mt-2 text-sm">
-            <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-            <span className="text-green-500">{alertStats.trend}</span>
-            <span className="text-muted-foreground ml-1">vs last week</span>
-          </div>
-        </motion.div>
+          <option>Location</option>
+        </select>
 
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.1 }}
-          className="bg-card p-6 rounded-lg border"
+        <select
+          value={timeRange}
+          onChange={(e) => setTimeRange(e.target.value)}
+          className="flex-1 rounded-md border border-input bg-background px-4 py-2"
         >
-          <div className="flex items-center justify-between">
-            <h3 className="font-medium">Active Alerts</h3>
-            <AlertCircle className="h-5 w-5 text-red-500" />
-          </div>
-          <p className="text-3xl font-bold mt-2">{alertStats.active}</p>
-          <p className="text-sm text-muted-foreground mt-2">
-            Requiring immediate attention
-          </p>
-        </motion.div>
+          <option value="7d">Last 7 days</option>
+          <option value="30d">Last 30 days</option>
+          <option value="90d">Last 90 days</option>
+        </select>
 
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="bg-card p-6 rounded-lg border"
+        <select
+          value={selectedDisease}
+          onChange={(e) => setSelectedDisease(e.target.value)}
+          className="flex-1 rounded-md border border-input bg-background px-4 py-2"
         >
-          <div className="flex items-center justify-between">
-            <h3 className="font-medium">Prediction Accuracy</h3>
-            <BarChart2 className="h-5 w-5 text-blue-500" />
-          </div>
-          <p className="text-3xl font-bold mt-2">{predictionMetrics.overall}%</p>
-          <p className="text-sm text-muted-foreground mt-2">
-            Last 30 days average
-          </p>
-        </motion.div>
+          <option value="all">Disease</option>
+          {diseaseOptions.map((disease) => (
+            <option key={disease} value={disease}>
+              {disease}
+            </option>
+          ))}
+        </select>
+      </div>
 
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="bg-card p-6 rounded-lg border"
-        >
-          <div className="flex items-center justify-between">
-            <h3 className="font-medium">Affected Regions</h3>
-            <MapPin className="h-5 w-5 text-purple-500" />
-          </div>
-          <p className="text-3xl font-bold mt-2">{Object.keys(alertStats.byRegion || {}).length}</p>
-          <p className="text-sm text-muted-foreground mt-2">
-            With active alerts
-          </p>
-        </motion.div>
+      {/* Weather Cards and Alert Statistics Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Left - Climate Cards */}
+        <div className="grid grid-cols-3 gap-4">
+          {/* Rainfall Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="relative rounded-lg overflow-hidden h-full min-h-[180px] cursor-pointer bg-sky-100"
+          >
+            {/* Content */}
+            <div className="flex flex-col items-center justify-center h-full p-4 text-sky-900">
+              <CloudRain className="h-12 w-12 mb-3" />
+              <span className="text-sm font-semibold mb-1">Rainfall</span>
+              {weatherData && (
+                <>
+                  <span className="text-2xl font-bold">
+                    {weatherData.current.rainfall.toFixed(1)} mm
+                  </span>
+                  <div className="mt-2 flex items-center gap-1 text-xs opacity-80">
+                    <TrendingUp className="h-3 w-3" />
+                    <span>Tomorrow: {weatherData.tomorrow.rainfall.toFixed(1)} mm</span>
+                  </div>
+                </>
+              )}
+            </div>
+          </motion.div>
+
+          {/* Temperature Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="relative rounded-lg overflow-hidden h-full min-h-[180px] cursor-pointer bg-rose-100"
+          >
+            {/* Content */}
+            <div className="flex flex-col items-center justify-center h-full p-4 text-rose-900">
+              <Thermometer className="h-12 w-12 mb-3" />
+              <span className="text-sm font-semibold mb-1">Temperature</span>
+              {weatherData && (
+                <>
+                  <span className="text-2xl font-bold">
+                    {weatherData.current.temperature}°C
+                  </span>
+                  <div className="mt-2 flex items-center gap-1 text-xs opacity-80">
+                    <TrendingUp className="h-3 w-3" />
+                    <span>Tomorrow: {weatherData.tomorrow.temperature}°C</span>
+                  </div>
+                </>
+              )}
+            </div>
+          </motion.div>
+
+          {/* Humidity Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="relative rounded-lg overflow-hidden h-full min-h-[180px] cursor-pointer bg-amber-100"
+          >
+            {/* Content */}
+            <div className="flex flex-col items-center justify-center h-full p-4 text-amber-900">
+              <Droplets className="h-12 w-12 mb-3" />
+              <span className="text-sm font-semibold mb-1">Humidity</span>
+              {weatherData && (
+                <>
+                  <span className="text-2xl font-bold">
+                    {weatherData.current.humidity}%
+                  </span>
+                  <div className="mt-2 flex items-center gap-1 text-xs opacity-80">
+                    <TrendingUp className="h-3 w-3" />
+                    <span>Tomorrow: {weatherData.tomorrow.humidity}%</span>
+                  </div>
+                </>
+              )}
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Right - Alert Statistics Cards */}
+        <div className="grid grid-cols-2 gap-4">
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-card p-4 rounded-lg border-2 border-blue-300 flex items-center gap-3"
+          >
+            <Bell className="h-10 w-10 text-blue-400 flex-shrink-0" />
+            <div className="flex-1">
+              <h3 className="text-xs font-medium text-muted-foreground">Total Alerts</h3>
+              <p className="text-2xl font-bold">{alertStats.total}</p>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.1 }}
+            className="bg-card p-4 rounded-lg border-2 border-rose-300 flex items-center gap-3"
+          >
+            <AlertTriangle className="h-10 w-10 text-rose-400 flex-shrink-0" />
+            <div className="flex-1">
+              <h3 className="text-xs font-medium text-muted-foreground">Active Alerts</h3>
+              <p className="text-2xl font-bold">{alertStats.active}</p>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="bg-card p-4 rounded-lg border-2 border-purple-300 flex items-center gap-3"
+          >
+            <MapPin className="h-10 w-10 text-purple-400 flex-shrink-0" />
+            <div className="flex-1">
+              <h3 className="text-xs font-medium text-muted-foreground">Affected Regions</h3>
+              <p className="text-2xl font-bold">{Object.keys(alertStats.byRegion || {}).length}</p>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="bg-card p-4 rounded-lg border-2 border-green-300 flex items-center gap-3"
+          >
+            <Target className="h-10 w-10 text-green-400 flex-shrink-0" />
+            <div className="flex-1">
+              <h3 className="text-xs font-medium text-muted-foreground">Prediction Accuracy</h3>
+              <p className="text-2xl font-bold">{predictionMetrics.overall}%</p>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Bottom - Full Width Disease Map */}
+      <div className="border rounded-lg p-6">
+        {/* <h3 className="text-lg font-semibold mb-4 text-center">Disease Map</h3> */}
+        <div className="w-full h-[600px]">
+          <DiseaseMap />
+        </div>
       </div>
 
       {!overview && (
@@ -145,92 +269,6 @@ const Overview = () => {
           </Button>
         </div>
       )}
-
-      {/* Filters and Controls */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <select
-            value={selectedDisease}
-            onChange={(e) => setSelectedDisease(e.target.value)}
-            className="rounded-md border border-input bg-background px-3 py-2"
-          >
-            <option value="all">All Diseases</option>
-            {diseaseOptions.map((disease) => (
-              <option key={disease} value={disease}>
-                {disease}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={timeRange}
-            onChange={(e) => setTimeRange(e.target.value)}
-            className="rounded-md border border-input bg-background px-3 py-2"
-          >
-            <option value="7d">Last 7 days</option>
-            <option value="30d">Last 30 days</option>
-            <option value="90d">Last 90 days</option>
-          </select>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm">
-            <Filter className="h-4 w-4 mr-2" />
-            Filter
-          </Button>
-          <Button variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Export
-          </Button>
-        </div>
-      </div>
-
-      {/* Alert Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filteredAlerts.map((alert) => (
-          <motion.div
-            key={alert.id}
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            className="bg-card p-6 rounded-lg border cursor-pointer hover:shadow-lg transition-shadow"
-            onClick={() => setSelectedAlert(alert)}
-          >
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="font-semibold">{alert.disease}</h3>
-                <p className="text-sm text-muted-foreground">{alert.region}</p>
-              </div>
-              <span className={`px-2 py-1 rounded text-xs font-medium ${
-                alert.severity === 'High' ? 'bg-red-100 text-red-700' :
-                alert.severity === 'Medium' ? 'bg-yellow-100 text-yellow-700' :
-                'bg-green-100 text-green-700'
-              }`}>
-                {alert.severity}
-              </span>
-            </div>
-
-            <div className="mt-4 grid grid-cols-3 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Cases</p>
-                <p className="text-lg font-semibold">{alert.cases}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Trend</p>
-                <p className="text-lg font-semibold text-green-600">{alert.trend}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Confidence</p>
-                <p className="text-lg font-semibold">{alert.confidence}%</p>
-              </div>
-            </div>
-          </motion.div>
-        ))}
-        {filteredAlerts.length === 0 && (
-          <div className="col-span-full rounded-lg border border-dashed p-6 text-center text-muted-foreground">
-            No alerts match the current filters.
-          </div>
-        )}
-      </div>
 
       {/* Alert Detail Modal */}
       <AnimatePresence>
