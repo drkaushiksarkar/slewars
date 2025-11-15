@@ -25,6 +25,7 @@ const FacilityTable = ({ filters }) => {
           {
             params: {
               districtUid: filters.location !== "all" ? filters.location : undefined,
+              disease: filters.disease !== "all" ? filters.disease : undefined,
               startDate: filters.startDate,
               endDate: filters.endDate,
             },

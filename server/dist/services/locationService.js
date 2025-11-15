@@ -238,6 +238,10 @@ class LocationService {
             if (!location) {
                 return null;
             }
+            // Disease case and death data element UIDs
+            const caseUIDs = ['vq2qO3eTrNi', 'YazgqXbizv1', 'Cj5rTc9nEvl', 'XWU1Huh0Luy', 'UsSUX0cpKsH', 'NCteyX2xpMf'];
+            const deathUIDs = ['r6nrJANOqMw', 'f7n9E0hX8qk', 'Yy9NtNfwYZJ', 'USBq0VHSkZq', 'eY5ehpbEsB7'];
+            const diseaseUIDs = [...caseUIDs, ...deathUIDs];
             // Build query to get all disease data for this location
             let query = `
         SELECT
@@ -250,9 +254,10 @@ class LocationService {
         WHERE dv.deleted = false
           AND ou.uid = $1
           AND dv.value IS NOT NULL
+          AND de.uid = ANY($2::text[])
       `;
-            const params = [uid];
-            let paramIndex = 2;
+            const params = [uid, diseaseUIDs];
+            let paramIndex = 3;
             if (startDate) {
                 query += ` AND p.startdate >= $${paramIndex}`;
                 params.push(startDate);
@@ -296,6 +301,8 @@ class LocationService {
     async getDistrictComparison() {
         try {
             logger.debug("Fetching district comparison data");
+            // Disease case data element UIDs
+            const diseaseUIDs = ['vq2qO3eTrNi', 'YazgqXbizv1', 'Cj5rTc9nEvl', 'XWU1Huh0Luy', 'UsSUX0cpKsH', 'NCteyX2xpMf'];
             const query = `
         SELECT
           ou.uid,
@@ -310,12 +317,12 @@ class LocationService {
           FROM organisationunit child
           WHERE child.path LIKE '%' || ou.uid || '%'
         )
-        LEFT JOIN dataelement de ON dv.dataelementid = de.dataelementid AND dv.deleted = false
+        LEFT JOIN dataelement de ON dv.dataelementid = de.dataelementid AND dv.deleted = false AND de.uid = ANY($1::text[])
         WHERE ou.hierarchylevel = 2
         GROUP BY ou.uid, ou.name, ou.geometry
         ORDER BY total_cases DESC
       `;
-            const result = await postgresService.query(query);
+            const result = await postgresService.query(query, [diseaseUIDs]);
             return result.rows.map((row) => ({
                 uid: row.uid,
                 districtName: row.district_name,
@@ -336,6 +343,9 @@ class LocationService {
     async getFacilityPerformance(districtUid, startDate, endDate) {
         try {
             logger.debug({ districtUid, startDate, endDate }, "Fetching facility performance data");
+            // Disease case and death data element UIDs
+            const caseUIDs = ['vq2qO3eTrNi', 'YazgqXbizv1', 'Cj5rTc9nEvl', 'XWU1Huh0Luy', 'UsSUX0cpKsH', 'NCteyX2xpMf'];
+            const deathUIDs = ['r6nrJANOqMw', 'f7n9E0hX8qk', 'Yy9NtNfwYZJ', 'USBq0VHSkZq', 'eY5ehpbEsB7'];
             let query = `
         WITH facility_data AS (
           SELECT
@@ -345,8 +355,8 @@ class LocationService {
             parent.name as district_name,
             parent.uid as district_uid,
             ou.hierarchylevel,
-            SUM(CASE WHEN dv.value ~ '^[0-9]+$' AND de.name NOT ILIKE '%death%' THEN CAST(dv.value AS INTEGER) ELSE 0 END) as total_cases,
-            SUM(CASE WHEN dv.value ~ '^[0-9]+$' AND de.name ILIKE '%death%' THEN CAST(dv.value AS INTEGER) ELSE 0 END) as total_deaths,
+            SUM(CASE WHEN dv.value ~ '^[0-9]+$' AND de.uid = ANY($1::text[]) THEN CAST(dv.value AS INTEGER) ELSE 0 END) as total_cases,
+            SUM(CASE WHEN dv.value ~ '^[0-9]+$' AND de.uid = ANY($2::text[]) THEN CAST(dv.value AS INTEGER) ELSE 0 END) as total_deaths,
             MAX(dv.lastupdated) as last_report_date,
             COUNT(DISTINCT dv.periodid) as reporting_periods,
             COUNT(DISTINCT de.dataelementid) as data_elements_reported
@@ -357,8 +367,8 @@ class LocationService {
           LEFT JOIN period p ON dv.periodid = p.periodid
           WHERE ou.hierarchylevel = 4
       `;
-            const params = [];
-            let paramIndex = 1;
+            const params = [caseUIDs, deathUIDs];
+            let paramIndex = 3;
             if (districtUid) {
                 query += ` AND parent.uid = $${paramIndex}`;
                 params.push(districtUid);
@@ -433,6 +443,8 @@ class LocationService {
     async getChiefdomData(districtUid, startDate, endDate) {
         try {
             logger.debug({ districtUid, startDate, endDate }, "Fetching chiefdom data");
+            // Disease case data element UIDs
+            const diseaseUIDs = ['vq2qO3eTrNi', 'YazgqXbizv1', 'Cj5rTc9nEvl', 'XWU1Huh0Luy', 'UsSUX0cpKsH', 'NCteyX2xpMf'];
             let query = `
         SELECT
           ou.uid,
@@ -448,10 +460,10 @@ class LocationService {
           FROM organisationunit child
           WHERE child.path LIKE '%' || ou.uid || '%'
         )
-        LEFT JOIN dataelement de ON dv.dataelementid = de.dataelementid AND dv.deleted = false
+        LEFT JOIN dataelement de ON dv.dataelementid = de.dataelementid AND dv.deleted = false AND de.uid = ANY($2::text[])
       `;
-            const params = [districtUid];
-            let paramIndex = 2;
+            const params = [districtUid, diseaseUIDs];
+            let paramIndex = 3;
             if (startDate || endDate) {
                 query += ` LEFT JOIN period p ON dv.periodid = p.periodid`;
             }

@@ -293,6 +293,11 @@ class LocationService {
         return null;
       }
 
+      // Disease case and death data element UIDs
+      const caseUIDs = ['vq2qO3eTrNi', 'YazgqXbizv1', 'Cj5rTc9nEvl', 'XWU1Huh0Luy', 'UsSUX0cpKsH', 'NCteyX2xpMf'];
+      const deathUIDs = ['r6nrJANOqMw', 'f7n9E0hX8qk', 'Yy9NtNfwYZJ', 'USBq0VHSkZq', 'eY5ehpbEsB7'];
+      const diseaseUIDs = [...caseUIDs, ...deathUIDs];
+
       // Build query to get all disease data for this location
       let query = `
         SELECT
@@ -305,19 +310,23 @@ class LocationService {
         WHERE dv.deleted = false
           AND ou.uid = $1
           AND dv.value IS NOT NULL
+          AND de.uid = ANY($2::text[])
       `;
 
-      const params: any[] = [uid];
-      let paramIndex = 2;
+      const params: any[] = [uid, diseaseUIDs];
+      let paramIndex = 3;
 
-      if (startDate) {
-        query += ` AND p.startdate >= $${paramIndex}`;
+      // Use overlap logic to include monthly/weekly periods
+      if (startDate && endDate) {
+        query += ` AND p.startdate <= $${paramIndex + 1} AND p.enddate >= $${paramIndex}`;
+        params.push(startDate, endDate);
+        paramIndex += 2;
+      } else if (startDate) {
+        query += ` AND p.enddate >= $${paramIndex}`;
         params.push(startDate);
         paramIndex++;
-      }
-
-      if (endDate) {
-        query += ` AND p.enddate <= $${paramIndex}`;
+      } else if (endDate) {
+        query += ` AND p.startdate <= $${paramIndex}`;
         params.push(endDate);
         paramIndex++;
       }
@@ -360,6 +369,9 @@ class LocationService {
     try {
       logger.debug("Fetching district comparison data");
 
+      // Disease case data element UIDs
+      const diseaseUIDs = ['vq2qO3eTrNi', 'YazgqXbizv1', 'Cj5rTc9nEvl', 'XWU1Huh0Luy', 'UsSUX0cpKsH', 'NCteyX2xpMf'];
+
       const query = `
         SELECT
           ou.uid,
@@ -374,13 +386,13 @@ class LocationService {
           FROM organisationunit child
           WHERE child.path LIKE '%' || ou.uid || '%'
         )
-        LEFT JOIN dataelement de ON dv.dataelementid = de.dataelementid AND dv.deleted = false
+        LEFT JOIN dataelement de ON dv.dataelementid = de.dataelementid AND dv.deleted = false AND de.uid = ANY($1::text[])
         WHERE ou.hierarchylevel = 2
         GROUP BY ou.uid, ou.name, ou.geometry
         ORDER BY total_cases DESC
       `;
 
-      const result = await postgresService.query(query);
+      const result = await postgresService.query(query, [diseaseUIDs]);
 
       return result.rows.map((row) => ({
         uid: row.uid,
@@ -399,9 +411,31 @@ class LocationService {
   /**
    * Get facility-level data with performance metrics
    */
-  async getFacilityPerformance(districtUid?: string, startDate?: string, endDate?: string): Promise<any[]> {
+  async getFacilityPerformance(districtUid?: string, startDate?: string, endDate?: string, diseaseFilter?: string): Promise<any[]> {
     try {
-      logger.debug({ districtUid, startDate, endDate }, "Fetching facility performance data");
+      logger.debug({ districtUid, startDate, endDate, diseaseFilter }, "Fetching facility performance data");
+
+      // Disease case and death data element UIDs - filter by specific disease if provided
+      let caseUIDs = ['vq2qO3eTrNi', 'YazgqXbizv1', 'Cj5rTc9nEvl', 'XWU1Huh0Luy', 'UsSUX0cpKsH', 'NCteyX2xpMf'];
+      let deathUIDs = ['r6nrJANOqMw', 'f7n9E0hX8qk', 'Yy9NtNfwYZJ', 'USBq0VHSkZq', 'eY5ehpbEsB7'];
+
+      if (diseaseFilter && diseaseFilter !== 'all') {
+        // For specific disease, get only that disease's UIDs
+        const diseaseMap: { [key: string]: { case: string, death: string } } = {
+          'malaria': { case: 'vq2qO3eTrNi', death: 'r6nrJANOqMw' },
+          'measles': { case: 'YazgqXbizv1', death: 'f7n9E0hX8qk' },
+          'typhoid': { case: 'Cj5rTc9nEvl', death: 'Yy9NtNfwYZJ' },
+          'yellowFever': { case: 'XWU1Huh0Luy', death: 'USBq0VHSkZq' },
+          'cholera': { case: 'UsSUX0cpKsH', death: 'eY5ehpbEsB7' },
+          'lassaFever': { case: 'NCteyX2xpMf', death: '' },
+        };
+
+        const diseaseUIDs = diseaseMap[diseaseFilter];
+        if (diseaseUIDs) {
+          caseUIDs = [diseaseUIDs.case];
+          deathUIDs = diseaseUIDs.death ? [diseaseUIDs.death] : [];
+        }
+      }
 
       let query = `
         WITH facility_data AS (
@@ -412,8 +446,8 @@ class LocationService {
             parent.name as district_name,
             parent.uid as district_uid,
             ou.hierarchylevel,
-            SUM(CASE WHEN dv.value ~ '^[0-9]+$' AND de.name NOT ILIKE '%death%' THEN CAST(dv.value AS INTEGER) ELSE 0 END) as total_cases,
-            SUM(CASE WHEN dv.value ~ '^[0-9]+$' AND de.name ILIKE '%death%' THEN CAST(dv.value AS INTEGER) ELSE 0 END) as total_deaths,
+            SUM(CASE WHEN dv.value ~ '^[0-9]+$' AND de.uid = ANY($1::text[]) THEN CAST(dv.value AS INTEGER) ELSE 0 END) as total_cases,
+            SUM(CASE WHEN dv.value ~ '^[0-9]+$' AND de.uid = ANY($2::text[]) THEN CAST(dv.value AS INTEGER) ELSE 0 END) as total_deaths,
             MAX(dv.lastupdated) as last_report_date,
             COUNT(DISTINCT dv.periodid) as reporting_periods,
             COUNT(DISTINCT de.dataelementid) as data_elements_reported
@@ -425,8 +459,8 @@ class LocationService {
           WHERE ou.hierarchylevel = 4
       `;
 
-      const params: any[] = [];
-      let paramIndex = 1;
+      const params: any[] = [caseUIDs, deathUIDs];
+      let paramIndex = 3;
 
       if (districtUid) {
         query += ` AND parent.uid = $${paramIndex}`;
@@ -434,14 +468,17 @@ class LocationService {
         paramIndex++;
       }
 
-      if (startDate) {
-        query += ` AND p.startdate >= $${paramIndex}`;
+      // Use overlap logic to include monthly/weekly periods
+      if (startDate && endDate) {
+        query += ` AND p.startdate <= $${paramIndex + 1} AND p.enddate >= $${paramIndex}`;
+        params.push(startDate, endDate);
+        paramIndex += 2;
+      } else if (startDate) {
+        query += ` AND p.enddate >= $${paramIndex}`;
         params.push(startDate);
         paramIndex++;
-      }
-
-      if (endDate) {
-        query += ` AND p.enddate <= $${paramIndex}`;
+      } else if (endDate) {
+        query += ` AND p.startdate <= $${paramIndex}`;
         params.push(endDate);
         paramIndex++;
       }
@@ -508,6 +545,9 @@ class LocationService {
     try {
       logger.debug({ districtUid, startDate, endDate }, "Fetching chiefdom data");
 
+      // Disease case data element UIDs
+      const diseaseUIDs = ['vq2qO3eTrNi', 'YazgqXbizv1', 'Cj5rTc9nEvl', 'XWU1Huh0Luy', 'UsSUX0cpKsH', 'NCteyX2xpMf'];
+
       let query = `
         SELECT
           ou.uid,
@@ -523,11 +563,11 @@ class LocationService {
           FROM organisationunit child
           WHERE child.path LIKE '%' || ou.uid || '%'
         )
-        LEFT JOIN dataelement de ON dv.dataelementid = de.dataelementid AND dv.deleted = false
+        LEFT JOIN dataelement de ON dv.dataelementid = de.dataelementid AND dv.deleted = false AND de.uid = ANY($2::text[])
       `;
 
-      const params: any[] = [districtUid];
-      let paramIndex = 2;
+      const params: any[] = [districtUid, diseaseUIDs];
+      let paramIndex = 3;
 
       if (startDate || endDate) {
         query += ` LEFT JOIN period p ON dv.periodid = p.periodid`;
@@ -538,14 +578,17 @@ class LocationService {
           AND ou.hierarchylevel = 3
       `;
 
-      if (startDate) {
-        query += ` AND p.startdate >= $${paramIndex}`;
+      // Use overlap logic to include monthly/weekly periods
+      if (startDate && endDate) {
+        query += ` AND p.startdate <= $${paramIndex + 1} AND p.enddate >= $${paramIndex}`;
+        params.push(startDate, endDate);
+        paramIndex += 2;
+      } else if (startDate) {
+        query += ` AND p.enddate >= $${paramIndex}`;
         params.push(startDate);
         paramIndex++;
-      }
-
-      if (endDate) {
-        query += ` AND p.enddate <= $${paramIndex}`;
+      } else if (endDate) {
+        query += ` AND p.startdate <= $${paramIndex}`;
         params.push(endDate);
         paramIndex++;
       }

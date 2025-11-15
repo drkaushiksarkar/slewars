@@ -289,44 +289,81 @@ class AnalyticsService {
     }
     /**
      * Get geographic heat map data
+     * Simplified for performance - only aggregates district-level data and immediate child facilities
      */
-    async getGeographicHeatMap() {
+    async getGeographicHeatMap(days = 90, startDate, endDate) {
         try {
-            logger.debug("Fetching geographic heat map data");
+            logger.debug({ days, startDate, endDate }, "Fetching geographic heat map data");
+            // Disease case data element UIDs (excluding deaths)
+            const diseaseUIDs = ['vq2qO3eTrNi', 'YazgqXbizv1', 'Cj5rTc9nEvl', 'XWU1Huh0Luy', 'UsSUX0cpKsH', 'NCteyX2xpMf'];
+            // Build time filter condition
+            let timeFilter = '';
+            const params = [diseaseUIDs];
+            let paramIndex = 2;
+            if (startDate && endDate) {
+                timeFilter = `AND p.startdate >= $${paramIndex} AND p.enddate <= $${paramIndex + 1}`;
+                params.push(startDate, endDate);
+            }
+            else {
+                timeFilter = `AND p.enddate >= NOW() - INTERVAL '${days} days'`;
+            }
             const query = `
-        WITH district_data AS (
-          -- Aggregate all facility data to district level
+        WITH time_filtered_cases AS (
+          -- First filter by time and disease data elements to reduce dataset
           SELECT
-            district.uid,
-            district.name as district_name,
-            ST_AsGeoJSON(district.geometry) as geometry,
-            de.name as disease,
-            SUM(CASE WHEN dv.value ~ '^[0-9]+$' THEN CAST(dv.value AS INTEGER) ELSE 0 END) as cases,
-            COUNT(DISTINCT facility.organisationunitid) as facility_count
+            dv.sourceid,
+            dv.dataelementid,
+            dv.value
           FROM datavalue dv
+          JOIN period p ON dv.periodid = p.periodid
           JOIN dataelement de ON dv.dataelementid = de.dataelementid
-          JOIN organisationunit facility ON dv.sourceid = facility.organisationunitid
-          JOIN organisationunit district ON (
-            facility.path LIKE '%' || district.uid || '%'
-            AND district.hierarchylevel = 2
-          )
           WHERE dv.deleted = false
             AND dv.value IS NOT NULL
-          GROUP BY district.uid, district.name, district.geometry, de.name
+            AND dv.value ~ '^[0-9]+$'
+            AND de.uid = ANY($1::text[])
+            ${timeFilter}
+        ),
+        facility_district_mapping AS (
+          -- Map facilities to districts using path extraction
+          SELECT DISTINCT
+            tfc.sourceid,
+            CASE
+              WHEN ou.hierarchylevel = 4 THEN split_part(ou.path, '/', 3)
+              WHEN ou.hierarchylevel = 3 THEN split_part(ou.path, '/', 3)
+              WHEN ou.hierarchylevel = 2 THEN ou.uid
+            END as district_uid
+          FROM time_filtered_cases tfc
+          JOIN organisationunit ou ON tfc.sourceid = ou.organisationunitid
+          WHERE ou.hierarchylevel IN (2, 3, 4)
+        ),
+        district_cases AS (
+          -- Aggregate cases by district and disease
+          SELECT
+            fdm.district_uid,
+            de.name as disease,
+            SUM(CAST(tfc.value AS INTEGER)) as cases,
+            COUNT(DISTINCT fdm.sourceid) as facilities_count
+          FROM time_filtered_cases tfc
+          JOIN facility_district_mapping fdm ON tfc.sourceid = fdm.sourceid
+          JOIN dataelement de ON tfc.dataelementid = de.dataelementid
+          GROUP BY fdm.district_uid, de.name
         )
         SELECT
-          dd.uid,
-          dd.district_name,
-          dd.geometry,
-          SUM(dd.cases) as total_cases,
-          COUNT(DISTINCT dd.disease) as disease_types,
-          MAX(dd.facility_count) as facilities_reporting,
-          json_object_agg(dd.disease, dd.cases) as cases_by_disease
-        FROM district_data dd
-        GROUP BY dd.uid, dd.district_name, dd.geometry
+          ou.uid,
+          ou.name as district_name,
+          ST_AsGeoJSON(ou.geometry) as geometry,
+          COALESCE(SUM(dc.cases), 0) as total_cases,
+          COUNT(DISTINCT dc.disease) as disease_types,
+          COALESCE(MAX(dc.facilities_count), 0) as facilities_reporting,
+          COALESCE(json_object_agg(dc.disease, dc.cases) FILTER (WHERE dc.disease IS NOT NULL), '{}'::json) as cases_by_disease
+        FROM organisationunit ou
+        LEFT JOIN district_cases dc ON ou.uid = dc.district_uid
+        WHERE ou.hierarchylevel = 2
+        GROUP BY ou.uid, ou.name, ou.geometry
+        HAVING SUM(dc.cases) > 0
         ORDER BY total_cases DESC
       `;
-            const result = await postgresService.query(query);
+            const result = await postgresService.query(query, params);
             return result.rows.map((row) => {
                 const totalCases = parseInt(row.total_cases) || 0;
                 const casesByDisease = row.cases_by_disease || {};

@@ -156,17 +156,18 @@ locationRouter.get("/districts/comparison", async (_req, res, next) => {
 /**
  * GET /api/locations/facilities/performance
  * Get facility performance data with rankings
- * Query params: districtUid, startDate, endDate
+ * Query params: districtUid, disease, startDate, endDate
  */
 locationRouter.get("/facilities/performance", async (req, res, next) => {
   try {
-    const { districtUid, startDate, endDate } = req.query;
-    logger.debug({ districtUid, startDate, endDate }, "GET /api/locations/facilities/performance");
+    const { districtUid, disease, startDate, endDate } = req.query;
+    logger.debug({ districtUid, disease, startDate, endDate }, "GET /api/locations/facilities/performance");
 
     const facilities = await locationService.getFacilityPerformance(
       districtUid as string | undefined,
       startDate as string | undefined,
-      endDate as string | undefined
+      endDate as string | undefined,
+      disease as string | undefined
     );
 
     res.json({

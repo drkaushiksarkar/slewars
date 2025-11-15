@@ -16,68 +16,23 @@ const DistrictComparison = ({ filters, onDistrictSelect }) => {
         setLoading(true);
         setError(null);
 
-        // Load GeoJSON first (fast, local file)
-        const geojsonRes = await fetch("/geoBoundaries-SLE-ADM2_simplified.geojson");
-        const geojsonData = await geojsonRes.json();
+        // Fetch district data directly from API with all filters
+        const heatmapRes = await axios.get("http://localhost:4000/api/analytics/heatmap", {
+          params: {
+            startDate: filters.startDate,
+            endDate: filters.endDate,
+            disease: filters.disease !== "all" ? filters.disease : undefined,
+            location: filters.location !== "all" ? filters.location : undefined,
+          },
+          timeout: 15000,
+        });
 
-        // Create initial district list with just boundaries
-        const initialData = geojsonData.features.map((feature) => ({
-          uid: feature.properties.shapeID || feature.properties.shapeName,
-          districtName: feature.properties.shapeName,
-          geometry: feature.geometry,
-          totalCases: 0,
-          diseaseTypes: 0,
-          facilitiesReporting: 0,
-        }));
-
-        // Show districts immediately
-        setDistricts(initialData);
+        const districtsData = heatmapRes.data.data || [];
+        setDistricts(districtsData);
         setLoading(false);
-
-        // Then try to fetch case data (may be slower)
-        try {
-          const heatmapRes = await axios.get("http://localhost:4000/api/analytics/heatmap", {
-            params: {
-              startDate: filters.startDate,
-              endDate: filters.endDate,
-            },
-            timeout: 10000, // 10 second timeout
-          });
-
-          const caseData = heatmapRes.data.data || [];
-
-          // Create a map of case data by district name
-          const caseMap = new Map();
-          caseData.forEach((district) => {
-            const name = district.districtName || district.name;
-            if (name) {
-              caseMap.set(name.toLowerCase(), district);
-            }
-          });
-
-          // Update with case data
-          const combinedData = geojsonData.features.map((feature) => {
-            const districtName = feature.properties.shapeName;
-            const cases = caseMap.get(districtName.toLowerCase()) || {};
-
-            return {
-              uid: feature.properties.shapeID || districtName,
-              districtName: districtName,
-              geometry: feature.geometry,
-              totalCases: cases.totalCases || 0,
-              diseaseTypes: cases.diseaseTypes || 0,
-              facilitiesReporting: cases.facilitiesReporting || 0,
-            };
-          });
-
-          setDistricts(combinedData);
-        } catch (apiError) {
-          console.warn("Failed to load case data, showing districts without data:", apiError);
-          // Keep showing the initial district list even if API fails
-        }
       } catch (error) {
-        console.error("Error loading GeoJSON:", error);
-        setError("Failed to load district boundaries");
+        console.error("Error loading district data:", error);
+        setError("Failed to load district data. Please check your connection.");
         setLoading(false);
       }
     };

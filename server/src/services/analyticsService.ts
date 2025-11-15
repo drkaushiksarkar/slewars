@@ -85,6 +85,7 @@ class AnalyticsService {
         WHERE dv.deleted = false
           AND de.uid = ANY($${paramIndex}::text[])
           AND dv.value IS NOT NULL
+          AND p.startdate <= NOW()
           AND p.enddate >= NOW() - INTERVAL '${days} days'
       `;
       casesParams.push(caseUIDs);
@@ -120,6 +121,7 @@ class AnalyticsService {
         WHERE dv.deleted = false
           AND de.uid = ANY($${paramIndex}::text[])
           AND dv.value IS NOT NULL
+          AND p.startdate <= NOW()
           AND p.enddate >= NOW() - INTERVAL '${days} days'
       `;
       deathsParams.push(deathUIDs);
@@ -369,30 +371,44 @@ class AnalyticsService {
    * Get geographic heat map data
    * Simplified for performance - only aggregates district-level data and immediate child facilities
    */
-  async getGeographicHeatMap(days: number = 90, startDate?: string, endDate?: string): Promise<GeographicData[]> {
+  async getGeographicHeatMap(days: number = 90, startDate?: string, endDate?: string, diseaseFilter?: string, locationFilter?: string): Promise<GeographicData[]> {
     try {
-      logger.debug({ days, startDate, endDate }, "Fetching geographic heat map data");
+      logger.debug({ days, startDate, endDate, diseaseFilter, locationFilter }, "Fetching geographic heat map data");
 
-      // Build time filter condition
-      let timeFilter = '';
-      if (startDate && endDate) {
-        timeFilter = `AND p.startdate >= '${startDate}' AND p.enddate <= '${endDate}'`;
-      } else {
-        timeFilter = `AND p.enddate >= NOW() - INTERVAL '${days} days'`;
+      // Disease case data element UIDs - filter by specific disease if provided
+      let diseaseUIDs = ['vq2qO3eTrNi', 'YazgqXbizv1', 'Cj5rTc9nEvl', 'XWU1Huh0Luy', 'UsSUX0cpKsH', 'NCteyX2xpMf'];
+
+      if (diseaseFilter && diseaseFilter !== 'all') {
+        diseaseUIDs = this.getDiseaseUIDsByName(diseaseFilter, 'cases');
       }
 
-      const query = `
+      // Build time filter condition using overlap logic to include monthly/weekly periods
+      let timeFilter = '';
+      const params: any[] = [diseaseUIDs];
+      let paramIndex = 2;
+
+      if (startDate && endDate) {
+        // Include periods that overlap with the date range
+        timeFilter = `AND p.startdate <= $${paramIndex + 1} AND p.enddate >= $${paramIndex}`;
+        params.push(startDate, endDate);
+      } else {
+        timeFilter = `AND p.startdate <= NOW() AND p.enddate >= NOW() - INTERVAL '${days} days'`;
+      }
+
+      let query = `
         WITH time_filtered_cases AS (
-          -- First filter by time to reduce dataset
+          -- First filter by time and disease data elements to reduce dataset
           SELECT
             dv.sourceid,
             dv.dataelementid,
             dv.value
           FROM datavalue dv
           JOIN period p ON dv.periodid = p.periodid
+          JOIN dataelement de ON dv.dataelementid = de.dataelementid
           WHERE dv.deleted = false
             AND dv.value IS NOT NULL
             AND dv.value ~ '^[0-9]+$'
+            AND de.uid = ANY($1::text[])
             ${timeFilter}
         ),
         facility_district_mapping AS (
@@ -413,7 +429,8 @@ class AnalyticsService {
           SELECT
             fdm.district_uid,
             de.name as disease,
-            SUM(CAST(tfc.value AS INTEGER)) as cases
+            SUM(CAST(tfc.value AS INTEGER)) as cases,
+            COUNT(DISTINCT fdm.sourceid) as facilities_count
           FROM time_filtered_cases tfc
           JOIN facility_district_mapping fdm ON tfc.sourceid = fdm.sourceid
           JOIN dataelement de ON tfc.dataelementid = de.dataelementid
@@ -425,17 +442,26 @@ class AnalyticsService {
           ST_AsGeoJSON(ou.geometry) as geometry,
           COALESCE(SUM(dc.cases), 0) as total_cases,
           COUNT(DISTINCT dc.disease) as disease_types,
-          1 as facilities_reporting,
+          COALESCE(MAX(dc.facilities_count), 0) as facilities_reporting,
           COALESCE(json_object_agg(dc.disease, dc.cases) FILTER (WHERE dc.disease IS NOT NULL), '{}'::json) as cases_by_disease
         FROM organisationunit ou
         LEFT JOIN district_cases dc ON ou.uid = dc.district_uid
         WHERE ou.hierarchylevel = 2
+      `;
+
+      // Add location filter if specified
+      if (locationFilter && locationFilter !== 'all') {
+        query += ` AND ou.uid = $${params.length + 1}`;
+        params.push(locationFilter);
+      }
+
+      query += `
         GROUP BY ou.uid, ou.name, ou.geometry
         HAVING SUM(dc.cases) > 0
         ORDER BY total_cases DESC
       `;
 
-      const result = await postgresService.query(query);
+      const result = await postgresService.query(query, params);
 
       return result.rows.map((row) => {
         const totalCases = parseInt(row.total_cases) || 0;
