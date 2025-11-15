@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.mlRouter = void 0;
 const express_1 = require("express");
 const zod_1 = require("zod");
-const mlService_1 = require("../services/ml/mlService");
+const mlService_js_1 = require("../services/ml/mlService.js");
 const predictSchema = zod_1.z.object({
     cases: zod_1.z.number(),
     rainfall: zod_1.z.number(),
@@ -25,7 +25,7 @@ exports.mlRouter = (0, express_1.Router)();
 exports.mlRouter.post("/predict", async (req, res, next) => {
     try {
         const features = predictSchema.parse(req.body);
-        const prediction = await mlService_1.mlService.predictRisk(features);
+        const prediction = await mlService_js_1.mlService.predictRisk(features);
         res.json(prediction);
     }
     catch (error) {
@@ -41,7 +41,7 @@ exports.mlRouter.post("/anomalies", (req, res, next) => {
             temperature: point.temperature ?? 0,
             humidity: point.humidity ?? 0
         }));
-        const anomalies = mlService_1.mlService.detectAnomalies(normalizedSeries);
+        const anomalies = mlService_js_1.mlService.detectAnomalies(normalizedSeries);
         res.json(anomalies);
     }
     catch (error) {

@@ -1,4 +1,4 @@
-import { TimeSeriesPoint } from "../../types/dashboard";
+import { TimeSeriesPoint } from "../../types/dashboard.js";
 
 export interface AnomalyResult {
   date: string;

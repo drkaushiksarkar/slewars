@@ -7,8 +7,8 @@ exports.getCountryConfig = exports.getCountryConfigs = void 0;
 const promises_1 = __importDefault(require("fs/promises"));
 const path_1 = __importDefault(require("path"));
 const zod_1 = require("zod");
-const env_1 = require("./env");
-const logger_1 = __importDefault(require("../services/logger"));
+const env_js_1 = require("./env.js");
+const logger_js_1 = __importDefault(require("../services/logger.js"));
 const countrySchema = zod_1.z.record(zod_1.z.string(), zod_1.z.object({
     id: zod_1.z.string(),
     name: zod_1.z.string(),
@@ -40,8 +40,8 @@ const countrySchema = zod_1.z.record(zod_1.z.string(), zod_1.z.object({
 }));
 let cache = null;
 const resolveConfigPath = () => {
-    if (env_1.env.COUNTRY_CONFIG_PATH) {
-        return env_1.env.COUNTRY_CONFIG_PATH;
+    if (env_js_1.env.COUNTRY_CONFIG_PATH) {
+        return env_js_1.env.COUNTRY_CONFIG_PATH;
     }
     return path_1.default.join(process.cwd(), "server", "config", "country-config.json");
 };
@@ -56,10 +56,10 @@ const getCountryConfigs = async () => {
     if (!cache) {
         try {
             cache = await loadConfigFile();
-            logger_1.default.info({ countryCount: Object.keys(cache).length }, "Loaded country configuration");
+            logger_js_1.default.info({ countryCount: Object.keys(cache).length }, "Loaded country configuration");
         }
         catch (error) {
-            logger_1.default.error({ error }, "Failed to load country configuration");
+            logger_js_1.default.error({ error }, "Failed to load country configuration");
             throw error;
         }
     }

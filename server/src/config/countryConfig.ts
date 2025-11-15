@@ -1,9 +1,9 @@
 import fs from "fs/promises";
 import path from "path";
 import { z } from "zod";
-import { env } from "./env";
-import { CountryConfig, CountryConfigMap } from "../types/country";
-import logger from "../services/logger";
+import { env } from "./env.js";
+import { CountryConfig, CountryConfigMap } from "../types/country.js";
+import logger from "../services/logger.js";
 
 const countrySchema = z.record(
   z.string(),

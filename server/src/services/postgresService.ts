@@ -1,6 +1,6 @@
 import { Pool, QueryResult } from "pg";
-import { env } from "../config/env";
-import logger from "./logger";
+import { env } from "../config/env.js";
+import logger from "./logger.js";
 
 class PostgresService {
   private pool: Pool | null = null;
@@ -33,11 +33,11 @@ class PostgresService {
     return this.pool;
   }
 
-  public async query<T = any>(text: string, params?: any[]): Promise<QueryResult<T>> {
+  public async query(text: string, params?: any[]): Promise<QueryResult<any>> {
     const pool = this.getPool();
     const start = Date.now();
     try {
-      const result = await pool.query<T>(text, params);
+      const result = await pool.query(text, params);
       const duration = Date.now() - start;
       logger.debug({ text, duration, rows: result.rowCount }, "Executed PostgreSQL query");
       return result;

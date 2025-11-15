@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { dhis2Service } from "../services/dhis2Service";
+import { dhis2Service } from "../services/dhis2Service.js";
 
 export const dhis2Router = Router();
 

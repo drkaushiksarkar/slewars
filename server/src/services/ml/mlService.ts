@@ -1,9 +1,9 @@
 import fs from "fs/promises";
 import path from "path";
-import logger from "../logger";
-import { OutbreakRiskModel, TrainingSample, PredictionResult } from "./outbreakRiskModel";
-import { SeasonalAnomalyModel, AnomalyResult } from "./anomalyModel";
-import { TimeSeriesPoint } from "../../types/dashboard";
+import logger from "../logger.js";
+import { OutbreakRiskModel, TrainingSample, PredictionResult } from "./outbreakRiskModel.js";
+import { SeasonalAnomalyModel, AnomalyResult } from "./anomalyModel.js";
+import { TimeSeriesPoint } from "../../types/dashboard.js";
 
 const TRAINING_FILE = path.join(
   process.cwd(),

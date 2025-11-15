@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { dashboardService } from "../services/dashboardService";
-import { geojsonService } from "../services/geojsonService";
+import { dashboardService } from "../services/dashboardService.js";
+import { geojsonService } from "../services/geojsonService.js";
 
 export const dataRouter = Router();
 

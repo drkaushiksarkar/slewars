@@ -1,4 +1,4 @@
-import { CountryConfig } from "./country";
+import { CountryConfig } from "./country.js";
 
 export interface TimeSeriesPoint {
   date: string;
@@ -59,5 +59,5 @@ export interface OverviewPayload {
   alerts: AlertDetail[];
   timeSeries: TimeSeriesPoint[];
   lastUpdated: string;
-  dataSource: "synthetic" | "dhis2" | "hybrid";
+  dataSource: "synthetic" | "dhis2" | "hybrid" | "postgres";
 }

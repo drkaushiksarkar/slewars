@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.geojsonService = void 0;
 const promises_1 = __importDefault(require("fs/promises"));
 const path_1 = __importDefault(require("path"));
-const logger_1 = __importDefault(require("./logger"));
+const logger_js_1 = __importDefault(require("./logger.js"));
 const SLE_GEOJSON_PATH = path_1.default.join(process.cwd(), "server", "data", "sierra-leone-adm1.geojson");
 class GeojsonService {
     constructor() {
@@ -19,7 +19,7 @@ class GeojsonService {
                 this.sleAdm1 = JSON.parse(raw);
             }
             catch (error) {
-                logger_1.default.error({ error }, "Failed to load Sierra Leone ADM1 geojson");
+                logger_js_1.default.error({ error }, "Failed to load Sierra Leone ADM1 geojson");
                 throw error;
             }
         }

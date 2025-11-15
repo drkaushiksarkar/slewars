@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
-import { mlService } from "../services/ml/mlService";
-import { TimeSeriesPoint } from "../types/dashboard";
+import { mlService } from "../services/ml/mlService.js";
+import { TimeSeriesPoint } from "../types/dashboard.js";
 
 const predictSchema = z.object({
   cases: z.number(),

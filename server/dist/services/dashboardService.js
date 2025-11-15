@@ -7,23 +7,23 @@ exports.dashboardService = void 0;
 const promises_1 = __importDefault(require("fs/promises"));
 const path_1 = __importDefault(require("path"));
 const node_cache_1 = __importDefault(require("node-cache"));
-const env_1 = require("../config/env");
-const countryConfig_1 = require("../config/countryConfig");
-const mlService_1 = require("./ml/mlService");
-const dhis2Service_1 = require("./dhis2Service");
-const logger_1 = __importDefault(require("./logger"));
+const env_js_1 = require("../config/env.js");
+const countryConfig_js_1 = require("../config/countryConfig.js");
+const mlService_js_1 = require("./ml/mlService.js");
+const dhis2Service_js_1 = require("./dhis2Service.js");
+const logger_js_1 = __importDefault(require("./logger.js"));
 const SAMPLE_DATA_FILE = path_1.default.join(process.cwd(), "server", "data", "sample-timeseries.json");
 class DashboardService {
     constructor() {
         this.cache = new node_cache_1.default({ stdTTL: 120 });
         this.syntheticData = null;
     }
-    async getOverview(countryId, source = env_1.env.DASHBOARD_DATA_SOURCE) {
+    async getOverview(countryId, source = env_js_1.env.DASHBOARD_DATA_SOURCE) {
         const cacheKey = `overview:${countryId}:${source}`;
         const cached = this.cache.get(cacheKey);
         if (cached)
             return cached;
-        const country = await (0, countryConfig_1.getCountryConfig)(countryId);
+        const country = await (0, countryConfig_js_1.getCountryConfig)(countryId);
         if (!country) {
             throw new Error(`Unknown country configuration: ${countryId}`);
         }
@@ -38,15 +38,15 @@ class DashboardService {
                 }
             }
             catch (error) {
-                logger_1.default.warn({ error }, "Falling back to synthetic data");
+                logger_js_1.default.warn({ error }, "Falling back to synthetic data");
             }
         }
         const latestPoint = series.at(-1);
         if (!latestPoint) {
             throw new Error("No time series data available");
         }
-        const anomalies = mlService_1.mlService.detectAnomalies(series);
-        const prediction = await mlService_1.mlService.predictRisk({
+        const anomalies = mlService_js_1.mlService.detectAnomalies(series);
+        const prediction = await mlService_js_1.mlService.predictRisk({
             cases: latestPoint.cases,
             rainfall: latestPoint.rainfall,
             temperature: latestPoint.temperature,
@@ -75,7 +75,7 @@ class DashboardService {
         if (!country.dhis2)
             return [];
         try {
-            const data = await dhis2Service_1.dhis2Service.fetchAnalytics({
+            const data = await dhis2Service_js_1.dhis2Service.fetchAnalytics({
                 dimension: [`dx:${country.dhis2.dataElements.join(";")}`, "pe:LAST_12_MONTHS"],
                 filter: `ou:${country.dhis2.orgUnit}`,
                 displayProperty: "NAME"
@@ -91,7 +91,7 @@ class DashboardService {
             }));
         }
         catch (error) {
-            logger_1.default.error({ error }, "Failed to fetch DHIS2 analytics");
+            logger_js_1.default.error({ error }, "Failed to fetch DHIS2 analytics");
             throw error;
         }
     }

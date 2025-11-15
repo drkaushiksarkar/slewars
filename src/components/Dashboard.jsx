@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useCountry } from "@/contexts/CountryContext";
 import { useDashboardData } from "@/contexts/DashboardDataContext";
-import Overview from "./Overview";
+import NewOverview from "./NewOverview";
 import ClimateData from "./ClimateData";
 import Training from "./Training";
 import Simulation from "./Simulation";
@@ -162,7 +162,7 @@ const Dashboard = () => {
         transition={{ duration: 0.3 }}
         className="bg-card rounded-lg p-6 shadow-lg"
       >
-        {activeTab === "overview" && <Overview />}
+        {activeTab === "overview" && <NewOverview />}
         {activeTab === "response" && <Response />}
         {activeTab === "climate" && <ClimateData />}
         {activeTab === "training" && <Training />}

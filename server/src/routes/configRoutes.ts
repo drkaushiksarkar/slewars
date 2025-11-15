@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getCountryConfig, getCountryConfigs } from "../config/countryConfig";
+import { getCountryConfig, getCountryConfigs } from "../config/countryConfig.js";
 
 export const configRouter = Router();
 
