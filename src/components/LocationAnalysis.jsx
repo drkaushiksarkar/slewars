@@ -176,7 +176,7 @@ const LocationAnalysis = () => {
             >
               <option value="all">All Diseases</option>
               {diseases.map((disease) => (
-                <option key={disease.uid} value={disease.uid}>
+                <option key={disease.uid} value={disease.id}>
                   {disease.name}
                 </option>
               ))}

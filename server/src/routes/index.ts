@@ -6,6 +6,8 @@ import { dhis2Router } from "./dhis2Routes.js";
 import { diseaseRouter } from "./diseaseRoutes.js";
 import { locationRouter } from "./locationRoutes.js";
 import { analyticsRouter } from "./analyticsRoutes.js";
+import climateRouter from "./climateRoutes.js";
+import forecastRouter from "./forecastRoutes.js";
 import { postgresService } from "../services/postgresService.js";
 import logger from "../services/logger.js";
 
@@ -44,5 +46,11 @@ router.use("/dhis2", dhis2Router);
 router.use("/diseases", diseaseRouter);
 router.use("/locations", locationRouter);
 router.use("/analytics", analyticsRouter);
+
+// Phase 5 routes - Climate data integration
+router.use("/climate", climateRouter);
+
+// Phase 6 routes - Disease forecasting
+router.use("/forecast", forecastRouter);
 
 export default router;

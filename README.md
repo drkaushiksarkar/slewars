@@ -22,6 +22,7 @@ Modern climate-aware Early Warning, Alert, and Response System with a Sierra Leo
    Fill in DHIS2 connection details if you want live data. Leave them blank to keep the synthetic demo feed.
 3. **Run both servers**
    ```bash
+   cd server/ml-service && ./setup.sh
    npm run dev:full
    ```
    - Frontend: http://localhost:3000 (Vite proxies `/api` calls to the backend)

@@ -37,6 +37,8 @@ const LocationHeatmap = ({ filters }) => {
             params: {
               startDate: filters.startDate,
               endDate: filters.endDate,
+              disease: filters.disease !== "all" ? filters.disease : undefined,
+              location: filters.location !== "all" ? filters.location : undefined,
             },
           }),
         ]);
@@ -81,7 +83,7 @@ const LocationHeatmap = ({ filters }) => {
     if (filters.startDate && filters.endDate) {
       fetchHeatmapData();
     }
-  }, [filters.startDate, filters.endDate]);
+  }, [filters.startDate, filters.endDate, filters.disease, filters.location]);
 
   // Initialize map
   useEffect(() => {
@@ -166,7 +168,7 @@ const LocationHeatmap = ({ filters }) => {
       // Calculate max cases for color scaling
       const maxCases = Math.max(...heatmapData.map((d) => d.totalCases || 0), 1);
 
-      // Add fill layer
+      // Add fill layer with pastel RdYlGn color scheme
       map.current.addLayer({
         id: "district-fills",
         type: "fill",
@@ -177,17 +179,17 @@ const LocationHeatmap = ({ filters }) => {
             ["linear"],
             ["get", "totalCases"],
             0,
-            "#f0f9ff",
+            "#d4edda", // Pastel green (low)
             maxCases * 0.25,
-            "#bae6fd",
+            "#fff3cd", // Pastel yellow-green
             maxCases * 0.5,
-            "#7dd3fc",
+            "#ffe5a0", // Pastel yellow
             maxCases * 0.75,
-            "#38bdf8",
+            "#ffc9a0", // Pastel orange
             maxCases,
-            "#0284c7",
+            "#ffb3b3", // Pastel red (high)
           ],
-          "fill-opacity": 0.7,
+          "fill-opacity": 0.75,
         },
       });
 
@@ -197,7 +199,7 @@ const LocationHeatmap = ({ filters }) => {
         type: "line",
         source: "districts",
         paint: {
-          "line-color": "#0284c7",
+          "line-color": "#64748b", // Neutral slate gray
           "line-width": 2,
         },
       });
@@ -276,7 +278,7 @@ const LocationHeatmap = ({ filters }) => {
         <h3 className="font-semibold text-sm mb-3">Case Distribution by District</h3>
         <div className="flex items-center gap-4">
           <span className="text-xs text-muted-foreground">Low</span>
-          <div className="flex-1 h-4 rounded-md bg-gradient-to-r from-[#f0f9ff] via-[#7dd3fc] to-[#0284c7]"></div>
+          <div className="flex-1 h-4 rounded-md bg-gradient-to-r from-[#d4edda] via-[#fff3cd] via-[#ffe5a0] via-[#ffc9a0] to-[#ffb3b3]"></div>
           <span className="text-xs text-muted-foreground">High</span>
         </div>
         <p className="text-xs text-muted-foreground mt-2">

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { TrendingUp, TrendingDown, Minus, ChevronRight } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import axios from "axios";
 
 const DistrictComparison = ({ filters, onDistrictSelect }) => {
@@ -107,7 +107,7 @@ const DistrictComparison = ({ filters, onDistrictSelect }) => {
         <div className="p-4 border-b">
           <h3 className="font-semibold">District Comparison</h3>
           <p className="text-xs text-muted-foreground mt-1">
-            Click on a district to view chiefdom-level data
+            Top diseases shown inline • Click any row for detailed chiefdom breakdown
           </p>
         </div>
 
@@ -142,8 +142,8 @@ const DistrictComparison = ({ filters, onDistrictSelect }) => {
                 >
                   Facilities {sortBy === "facilitiesReporting" && (sortOrder === "asc" ? "↑" : "↓")}
                 </th>
-                <th className="text-right text-xs font-medium text-muted-foreground p-3">
-                  Action
+                <th className="text-left text-xs font-medium text-muted-foreground p-3">
+                  Top Diseases
                 </th>
               </tr>
             </thead>
@@ -189,17 +189,25 @@ const DistrictComparison = ({ filters, onDistrictSelect }) => {
                         {district.facilitiesReporting || 0}
                       </span>
                     </td>
-                    <td className="p-3 text-right">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDistrictSelect(district);
-                        }}
-                        className="inline-flex items-center text-xs text-primary hover:text-primary/80 font-medium"
-                      >
-                        View Details
-                        <ChevronRight className="h-4 w-4 ml-1" />
-                      </button>
+                    <td className="p-3">
+                      <div className="flex flex-wrap gap-1">
+                        {district.casesByDisease && Object.keys(district.casesByDisease).length > 0 ? (
+                          Object.entries(district.casesByDisease)
+                            .sort(([, a], [, b]) => Number(b) - Number(a))
+                            .slice(0, 3)
+                            .map(([disease, cases]) => (
+                              <span
+                                key={disease}
+                                className="inline-flex items-center px-2 py-0.5 rounded-md text-xs bg-primary/10 text-primary"
+                                title={`${disease}: ${Number(cases).toLocaleString()} cases`}
+                              >
+                                {disease.replace('IDSR ', '')}: {Number(cases).toLocaleString()}
+                              </span>
+                            ))
+                        ) : (
+                          <span className="text-xs text-muted-foreground">No data</span>
+                        )}
+                      </div>
                     </td>
                   </motion.tr>
                 );

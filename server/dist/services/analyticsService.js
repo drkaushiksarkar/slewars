@@ -35,6 +35,7 @@ class AnalyticsService {
         WHERE dv.deleted = false
           AND de.uid = ANY($${paramIndex}::text[])
           AND dv.value IS NOT NULL
+          AND p.startdate <= NOW()
           AND p.enddate >= NOW() - INTERVAL '${days} days'
       `;
             casesParams.push(caseUIDs);
@@ -64,6 +65,7 @@ class AnalyticsService {
         WHERE dv.deleted = false
           AND de.uid = ANY($${paramIndex}::text[])
           AND dv.value IS NOT NULL
+          AND p.startdate <= NOW()
           AND p.enddate >= NOW() - INTERVAL '${days} days'
       `;
             deathsParams.push(deathUIDs);
@@ -291,23 +293,27 @@ class AnalyticsService {
      * Get geographic heat map data
      * Simplified for performance - only aggregates district-level data and immediate child facilities
      */
-    async getGeographicHeatMap(days = 90, startDate, endDate) {
+    async getGeographicHeatMap(days = 90, startDate, endDate, diseaseFilter, locationFilter) {
         try {
-            logger.debug({ days, startDate, endDate }, "Fetching geographic heat map data");
-            // Disease case data element UIDs (excluding deaths)
-            const diseaseUIDs = ['vq2qO3eTrNi', 'YazgqXbizv1', 'Cj5rTc9nEvl', 'XWU1Huh0Luy', 'UsSUX0cpKsH', 'NCteyX2xpMf'];
-            // Build time filter condition
+            logger.debug({ days, startDate, endDate, diseaseFilter, locationFilter }, "Fetching geographic heat map data");
+            // Disease case data element UIDs - filter by specific disease if provided
+            let diseaseUIDs = ['vq2qO3eTrNi', 'YazgqXbizv1', 'Cj5rTc9nEvl', 'XWU1Huh0Luy', 'UsSUX0cpKsH', 'NCteyX2xpMf'];
+            if (diseaseFilter && diseaseFilter !== 'all') {
+                diseaseUIDs = this.getDiseaseUIDsByName(diseaseFilter, 'cases');
+            }
+            // Build time filter condition using overlap logic to include monthly/weekly periods
             let timeFilter = '';
             const params = [diseaseUIDs];
             let paramIndex = 2;
             if (startDate && endDate) {
-                timeFilter = `AND p.startdate >= $${paramIndex} AND p.enddate <= $${paramIndex + 1}`;
+                // Include periods that overlap with the date range
+                timeFilter = `AND p.startdate <= $${paramIndex + 1} AND p.enddate >= $${paramIndex}`;
                 params.push(startDate, endDate);
             }
             else {
-                timeFilter = `AND p.enddate >= NOW() - INTERVAL '${days} days'`;
+                timeFilter = `AND p.startdate <= NOW() AND p.enddate >= NOW() - INTERVAL '${days} days'`;
             }
-            const query = `
+            let query = `
         WITH time_filtered_cases AS (
           -- First filter by time and disease data elements to reduce dataset
           SELECT
@@ -359,6 +365,13 @@ class AnalyticsService {
         FROM organisationunit ou
         LEFT JOIN district_cases dc ON ou.uid = dc.district_uid
         WHERE ou.hierarchylevel = 2
+      `;
+            // Add location filter if specified
+            if (locationFilter && locationFilter !== 'all') {
+                query += ` AND ou.uid = $${params.length + 1}`;
+                params.push(locationFilter);
+            }
+            query += `
         GROUP BY ou.uid, ou.name, ou.geometry
         HAVING SUM(dc.cases) > 0
         ORDER BY total_cases DESC

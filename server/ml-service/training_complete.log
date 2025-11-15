@@ -1,0 +1,1302 @@
+02:01:24 | ================================================================================
+02:01:24 | COMPLETE TRAINING - All Diseases & All Districts
+02:01:24 | ================================================================================
+02:01:24 | Fetching all districts...
+02:01:24 | Found 13 districts
+02:01:24 | 
+Starting training for 3 diseases across 13 districts
+02:01:24 | Total combinations to train: 39
+
+02:01:24 | 
+================================================================================
+02:01:24 | DISEASE: Malaria
+02:01:24 | ================================================================================
+02:01:24 | 
+[1/39] Malaria in Bo
+02:01:24 | --------------------------------------------------------------------------------
+02:01:24 | Training model...
+02:01:24 | Training model for Malaria in O6uvpzGd5pu
+02:01:24 | Fetched 22 disease time series records for disease
+02:01:24 | Fetched 98 climate records
+02:01:24 | Fetched 22 disease records and 98 climate records
+/Users/Rishabh.Dev/Documents/Projects/experiments/slewars/server/ml-service/feature_engineering.py:154: FutureWarning: DataFrame.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  df = df.fillna(method='ffill').fillna(method='bfill')
+02:01:24 | Merged 4 climate features
+02:01:24 | Prepared 22 training samples with 30 features
+02:01:24 | Training set: 17 samples, Test set: 5 samples
+02:01:24 | Training XGBoost forecaster on 17 samples
+02:01:24 | Dropping non-numeric column: startdate
+02:01:24 | Dropping non-numeric column: enddate
+02:01:24 | Training XGBoost model with 17 samples
+02:01:25 | XGBoost model trained successfully
+02:01:25 | Ensemble (XGBoost) trained successfully
+02:01:25 | Ensemble model saved to models/Malaria/O6uvpzGd5pu/ensemble_model.pkl
+02:01:25 | Model trained successfully. MAE: 579.99, RMSE: 880.92
+02:01:25 | ✓ Training successful!
+02:01:25 |   Training: 17 samples
+02:01:25 |   Testing: 5 samples
+02:01:25 |   MAE: 579.99
+02:01:25 |   RMSE: 880.92
+02:01:25 |   R²: 0.533
+02:01:25 | Generating initial forecast...
+02:01:25 | Generating forecast for Malaria in O6uvpzGd5pu, horizon=4, force_retrain=False
+02:01:25 | Fetched 11 disease time series records for disease
+02:01:25 | Fetched 53 climate records
+/Users/Rishabh.Dev/Documents/Projects/experiments/slewars/server/ml-service/feature_engineering.py:154: FutureWarning: DataFrame.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  df = df.fillna(method='ffill').fillna(method='bfill')
+02:01:25 | Merged 4 climate features
+02:01:25 | Prepared 11 training samples with 30 features
+02:01:25 | Prepared forecast features for 4 periods
+02:01:25 | Generating 4-step forecast
+02:01:25 | Forecast generated successfully for 4 weeks
+02:01:25 | ✓ Forecast generated!
+02:01:26 | 
+[2/39] Malaria in Bombali
+02:01:26 | --------------------------------------------------------------------------------
+02:01:26 | Training model...
+02:01:26 | Training model for Malaria in fdc6uOvgoji
+02:01:26 | Fetched 20 disease time series records for disease
+02:01:26 | Fetched 53 climate records
+02:01:26 | Fetched 20 disease records and 53 climate records
+/Users/Rishabh.Dev/Documents/Projects/experiments/slewars/server/ml-service/feature_engineering.py:154: FutureWarning: DataFrame.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  df = df.fillna(method='ffill').fillna(method='bfill')
+02:01:26 | Merged 4 climate features
+02:01:26 | Prepared 20 training samples with 30 features
+02:01:26 | Training set: 16 samples, Test set: 4 samples
+02:01:26 | Training XGBoost forecaster on 16 samples
+02:01:26 | Dropping non-numeric column: startdate
+02:01:26 | Dropping non-numeric column: enddate
+02:01:26 | Training XGBoost model with 16 samples
+02:01:26 | XGBoost model trained successfully
+02:01:26 | Ensemble (XGBoost) trained successfully
+02:01:26 | Ensemble model saved to models/Malaria/fdc6uOvgoji/ensemble_model.pkl
+02:01:26 | Model trained successfully. MAE: 182.86, RMSE: 220.72
+02:01:26 | ✓ Training successful!
+02:01:26 |   Training: 16 samples
+02:01:26 |   Testing: 4 samples
+02:01:26 |   MAE: 182.86
+02:01:26 |   RMSE: 220.72
+02:01:26 |   R²: 0.955
+02:01:26 | Generating initial forecast...
+02:01:26 | Generating forecast for Malaria in fdc6uOvgoji, horizon=4, force_retrain=False
+02:01:26 | Fetched 10 disease time series records for disease
+02:01:26 | Fetched 8 climate records
+/Users/Rishabh.Dev/Documents/Projects/experiments/slewars/server/ml-service/feature_engineering.py:154: FutureWarning: DataFrame.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  df = df.fillna(method='ffill').fillna(method='bfill')
+02:01:26 | Merged 4 climate features
+02:01:26 | Prepared 10 training samples with 30 features
+02:01:26 | Prepared forecast features for 4 periods
+02:01:26 | Generating 4-step forecast
+02:01:26 | Forecast generated successfully for 4 weeks
+02:01:26 | ✓ Forecast generated!
+02:01:27 | 
+[3/39] Malaria in Bonthe
+02:01:27 | --------------------------------------------------------------------------------
+02:01:27 | Training model...
+02:01:27 | Training model for Malaria in lc3eMKXaEfw
+02:01:27 | Fetched 20 disease time series records for disease
+02:01:27 | Fetched 26 climate records
+02:01:27 | Fetched 20 disease records and 26 climate records
+/Users/Rishabh.Dev/Documents/Projects/experiments/slewars/server/ml-service/feature_engineering.py:154: FutureWarning: DataFrame.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  df = df.fillna(method='ffill').fillna(method='bfill')
+02:01:27 | Merged 4 climate features
+02:01:27 | Prepared 20 training samples with 30 features
+02:01:27 | Training set: 16 samples, Test set: 4 samples
+02:01:27 | Training XGBoost forecaster on 16 samples
+02:01:27 | Dropping non-numeric column: startdate
+02:01:27 | Dropping non-numeric column: enddate
+02:01:27 | Training XGBoost model with 16 samples
+02:01:27 | XGBoost model trained successfully
+02:01:27 | Ensemble (XGBoost) trained successfully
+02:01:27 | Ensemble model saved to models/Malaria/lc3eMKXaEfw/ensemble_model.pkl
+02:01:27 | Model trained successfully. MAE: 33.68, RMSE: 66.88
+02:01:27 | ✓ Training successful!
+02:01:27 |   Training: 16 samples
+02:01:27 |   Testing: 4 samples
+02:01:27 |   MAE: 33.68
+02:01:27 |   RMSE: 66.88
+02:01:27 |   R²: 0.944
+02:01:27 | Generating initial forecast...
+02:01:27 | Generating forecast for Malaria in lc3eMKXaEfw, horizon=4, force_retrain=False
+02:01:27 | Fetched 10 disease time series records for disease
+02:01:27 | Fetched 26 climate records
+/Users/Rishabh.Dev/Documents/Projects/experiments/slewars/server/ml-service/feature_engineering.py:154: FutureWarning: DataFrame.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  df = df.fillna(method='ffill').fillna(method='bfill')
+02:01:27 | Merged 4 climate features
+02:01:27 | Prepared 10 training samples with 30 features
+02:01:27 | Prepared forecast features for 4 periods
+02:01:27 | Generating 4-step forecast
+02:01:27 | Forecast generated successfully for 4 weeks
+02:01:27 | ✓ Forecast generated!
+02:01:28 | 
+[4/39] Malaria in Kailahun
+02:01:28 | --------------------------------------------------------------------------------
+02:01:28 | Training model...
+02:01:28 | Training model for Malaria in jUb8gELQApl
+02:01:28 | Fetched 22 disease time series records for disease
+02:01:28 | Fetched 0 climate records
+02:01:28 | Fetched 22 disease records and 0 climate records
+02:01:28 | Prepared 14 training samples with 16 features
+02:01:28 | Training set: 11 samples, Test set: 3 samples
+02:01:28 | Training XGBoost forecaster on 11 samples
+02:01:28 | Dropping non-numeric column: startdate
+02:01:28 | Dropping non-numeric column: enddate
+02:01:28 | Training XGBoost model with 11 samples
+02:01:28 | XGBoost model trained successfully
+02:01:28 | Ensemble (XGBoost) trained successfully
+02:01:28 | Ensemble model saved to models/Malaria/jUb8gELQApl/ensemble_model.pkl
+02:01:28 | Model trained successfully. MAE: 564.43, RMSE: 691.62
+02:01:28 | ✓ Training successful!
+02:01:28 |   Training: 11 samples
+02:01:28 |   Testing: 3 samples
+02:01:28 |   MAE: 564.43
+02:01:28 |   RMSE: 691.62
+02:01:28 |   R²: -0.702
+02:01:28 | Generating initial forecast...
+02:01:28 | Generating forecast for Malaria in jUb8gELQApl, horizon=4, force_retrain=False
+02:01:28 | Fetched 11 disease time series records for disease
+02:01:28 | Fetched 0 climate records
+02:01:28 | Prepared 3 training samples with 16 features
+02:01:28 | ✗ Forecast failed: Insufficient historical data for forecasting. Found 3 points, need at least 10
+02:01:29 | 
+[5/39] Malaria in Kambia
+02:01:29 | --------------------------------------------------------------------------------
+02:01:29 | Training model...
+02:01:29 | Training model for Malaria in PMa2VCrupOd
+02:01:29 | Fetched 22 disease time series records for disease
+02:01:29 | Fetched 0 climate records
+02:01:29 | Fetched 22 disease records and 0 climate records
+02:01:29 | Prepared 14 training samples with 16 features
+02:01:29 | Training set: 11 samples, Test set: 3 samples
+02:01:29 | Training XGBoost forecaster on 11 samples
+02:01:29 | Dropping non-numeric column: startdate
+02:01:29 | Dropping non-numeric column: enddate
+02:01:29 | Training XGBoost model with 11 samples
+02:01:29 | XGBoost model trained successfully
+02:01:29 | Ensemble (XGBoost) trained successfully
+02:01:29 | Ensemble model saved to models/Malaria/PMa2VCrupOd/ensemble_model.pkl
+02:01:29 | Model trained successfully. MAE: 480.07, RMSE: 784.13
+02:01:29 | ✓ Training successful!
+02:01:29 |   Training: 11 samples
+02:01:29 |   Testing: 3 samples
+02:01:29 |   MAE: 480.07
+02:01:29 |   RMSE: 784.13
+02:01:29 |   R²: 0.703
+02:01:29 | Generating initial forecast...
+02:01:29 | Generating forecast for Malaria in PMa2VCrupOd, horizon=4, force_retrain=False
+02:01:29 | Fetched 11 disease time series records for disease
+02:01:29 | Fetched 0 climate records
+02:01:29 | Prepared 3 training samples with 16 features
+02:01:29 | ✗ Forecast failed: Insufficient historical data for forecasting. Found 3 points, need at least 10
+02:01:30 | 
+[6/39] Malaria in Kenema
+02:01:30 | --------------------------------------------------------------------------------
+02:01:30 | Training model...
+02:01:30 | Training model for Malaria in kJq2mPyFEHo
+02:01:30 | Fetched 22 disease time series records for disease
+02:01:30 | Fetched 0 climate records
+02:01:30 | Fetched 22 disease records and 0 climate records
+02:01:30 | Prepared 14 training samples with 16 features
+02:01:30 | Training set: 11 samples, Test set: 3 samples
+02:01:30 | Training XGBoost forecaster on 11 samples
+02:01:30 | Dropping non-numeric column: startdate
+02:01:30 | Dropping non-numeric column: enddate
+02:01:30 | Training XGBoost model with 11 samples
+02:01:30 | XGBoost model trained successfully
+02:01:30 | Ensemble (XGBoost) trained successfully
+02:01:30 | Ensemble model saved to models/Malaria/kJq2mPyFEHo/ensemble_model.pkl
+02:01:30 | Model trained successfully. MAE: 666.03, RMSE: 703.33
+02:01:30 | ✓ Training successful!
+02:01:30 |   Training: 11 samples
+02:01:30 |   Testing: 3 samples
+02:01:30 |   MAE: 666.03
+02:01:30 |   RMSE: 703.33
+02:01:30 |   R²: 0.783
+02:01:30 | Generating initial forecast...
+02:01:30 | Generating forecast for Malaria in kJq2mPyFEHo, horizon=4, force_retrain=False
+02:01:31 | Fetched 11 disease time series records for disease
+02:01:31 | Fetched 0 climate records
+02:01:31 | Prepared 3 training samples with 16 features
+02:01:31 | ✗ Forecast failed: Insufficient historical data for forecasting. Found 3 points, need at least 10
+02:01:31 | 
+[7/39] Malaria in Koinadugu
+02:01:31 | --------------------------------------------------------------------------------
+02:01:31 | Training model...
+02:01:31 | Training model for Malaria in qhqAxPSTUXp
+02:01:31 | Fetched 20 disease time series records for disease
+02:01:31 | Fetched 0 climate records
+02:01:31 | Fetched 20 disease records and 0 climate records
+02:01:31 | Prepared 12 training samples with 16 features
+02:01:31 | Training set: 9 samples, Test set: 3 samples
+02:01:31 | Training XGBoost forecaster on 9 samples
+02:01:31 | Dropping non-numeric column: startdate
+02:01:31 | Dropping non-numeric column: enddate
+02:01:31 | Training XGBoost model with 9 samples
+02:01:32 | XGBoost model trained successfully
+02:01:32 | Ensemble (XGBoost) trained successfully
+02:01:32 | Ensemble model saved to models/Malaria/qhqAxPSTUXp/ensemble_model.pkl
+02:01:32 | Model trained successfully. MAE: 100.72, RMSE: 171.51
+02:01:32 | ✓ Training successful!
+02:01:32 |   Training: 9 samples
+02:01:32 |   Testing: 3 samples
+02:01:32 |   MAE: 100.72
+02:01:32 |   RMSE: 171.51
+02:01:32 |   R²: 0.877
+02:01:32 | Generating initial forecast...
+02:01:32 | Generating forecast for Malaria in qhqAxPSTUXp, horizon=4, force_retrain=False
+02:01:32 | Fetched 10 disease time series records for disease
+02:01:32 | Fetched 0 climate records
+02:01:32 | Prepared 2 training samples with 16 features
+02:01:32 | ✗ Forecast failed: Insufficient historical data for forecasting. Found 2 points, need at least 10
+02:01:32 | 
+[8/39] Malaria in Kono
+02:01:32 | --------------------------------------------------------------------------------
+02:01:32 | Training model...
+02:01:32 | Training model for Malaria in Vth0fbpFcsO
+02:01:32 | Fetched 19 disease time series records for disease
+02:01:32 | Fetched 0 climate records
+02:01:32 | Fetched 19 disease records and 0 climate records
+02:01:32 | Prepared 11 training samples with 16 features
+02:01:32 | Training set: 8 samples, Test set: 3 samples
+02:01:32 | Training XGBoost forecaster on 8 samples
+02:01:32 | Dropping non-numeric column: startdate
+02:01:32 | Dropping non-numeric column: enddate
+02:01:32 | Training XGBoost model with 8 samples
+02:01:33 | XGBoost model trained successfully
+02:01:33 | Ensemble (XGBoost) trained successfully
+02:01:33 | Ensemble model saved to models/Malaria/Vth0fbpFcsO/ensemble_model.pkl
+02:01:33 | Model trained successfully. MAE: 123.91, RMSE: 189.03
+02:01:33 | ✓ Training successful!
+02:01:33 |   Training: 8 samples
+02:01:33 |   Testing: 3 samples
+02:01:33 |   MAE: 123.91
+02:01:33 |   RMSE: 189.03
+02:01:33 |   R²: 0.856
+02:01:33 | Generating initial forecast...
+02:01:33 | Generating forecast for Malaria in Vth0fbpFcsO, horizon=4, force_retrain=False
+02:01:33 | Fetched 10 disease time series records for disease
+02:01:33 | Fetched 0 climate records
+02:01:33 | Prepared 2 training samples with 16 features
+02:01:33 | ✗ Forecast failed: Insufficient historical data for forecasting. Found 2 points, need at least 10
+02:01:33 | 
+[9/39] Malaria in Moyamba
+02:01:33 | --------------------------------------------------------------------------------
+02:01:33 | Training model...
+02:01:33 | Training model for Malaria in jmIPBj66vD6
+02:01:34 | Fetched 22 disease time series records for disease
+02:01:34 | Fetched 53 climate records
+02:01:34 | Fetched 22 disease records and 53 climate records
+/Users/Rishabh.Dev/Documents/Projects/experiments/slewars/server/ml-service/feature_engineering.py:154: FutureWarning: DataFrame.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  df = df.fillna(method='ffill').fillna(method='bfill')
+02:01:34 | Merged 4 climate features
+02:01:34 | Prepared 22 training samples with 30 features
+02:01:34 | Training set: 17 samples, Test set: 5 samples
+02:01:34 | Training XGBoost forecaster on 17 samples
+02:01:34 | Dropping non-numeric column: startdate
+02:01:34 | Dropping non-numeric column: enddate
+02:01:34 | Training XGBoost model with 17 samples
+02:01:34 | XGBoost model trained successfully
+02:01:34 | Ensemble (XGBoost) trained successfully
+02:01:34 | Ensemble model saved to models/Malaria/jmIPBj66vD6/ensemble_model.pkl
+02:01:34 | Model trained successfully. MAE: 1004.01, RMSE: 1215.36
+02:01:34 | ✓ Training successful!
+02:01:34 |   Training: 17 samples
+02:01:34 |   Testing: 5 samples
+02:01:34 |   MAE: 1004.01
+02:01:34 |   RMSE: 1215.36
+02:01:34 |   R²: -0.550
+02:01:34 | Generating initial forecast...
+02:01:34 | Generating forecast for Malaria in jmIPBj66vD6, horizon=4, force_retrain=False
+02:01:34 | Fetched 11 disease time series records for disease
+02:01:34 | Fetched 8 climate records
+/Users/Rishabh.Dev/Documents/Projects/experiments/slewars/server/ml-service/feature_engineering.py:154: FutureWarning: DataFrame.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  df = df.fillna(method='ffill').fillna(method='bfill')
+02:01:34 | Merged 4 climate features
+02:01:34 | Prepared 11 training samples with 30 features
+02:01:34 | Prepared forecast features for 4 periods
+02:01:34 | Generating 4-step forecast
+02:01:34 | Forecast generated successfully for 4 weeks
+02:01:34 | ✓ Forecast generated!
+02:01:35 | 
+[10/39] Malaria in Port Loko
+02:01:35 | --------------------------------------------------------------------------------
+02:01:35 | Training model...
+02:01:35 | Training model for Malaria in TEQlaapDQoK
+02:01:35 | Fetched 21 disease time series records for disease
+02:01:35 | Fetched 0 climate records
+02:01:35 | Fetched 21 disease records and 0 climate records
+02:01:35 | Prepared 13 training samples with 16 features
+02:01:35 | Training set: 10 samples, Test set: 3 samples
+02:01:35 | Training XGBoost forecaster on 10 samples
+02:01:35 | Dropping non-numeric column: startdate
+02:01:35 | Dropping non-numeric column: enddate
+02:01:35 | Training XGBoost model with 10 samples
+02:01:35 | XGBoost model trained successfully
+02:01:35 | Ensemble (XGBoost) trained successfully
+02:01:35 | Ensemble model saved to models/Malaria/TEQlaapDQoK/ensemble_model.pkl
+02:01:35 | Model trained successfully. MAE: 35.73, RMSE: 56.73
+02:01:35 | ✓ Training successful!
+02:01:35 |   Training: 10 samples
+02:01:35 |   Testing: 3 samples
+02:01:35 |   MAE: 35.73
+02:01:35 |   RMSE: 56.73
+02:01:35 |   R²: 0.994
+02:01:35 | Generating initial forecast...
+02:01:35 | Generating forecast for Malaria in TEQlaapDQoK, horizon=4, force_retrain=False
+02:01:35 | Fetched 10 disease time series records for disease
+02:01:35 | Fetched 0 climate records
+02:01:35 | Prepared 2 training samples with 16 features
+02:01:35 | ✗ Forecast failed: Insufficient historical data for forecasting. Found 2 points, need at least 10
+02:01:36 | 
+[11/39] Malaria in Pujehun
+02:01:36 | --------------------------------------------------------------------------------
+02:01:36 | Training model...
+02:01:36 | Training model for Malaria in bL4ooGhyHRQ
+02:01:36 | Fetched 21 disease time series records for disease
+02:01:36 | Fetched 0 climate records
+02:01:36 | Fetched 21 disease records and 0 climate records
+02:01:36 | Prepared 13 training samples with 16 features
+02:01:36 | Training set: 10 samples, Test set: 3 samples
+02:01:36 | Training XGBoost forecaster on 10 samples
+02:01:36 | Dropping non-numeric column: startdate
+02:01:36 | Dropping non-numeric column: enddate
+02:01:36 | Training XGBoost model with 10 samples
+02:01:36 | XGBoost model trained successfully
+02:01:36 | Ensemble (XGBoost) trained successfully
+02:01:36 | Ensemble model saved to models/Malaria/bL4ooGhyHRQ/ensemble_model.pkl
+02:01:36 | Model trained successfully. MAE: 92.72, RMSE: 115.04
+02:01:36 | ✓ Training successful!
+02:01:36 |   Training: 10 samples
+02:01:36 |   Testing: 3 samples
+02:01:36 |   MAE: 92.72
+02:01:36 |   RMSE: 115.04
+02:01:36 |   R²: 0.999
+02:01:36 | Generating initial forecast...
+02:01:36 | Generating forecast for Malaria in bL4ooGhyHRQ, horizon=4, force_retrain=False
+02:01:36 | Fetched 10 disease time series records for disease
+02:01:36 | Fetched 0 climate records
+02:01:36 | Prepared 2 training samples with 16 features
+02:01:36 | ✗ Forecast failed: Insufficient historical data for forecasting. Found 2 points, need at least 10
+02:01:37 | 
+[12/39] Malaria in Tonkolili
+02:01:37 | --------------------------------------------------------------------------------
+02:01:37 | Training model...
+02:01:37 | Training model for Malaria in eIQbndfxQMb
+02:01:37 | Fetched 22 disease time series records for disease
+02:01:37 | Fetched 0 climate records
+02:01:37 | Fetched 22 disease records and 0 climate records
+02:01:37 | Prepared 14 training samples with 16 features
+02:01:37 | Training set: 11 samples, Test set: 3 samples
+02:01:37 | Training XGBoost forecaster on 11 samples
+02:01:37 | Dropping non-numeric column: startdate
+02:01:37 | Dropping non-numeric column: enddate
+02:01:37 | Training XGBoost model with 11 samples
+02:01:37 | XGBoost model trained successfully
+02:01:37 | Ensemble (XGBoost) trained successfully
+02:01:37 | Ensemble model saved to models/Malaria/eIQbndfxQMb/ensemble_model.pkl
+02:01:37 | Model trained successfully. MAE: 780.79, RMSE: 958.11
+02:01:37 | ✓ Training successful!
+02:01:37 |   Training: 11 samples
+02:01:37 |   Testing: 3 samples
+02:01:37 |   MAE: 780.79
+02:01:37 |   RMSE: 958.11
+02:01:37 |   R²: 0.319
+02:01:37 | Generating initial forecast...
+02:01:37 | Generating forecast for Malaria in eIQbndfxQMb, horizon=4, force_retrain=False
+02:01:38 | Fetched 11 disease time series records for disease
+02:01:38 | Fetched 0 climate records
+02:01:38 | Prepared 3 training samples with 16 features
+02:01:38 | ✗ Forecast failed: Insufficient historical data for forecasting. Found 3 points, need at least 10
+02:01:38 | 
+[13/39] Malaria in Western Area
+02:01:38 | --------------------------------------------------------------------------------
+02:01:38 | Training model...
+02:01:38 | Training model for Malaria in at6UHUQatSo
+02:01:38 | Fetched 22 disease time series records for disease
+02:01:38 | Fetched 0 climate records
+02:01:38 | Fetched 22 disease records and 0 climate records
+02:01:38 | Prepared 14 training samples with 16 features
+02:01:38 | Training set: 11 samples, Test set: 3 samples
+02:01:38 | Training XGBoost forecaster on 11 samples
+02:01:38 | Dropping non-numeric column: startdate
+02:01:38 | Dropping non-numeric column: enddate
+02:01:38 | Training XGBoost model with 11 samples
+02:01:38 | XGBoost model trained successfully
+02:01:38 | Ensemble (XGBoost) trained successfully
+02:01:38 | Ensemble model saved to models/Malaria/at6UHUQatSo/ensemble_model.pkl
+02:01:38 | Model trained successfully. MAE: 234.04, RMSE: 388.38
+02:01:38 | ✓ Training successful!
+02:01:38 |   Training: 11 samples
+02:01:38 |   Testing: 3 samples
+02:01:38 |   MAE: 234.04
+02:01:38 |   RMSE: 388.38
+02:01:38 |   R²: -2.180
+02:01:38 | Generating initial forecast...
+02:01:38 | Generating forecast for Malaria in at6UHUQatSo, horizon=4, force_retrain=False
+02:01:39 | Fetched 11 disease time series records for disease
+02:01:39 | Fetched 0 climate records
+02:01:39 | Prepared 3 training samples with 16 features
+02:01:39 | ✗ Forecast failed: Insufficient historical data for forecasting. Found 3 points, need at least 10
+02:01:39 | 
+================================================================================
+02:01:39 | DISEASE: Measles
+02:01:39 | ================================================================================
+02:01:39 | 
+[14/39] Measles in Bo
+02:01:39 | --------------------------------------------------------------------------------
+02:01:39 | Training model...
+02:01:39 | Training model for Measles in O6uvpzGd5pu
+02:01:39 | Fetched 22 disease time series records for disease
+02:01:39 | Fetched 98 climate records
+02:01:39 | Fetched 22 disease records and 98 climate records
+/Users/Rishabh.Dev/Documents/Projects/experiments/slewars/server/ml-service/feature_engineering.py:154: FutureWarning: DataFrame.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  df = df.fillna(method='ffill').fillna(method='bfill')
+02:01:39 | Merged 4 climate features
+02:01:39 | Prepared 22 training samples with 30 features
+02:01:39 | Training set: 17 samples, Test set: 5 samples
+02:01:39 | Training XGBoost forecaster on 17 samples
+02:01:39 | Dropping non-numeric column: startdate
+02:01:39 | Dropping non-numeric column: enddate
+02:01:39 | Training XGBoost model with 17 samples
+02:01:40 | XGBoost model trained successfully
+02:01:40 | Ensemble (XGBoost) trained successfully
+02:01:40 | Ensemble model saved to models/Measles/O6uvpzGd5pu/ensemble_model.pkl
+02:01:40 | Model trained successfully. MAE: 227.99, RMSE: 294.92
+02:01:40 | ✓ Training successful!
+02:01:40 |   Training: 17 samples
+02:01:40 |   Testing: 5 samples
+02:01:40 |   MAE: 227.99
+02:01:40 |   RMSE: 294.92
+02:01:40 |   R²: -0.509
+02:01:40 | Generating initial forecast...
+02:01:40 | Generating forecast for Measles in O6uvpzGd5pu, horizon=4, force_retrain=False
+02:01:40 | Fetched 10 disease time series records for disease
+02:01:40 | Fetched 53 climate records
+/Users/Rishabh.Dev/Documents/Projects/experiments/slewars/server/ml-service/feature_engineering.py:154: FutureWarning: DataFrame.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  df = df.fillna(method='ffill').fillna(method='bfill')
+02:01:40 | Merged 4 climate features
+02:01:40 | Prepared 10 training samples with 30 features
+02:01:40 | Prepared forecast features for 4 periods
+02:01:40 | Generating 4-step forecast
+02:01:40 | Forecast generated successfully for 4 weeks
+02:01:40 | ✓ Forecast generated!
+02:01:40 | 
+[15/39] Measles in Bombali
+02:01:40 | --------------------------------------------------------------------------------
+02:01:40 | Training model...
+02:01:40 | Training model for Measles in fdc6uOvgoji
+02:01:41 | Fetched 21 disease time series records for disease
+02:01:41 | Fetched 53 climate records
+02:01:41 | Fetched 21 disease records and 53 climate records
+/Users/Rishabh.Dev/Documents/Projects/experiments/slewars/server/ml-service/feature_engineering.py:154: FutureWarning: DataFrame.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  df = df.fillna(method='ffill').fillna(method='bfill')
+02:01:41 | Merged 4 climate features
+02:01:41 | Prepared 21 training samples with 30 features
+02:01:41 | Training set: 16 samples, Test set: 5 samples
+02:01:41 | Training XGBoost forecaster on 16 samples
+02:01:41 | Dropping non-numeric column: startdate
+02:01:41 | Dropping non-numeric column: enddate
+02:01:41 | Training XGBoost model with 16 samples
+02:01:41 | XGBoost model trained successfully
+02:01:41 | Ensemble (XGBoost) trained successfully
+02:01:41 | Ensemble model saved to models/Measles/fdc6uOvgoji/ensemble_model.pkl
+02:01:41 | Model trained successfully. MAE: 48.32, RMSE: 56.84
+02:01:41 | ✓ Training successful!
+02:01:41 |   Training: 16 samples
+02:01:41 |   Testing: 5 samples
+02:01:41 |   MAE: 48.32
+02:01:41 |   RMSE: 56.84
+02:01:41 |   R²: 0.028
+02:01:41 | Generating initial forecast...
+02:01:41 | Generating forecast for Measles in fdc6uOvgoji, horizon=4, force_retrain=False
+02:01:41 | Fetched 10 disease time series records for disease
+02:01:41 | Fetched 8 climate records
+/Users/Rishabh.Dev/Documents/Projects/experiments/slewars/server/ml-service/feature_engineering.py:154: FutureWarning: DataFrame.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  df = df.fillna(method='ffill').fillna(method='bfill')
+02:01:41 | Merged 4 climate features
+02:01:41 | Prepared 10 training samples with 30 features
+02:01:41 | Prepared forecast features for 4 periods
+02:01:41 | Generating 4-step forecast
+02:01:41 | Forecast generated successfully for 4 weeks
+02:01:41 | ✓ Forecast generated!
+02:01:41 | 
+[16/39] Measles in Bonthe
+02:01:41 | --------------------------------------------------------------------------------
+02:01:41 | Training model...
+02:01:41 | Training model for Measles in lc3eMKXaEfw
+02:01:42 | Fetched 19 disease time series records for disease
+02:01:42 | Fetched 26 climate records
+02:01:42 | Fetched 19 disease records and 26 climate records
+/Users/Rishabh.Dev/Documents/Projects/experiments/slewars/server/ml-service/feature_engineering.py:154: FutureWarning: DataFrame.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  df = df.fillna(method='ffill').fillna(method='bfill')
+02:01:42 | Merged 4 climate features
+02:01:42 | Prepared 19 training samples with 30 features
+02:01:42 | Training set: 15 samples, Test set: 4 samples
+02:01:42 | Training XGBoost forecaster on 15 samples
+02:01:42 | Dropping non-numeric column: startdate
+02:01:42 | Dropping non-numeric column: enddate
+02:01:42 | Training XGBoost model with 15 samples
+02:01:42 | XGBoost model trained successfully
+02:01:42 | Ensemble (XGBoost) trained successfully
+02:01:42 | Ensemble model saved to models/Measles/lc3eMKXaEfw/ensemble_model.pkl
+02:01:42 | Model trained successfully. MAE: 1.24, RMSE: 1.42
+02:01:42 | ✓ Training successful!
+02:01:42 |   Training: 15 samples
+02:01:42 |   Testing: 4 samples
+02:01:42 |   MAE: 1.24
+02:01:42 |   RMSE: 1.42
+02:01:42 |   R²: 0.997
+02:01:42 | Generating initial forecast...
+02:01:42 | Generating forecast for Measles in lc3eMKXaEfw, horizon=4, force_retrain=False
+02:01:42 | Fetched 9 disease time series records for disease
+02:01:42 | Fetched 26 climate records
+/Users/Rishabh.Dev/Documents/Projects/experiments/slewars/server/ml-service/feature_engineering.py:154: FutureWarning: DataFrame.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  df = df.fillna(method='ffill').fillna(method='bfill')
+02:01:42 | Merged 4 climate features
+02:01:42 | Prepared 9 training samples with 30 features
+02:01:42 | ✗ Forecast failed: Insufficient historical data for forecasting. Found 9 points, need at least 10
+02:01:42 | 
+[17/39] Measles in Kailahun
+02:01:42 | --------------------------------------------------------------------------------
+02:01:42 | Training model...
+02:01:42 | Training model for Measles in jUb8gELQApl
+02:01:43 | Fetched 22 disease time series records for disease
+02:01:43 | Fetched 0 climate records
+02:01:43 | Fetched 22 disease records and 0 climate records
+02:01:43 | Prepared 14 training samples with 16 features
+02:01:43 | Training set: 11 samples, Test set: 3 samples
+02:01:43 | Training XGBoost forecaster on 11 samples
+02:01:43 | Dropping non-numeric column: startdate
+02:01:43 | Dropping non-numeric column: enddate
+02:01:43 | Training XGBoost model with 11 samples
+02:01:43 | XGBoost model trained successfully
+02:01:43 | Ensemble (XGBoost) trained successfully
+02:01:43 | Ensemble model saved to models/Measles/jUb8gELQApl/ensemble_model.pkl
+02:01:43 | Model trained successfully. MAE: 19.90, RMSE: 33.18
+02:01:43 | ✓ Training successful!
+02:01:43 |   Training: 11 samples
+02:01:43 |   Testing: 3 samples
+02:01:43 |   MAE: 19.90
+02:01:43 |   RMSE: 33.18
+02:01:43 |   R²: 0.843
+02:01:43 | Generating initial forecast...
+02:01:43 | Generating forecast for Measles in jUb8gELQApl, horizon=4, force_retrain=False
+02:01:43 | Fetched 10 disease time series records for disease
+02:01:43 | Fetched 0 climate records
+02:01:43 | Prepared 2 training samples with 16 features
+02:01:43 | ✗ Forecast failed: Insufficient historical data for forecasting. Found 2 points, need at least 10
+02:01:43 | 
+[18/39] Measles in Kambia
+02:01:43 | --------------------------------------------------------------------------------
+02:01:43 | Training model...
+02:01:43 | Training model for Measles in PMa2VCrupOd
+02:01:44 | Fetched 22 disease time series records for disease
+02:01:44 | Fetched 0 climate records
+02:01:44 | Fetched 22 disease records and 0 climate records
+02:01:44 | Prepared 14 training samples with 16 features
+02:01:44 | Training set: 11 samples, Test set: 3 samples
+02:01:44 | Training XGBoost forecaster on 11 samples
+02:01:44 | Dropping non-numeric column: startdate
+02:01:44 | Dropping non-numeric column: enddate
+02:01:44 | Training XGBoost model with 11 samples
+02:01:44 | XGBoost model trained successfully
+02:01:44 | Ensemble (XGBoost) trained successfully
+02:01:44 | Ensemble model saved to models/Measles/PMa2VCrupOd/ensemble_model.pkl
+02:01:44 | Model trained successfully. MAE: 1.83, RMSE: 3.03
+02:01:44 | ✓ Training successful!
+02:01:44 |   Training: 11 samples
+02:01:44 |   Testing: 3 samples
+02:01:44 |   MAE: 1.83
+02:01:44 |   RMSE: 3.03
+02:01:44 |   R²: 0.988
+02:01:44 | Generating initial forecast...
+02:01:44 | Generating forecast for Measles in PMa2VCrupOd, horizon=4, force_retrain=False
+02:01:44 | Fetched 10 disease time series records for disease
+02:01:44 | Fetched 0 climate records
+02:01:44 | Prepared 2 training samples with 16 features
+02:01:44 | ✗ Forecast failed: Insufficient historical data for forecasting. Found 2 points, need at least 10
+02:01:44 | 
+[19/39] Measles in Kenema
+02:01:44 | --------------------------------------------------------------------------------
+02:01:44 | Training model...
+02:01:44 | Training model for Measles in kJq2mPyFEHo
+02:01:45 | Fetched 22 disease time series records for disease
+02:01:45 | Fetched 0 climate records
+02:01:45 | Fetched 22 disease records and 0 climate records
+02:01:45 | Prepared 14 training samples with 16 features
+02:01:45 | Training set: 11 samples, Test set: 3 samples
+02:01:45 | Training XGBoost forecaster on 11 samples
+02:01:45 | Dropping non-numeric column: startdate
+02:01:45 | Dropping non-numeric column: enddate
+02:01:45 | Training XGBoost model with 11 samples
+02:01:45 | XGBoost model trained successfully
+02:01:45 | Ensemble (XGBoost) trained successfully
+02:01:45 | Ensemble model saved to models/Measles/kJq2mPyFEHo/ensemble_model.pkl
+02:01:45 | Model trained successfully. MAE: 48.12, RMSE: 67.24
+02:01:45 | ✓ Training successful!
+02:01:45 |   Training: 11 samples
+02:01:45 |   Testing: 3 samples
+02:01:45 |   MAE: 48.12
+02:01:45 |   RMSE: 67.24
+02:01:45 |   R²: 0.205
+02:01:45 | Generating initial forecast...
+02:01:45 | Generating forecast for Measles in kJq2mPyFEHo, horizon=4, force_retrain=False
+02:01:45 | Fetched 10 disease time series records for disease
+02:01:45 | Fetched 0 climate records
+02:01:45 | Prepared 2 training samples with 16 features
+02:01:45 | ✗ Forecast failed: Insufficient historical data for forecasting. Found 2 points, need at least 10
+02:01:45 | 
+[20/39] Measles in Koinadugu
+02:01:45 | --------------------------------------------------------------------------------
+02:01:45 | Training model...
+02:01:45 | Training model for Measles in qhqAxPSTUXp
+02:01:46 | Fetched 19 disease time series records for disease
+02:01:46 | Fetched 0 climate records
+02:01:46 | Fetched 19 disease records and 0 climate records
+02:01:46 | Prepared 11 training samples with 16 features
+02:01:46 | Training set: 8 samples, Test set: 3 samples
+02:01:46 | Training XGBoost forecaster on 8 samples
+02:01:46 | Dropping non-numeric column: startdate
+02:01:46 | Dropping non-numeric column: enddate
+02:01:46 | Training XGBoost model with 8 samples
+02:01:46 | XGBoost model trained successfully
+02:01:46 | Ensemble (XGBoost) trained successfully
+02:01:46 | Ensemble model saved to models/Measles/qhqAxPSTUXp/ensemble_model.pkl
+02:01:46 | Model trained successfully. MAE: 19.64, RMSE: 24.29
+02:01:46 | ✓ Training successful!
+02:01:46 |   Training: 8 samples
+02:01:46 |   Testing: 3 samples
+02:01:46 |   MAE: 19.64
+02:01:46 |   RMSE: 24.29
+02:01:46 |   R²: 0.563
+02:01:46 | Generating initial forecast...
+02:01:46 | Generating forecast for Measles in qhqAxPSTUXp, horizon=4, force_retrain=False
+02:01:46 | Fetched 9 disease time series records for disease
+02:01:46 | Fetched 0 climate records
+02:01:46 | Prepared 1 training samples with 16 features
+02:01:46 | ✗ Forecast failed: Insufficient historical data for forecasting. Found 1 points, need at least 10
+02:01:46 | 
+[21/39] Measles in Kono
+02:01:46 | --------------------------------------------------------------------------------
+02:01:46 | Training model...
+02:01:46 | Training model for Measles in Vth0fbpFcsO
+02:01:47 | Fetched 20 disease time series records for disease
+02:01:47 | Fetched 0 climate records
+02:01:47 | Fetched 20 disease records and 0 climate records
+02:01:47 | Prepared 12 training samples with 16 features
+02:01:47 | Training set: 9 samples, Test set: 3 samples
+02:01:47 | Training XGBoost forecaster on 9 samples
+02:01:47 | Dropping non-numeric column: startdate
+02:01:47 | Dropping non-numeric column: enddate
+02:01:47 | Training XGBoost model with 9 samples
+02:01:47 | XGBoost model trained successfully
+02:01:47 | Ensemble (XGBoost) trained successfully
+02:01:47 | Ensemble model saved to models/Measles/Vth0fbpFcsO/ensemble_model.pkl
+02:01:47 | Model trained successfully. MAE: 24.35, RMSE: 42.13
+02:01:47 | ✓ Training successful!
+02:01:47 |   Training: 9 samples
+02:01:47 |   Testing: 3 samples
+02:01:47 |   MAE: 24.35
+02:01:47 |   RMSE: 42.13
+02:01:47 |   R²: -25.535
+02:01:47 | Generating initial forecast...
+02:01:47 | Generating forecast for Measles in Vth0fbpFcsO, horizon=4, force_retrain=False
+02:01:47 | Fetched 10 disease time series records for disease
+02:01:47 | Fetched 0 climate records
+02:01:47 | Prepared 2 training samples with 16 features
+02:01:47 | ✗ Forecast failed: Insufficient historical data for forecasting. Found 2 points, need at least 10
+02:01:47 | 
+[22/39] Measles in Moyamba
+02:01:47 | --------------------------------------------------------------------------------
+02:01:47 | Training model...
+02:01:47 | Training model for Measles in jmIPBj66vD6
+02:01:48 | Fetched 22 disease time series records for disease
+02:01:48 | Fetched 53 climate records
+02:01:48 | Fetched 22 disease records and 53 climate records
+/Users/Rishabh.Dev/Documents/Projects/experiments/slewars/server/ml-service/feature_engineering.py:154: FutureWarning: DataFrame.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  df = df.fillna(method='ffill').fillna(method='bfill')
+02:01:48 | Merged 4 climate features
+02:01:48 | Prepared 22 training samples with 30 features
+02:01:48 | Training set: 17 samples, Test set: 5 samples
+02:01:48 | Training XGBoost forecaster on 17 samples
+02:01:48 | Dropping non-numeric column: startdate
+02:01:48 | Dropping non-numeric column: enddate
+02:01:48 | Training XGBoost model with 17 samples
+02:01:48 | XGBoost model trained successfully
+02:01:48 | Ensemble (XGBoost) trained successfully
+02:01:48 | Ensemble model saved to models/Measles/jmIPBj66vD6/ensemble_model.pkl
+02:01:48 | Model trained successfully. MAE: 21.57, RMSE: 24.75
+02:01:48 | ✓ Training successful!
+02:01:48 |   Training: 17 samples
+02:01:48 |   Testing: 5 samples
+02:01:48 |   MAE: 21.57
+02:01:48 |   RMSE: 24.75
+02:01:48 |   R²: 0.773
+02:01:48 | Generating initial forecast...
+02:01:48 | Generating forecast for Measles in jmIPBj66vD6, horizon=4, force_retrain=False
+02:01:48 | Fetched 10 disease time series records for disease
+02:01:48 | Fetched 8 climate records
+/Users/Rishabh.Dev/Documents/Projects/experiments/slewars/server/ml-service/feature_engineering.py:154: FutureWarning: DataFrame.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  df = df.fillna(method='ffill').fillna(method='bfill')
+02:01:48 | Merged 4 climate features
+02:01:48 | Prepared 10 training samples with 30 features
+02:01:48 | Prepared forecast features for 4 periods
+02:01:48 | Generating 4-step forecast
+02:01:48 | Forecast generated successfully for 4 weeks
+02:01:48 | ✓ Forecast generated!
+02:01:48 | 
+[23/39] Measles in Port Loko
+02:01:48 | --------------------------------------------------------------------------------
+02:01:48 | Training model...
+02:01:48 | Training model for Measles in TEQlaapDQoK
+02:01:49 | Fetched 20 disease time series records for disease
+02:01:49 | Fetched 0 climate records
+02:01:49 | Fetched 20 disease records and 0 climate records
+02:01:49 | Prepared 12 training samples with 16 features
+02:01:49 | Training set: 9 samples, Test set: 3 samples
+02:01:49 | Training XGBoost forecaster on 9 samples
+02:01:49 | Dropping non-numeric column: startdate
+02:01:49 | Dropping non-numeric column: enddate
+02:01:49 | Training XGBoost model with 9 samples
+02:01:49 | XGBoost model trained successfully
+02:01:49 | Ensemble (XGBoost) trained successfully
+02:01:49 | Ensemble model saved to models/Measles/TEQlaapDQoK/ensemble_model.pkl
+02:01:49 | Model trained successfully. MAE: 124.23, RMSE: 150.89
+02:01:49 | ✓ Training successful!
+02:01:49 |   Training: 9 samples
+02:01:49 |   Testing: 3 samples
+02:01:49 |   MAE: 124.23
+02:01:49 |   RMSE: 150.89
+02:01:49 |   R²: -0.415
+02:01:49 | Generating initial forecast...
+02:01:49 | Generating forecast for Measles in TEQlaapDQoK, horizon=4, force_retrain=False
+02:01:49 | Fetched 9 disease time series records for disease
+02:01:49 | Fetched 0 climate records
+02:01:49 | Prepared 1 training samples with 16 features
+02:01:49 | ✗ Forecast failed: Insufficient historical data for forecasting. Found 1 points, need at least 10
+02:01:50 | 
+[24/39] Measles in Pujehun
+02:01:50 | --------------------------------------------------------------------------------
+02:01:50 | Training model...
+02:01:50 | Training model for Measles in bL4ooGhyHRQ
+02:01:50 | Fetched 18 disease time series records for disease
+02:01:50 | Fetched 0 climate records
+02:01:50 | Fetched 18 disease records and 0 climate records
+02:01:50 | Prepared 10 training samples with 16 features
+02:01:50 | Training set: 8 samples, Test set: 2 samples
+02:01:50 | Training XGBoost forecaster on 8 samples
+02:01:50 | Dropping non-numeric column: startdate
+02:01:50 | Dropping non-numeric column: enddate
+02:01:50 | Training XGBoost model with 8 samples
+02:01:50 | XGBoost model trained successfully
+02:01:50 | Ensemble (XGBoost) trained successfully
+02:01:50 | Ensemble model saved to models/Measles/bL4ooGhyHRQ/ensemble_model.pkl
+02:01:50 | Model trained successfully. MAE: 30.01, RMSE: 42.42
+02:01:50 | ✓ Training successful!
+02:01:50 |   Training: 8 samples
+02:01:50 |   Testing: 2 samples
+02:01:50 |   MAE: 30.01
+02:01:50 |   RMSE: 42.42
+02:01:50 |   R²: -10.516
+02:01:50 | Generating initial forecast...
+02:01:50 | Generating forecast for Measles in bL4ooGhyHRQ, horizon=4, force_retrain=False
+02:01:50 | Fetched 9 disease time series records for disease
+02:01:50 | Fetched 0 climate records
+02:01:50 | Prepared 1 training samples with 16 features
+02:01:50 | ✗ Forecast failed: Insufficient historical data for forecasting. Found 1 points, need at least 10
+02:01:50 | 
+[25/39] Measles in Tonkolili
+02:01:50 | --------------------------------------------------------------------------------
+02:01:50 | Training model...
+02:01:50 | Training model for Measles in eIQbndfxQMb
+02:01:51 | Fetched 22 disease time series records for disease
+02:01:51 | Fetched 0 climate records
+02:01:51 | Fetched 22 disease records and 0 climate records
+02:01:51 | Prepared 14 training samples with 16 features
+02:01:51 | Training set: 11 samples, Test set: 3 samples
+02:01:51 | Training XGBoost forecaster on 11 samples
+02:01:51 | Dropping non-numeric column: startdate
+02:01:51 | Dropping non-numeric column: enddate
+02:01:51 | Training XGBoost model with 11 samples
+02:01:51 | XGBoost model trained successfully
+02:01:51 | Ensemble (XGBoost) trained successfully
+02:01:51 | Ensemble model saved to models/Measles/eIQbndfxQMb/ensemble_model.pkl
+02:01:51 | Model trained successfully. MAE: 20.41, RMSE: 35.31
+02:01:51 | ✓ Training successful!
+02:01:51 |   Training: 11 samples
+02:01:51 |   Testing: 3 samples
+02:01:51 |   MAE: 20.41
+02:01:51 |   RMSE: 35.31
+02:01:51 |   R²: -1.019
+02:01:51 | Generating initial forecast...
+02:01:51 | Generating forecast for Measles in eIQbndfxQMb, horizon=4, force_retrain=False
+02:01:51 | Fetched 10 disease time series records for disease
+02:01:51 | Fetched 0 climate records
+02:01:51 | Prepared 2 training samples with 16 features
+02:01:51 | ✗ Forecast failed: Insufficient historical data for forecasting. Found 2 points, need at least 10
+02:01:52 | 
+[26/39] Measles in Western Area
+02:01:52 | --------------------------------------------------------------------------------
+02:01:52 | Training model...
+02:01:52 | Training model for Measles in at6UHUQatSo
+02:01:52 | Fetched 22 disease time series records for disease
+02:01:52 | Fetched 0 climate records
+02:01:52 | Fetched 22 disease records and 0 climate records
+02:01:52 | Prepared 14 training samples with 16 features
+02:01:52 | Training set: 11 samples, Test set: 3 samples
+02:01:52 | Training XGBoost forecaster on 11 samples
+02:01:52 | Dropping non-numeric column: startdate
+02:01:52 | Dropping non-numeric column: enddate
+02:01:52 | Training XGBoost model with 11 samples
+02:01:52 | XGBoost model trained successfully
+02:01:52 | Ensemble (XGBoost) trained successfully
+02:01:52 | Ensemble model saved to models/Measles/at6UHUQatSo/ensemble_model.pkl
+02:01:52 | Model trained successfully. MAE: 93.01, RMSE: 124.00
+02:01:52 | ✓ Training successful!
+02:01:52 |   Training: 11 samples
+02:01:52 |   Testing: 3 samples
+02:01:52 |   MAE: 93.01
+02:01:52 |   RMSE: 124.00
+02:01:52 |   R²: 0.276
+02:01:52 | Generating initial forecast...
+02:01:52 | Generating forecast for Measles in at6UHUQatSo, horizon=4, force_retrain=False
+02:01:52 | Fetched 10 disease time series records for disease
+02:01:52 | Fetched 0 climate records
+02:01:52 | Prepared 2 training samples with 16 features
+02:01:52 | ✗ Forecast failed: Insufficient historical data for forecasting. Found 2 points, need at least 10
+02:01:53 | 
+================================================================================
+02:01:53 | DISEASE: Yellow Fever
+02:01:53 | ================================================================================
+02:01:53 | 
+[27/39] Yellow Fever in Bo
+02:01:53 | --------------------------------------------------------------------------------
+02:01:53 | Training model...
+02:01:53 | Training model for Yellow Fever in O6uvpzGd5pu
+02:01:53 | Fetched 22 disease time series records for disease
+02:01:53 | Fetched 98 climate records
+02:01:53 | Fetched 22 disease records and 98 climate records
+/Users/Rishabh.Dev/Documents/Projects/experiments/slewars/server/ml-service/feature_engineering.py:154: FutureWarning: DataFrame.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  df = df.fillna(method='ffill').fillna(method='bfill')
+02:01:53 | Merged 4 climate features
+02:01:53 | Prepared 22 training samples with 30 features
+02:01:53 | Training set: 17 samples, Test set: 5 samples
+02:01:53 | Training XGBoost forecaster on 17 samples
+02:01:53 | Dropping non-numeric column: startdate
+02:01:53 | Dropping non-numeric column: enddate
+02:01:53 | Training XGBoost model with 17 samples
+02:01:53 | XGBoost model trained successfully
+02:01:53 | Ensemble (XGBoost) trained successfully
+02:01:53 | Ensemble model saved to models/Yellow Fever/O6uvpzGd5pu/ensemble_model.pkl
+02:01:53 | Model trained successfully. MAE: 225.62, RMSE: 297.45
+02:01:53 | ✓ Training successful!
+02:01:53 |   Training: 17 samples
+02:01:53 |   Testing: 5 samples
+02:01:53 |   MAE: 225.62
+02:01:53 |   RMSE: 297.45
+02:01:53 |   R²: -0.421
+02:01:53 | Generating initial forecast...
+02:01:53 | Generating forecast for Yellow Fever in O6uvpzGd5pu, horizon=4, force_retrain=False
+02:01:53 | Fetched 10 disease time series records for disease
+02:01:53 | Fetched 53 climate records
+/Users/Rishabh.Dev/Documents/Projects/experiments/slewars/server/ml-service/feature_engineering.py:154: FutureWarning: DataFrame.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  df = df.fillna(method='ffill').fillna(method='bfill')
+02:01:53 | Merged 4 climate features
+02:01:53 | Prepared 10 training samples with 30 features
+02:01:53 | Prepared forecast features for 4 periods
+02:01:53 | Generating 4-step forecast
+02:01:53 | Forecast generated successfully for 4 weeks
+02:01:53 | ✓ Forecast generated!
+02:01:54 | 
+[28/39] Yellow Fever in Bombali
+02:01:54 | --------------------------------------------------------------------------------
+02:01:54 | Training model...
+02:01:54 | Training model for Yellow Fever in fdc6uOvgoji
+02:01:54 | Fetched 21 disease time series records for disease
+02:01:54 | Fetched 53 climate records
+02:01:54 | Fetched 21 disease records and 53 climate records
+/Users/Rishabh.Dev/Documents/Projects/experiments/slewars/server/ml-service/feature_engineering.py:154: FutureWarning: DataFrame.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  df = df.fillna(method='ffill').fillna(method='bfill')
+02:01:54 | Merged 4 climate features
+02:01:54 | Prepared 21 training samples with 30 features
+02:01:54 | Training set: 16 samples, Test set: 5 samples
+02:01:54 | Training XGBoost forecaster on 16 samples
+02:01:54 | Dropping non-numeric column: startdate
+02:01:54 | Dropping non-numeric column: enddate
+02:01:54 | Training XGBoost model with 16 samples
+02:01:54 | XGBoost model trained successfully
+02:01:54 | Ensemble (XGBoost) trained successfully
+02:01:54 | Ensemble model saved to models/Yellow Fever/fdc6uOvgoji/ensemble_model.pkl
+02:01:54 | Model trained successfully. MAE: 42.36, RMSE: 52.33
+02:01:54 | ✓ Training successful!
+02:01:54 |   Training: 16 samples
+02:01:54 |   Testing: 5 samples
+02:01:54 |   MAE: 42.36
+02:01:54 |   RMSE: 52.33
+02:01:54 |   R²: 0.043
+02:01:54 | Generating initial forecast...
+02:01:54 | Generating forecast for Yellow Fever in fdc6uOvgoji, horizon=4, force_retrain=False
+02:01:54 | Fetched 10 disease time series records for disease
+02:01:54 | Fetched 8 climate records
+/Users/Rishabh.Dev/Documents/Projects/experiments/slewars/server/ml-service/feature_engineering.py:154: FutureWarning: DataFrame.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  df = df.fillna(method='ffill').fillna(method='bfill')
+02:01:54 | Merged 4 climate features
+02:01:54 | Prepared 10 training samples with 30 features
+02:01:54 | Prepared forecast features for 4 periods
+02:01:54 | Generating 4-step forecast
+02:01:54 | Forecast generated successfully for 4 weeks
+02:01:54 | ✓ Forecast generated!
+02:01:55 | 
+[29/39] Yellow Fever in Bonthe
+02:01:55 | --------------------------------------------------------------------------------
+02:01:55 | Training model...
+02:01:55 | Training model for Yellow Fever in lc3eMKXaEfw
+02:01:55 | Fetched 19 disease time series records for disease
+02:01:55 | Fetched 26 climate records
+02:01:55 | Fetched 19 disease records and 26 climate records
+/Users/Rishabh.Dev/Documents/Projects/experiments/slewars/server/ml-service/feature_engineering.py:154: FutureWarning: DataFrame.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  df = df.fillna(method='ffill').fillna(method='bfill')
+02:01:55 | Merged 4 climate features
+02:01:55 | Prepared 19 training samples with 30 features
+02:01:55 | Training set: 15 samples, Test set: 4 samples
+02:01:55 | Training XGBoost forecaster on 15 samples
+02:01:55 | Dropping non-numeric column: startdate
+02:01:55 | Dropping non-numeric column: enddate
+02:01:55 | Training XGBoost model with 15 samples
+02:01:55 | XGBoost model trained successfully
+02:01:55 | Ensemble (XGBoost) trained successfully
+02:01:55 | Ensemble model saved to models/Yellow Fever/lc3eMKXaEfw/ensemble_model.pkl
+02:01:55 | Model trained successfully. MAE: 1.69, RMSE: 1.97
+02:01:55 | ✓ Training successful!
+02:01:55 |   Training: 15 samples
+02:01:55 |   Testing: 4 samples
+02:01:55 |   MAE: 1.69
+02:01:55 |   RMSE: 1.97
+02:01:55 |   R²: 0.993
+02:01:55 | Generating initial forecast...
+02:01:55 | Generating forecast for Yellow Fever in lc3eMKXaEfw, horizon=4, force_retrain=False
+02:01:55 | Fetched 9 disease time series records for disease
+02:01:55 | Fetched 26 climate records
+/Users/Rishabh.Dev/Documents/Projects/experiments/slewars/server/ml-service/feature_engineering.py:154: FutureWarning: DataFrame.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  df = df.fillna(method='ffill').fillna(method='bfill')
+02:01:55 | Merged 4 climate features
+02:01:55 | Prepared 9 training samples with 30 features
+02:01:55 | ✗ Forecast failed: Insufficient historical data for forecasting. Found 9 points, need at least 10
+02:01:56 | 
+[30/39] Yellow Fever in Kailahun
+02:01:56 | --------------------------------------------------------------------------------
+02:01:56 | Training model...
+02:01:56 | Training model for Yellow Fever in jUb8gELQApl
+02:01:56 | Fetched 22 disease time series records for disease
+02:01:56 | Fetched 0 climate records
+02:01:56 | Fetched 22 disease records and 0 climate records
+02:01:56 | Prepared 14 training samples with 16 features
+02:01:56 | Training set: 11 samples, Test set: 3 samples
+02:01:56 | Training XGBoost forecaster on 11 samples
+02:01:56 | Dropping non-numeric column: startdate
+02:01:56 | Dropping non-numeric column: enddate
+02:01:56 | Training XGBoost model with 11 samples
+02:01:56 | XGBoost model trained successfully
+02:01:56 | Ensemble (XGBoost) trained successfully
+02:01:56 | Ensemble model saved to models/Yellow Fever/jUb8gELQApl/ensemble_model.pkl
+02:01:56 | Model trained successfully. MAE: 36.48, RMSE: 55.09
+02:01:56 | ✓ Training successful!
+02:01:56 |   Training: 11 samples
+02:01:56 |   Testing: 3 samples
+02:01:56 |   MAE: 36.48
+02:01:56 |   RMSE: 55.09
+02:01:56 |   R²: 0.588
+02:01:56 | Generating initial forecast...
+02:01:56 | Generating forecast for Yellow Fever in jUb8gELQApl, horizon=4, force_retrain=False
+02:01:56 | Fetched 10 disease time series records for disease
+02:01:56 | Fetched 0 climate records
+02:01:56 | Prepared 2 training samples with 16 features
+02:01:56 | ✗ Forecast failed: Insufficient historical data for forecasting. Found 2 points, need at least 10
+02:01:57 | 
+[31/39] Yellow Fever in Kambia
+02:01:57 | --------------------------------------------------------------------------------
+02:01:57 | Training model...
+02:01:57 | Training model for Yellow Fever in PMa2VCrupOd
+02:01:57 | Fetched 22 disease time series records for disease
+02:01:57 | Fetched 0 climate records
+02:01:57 | Fetched 22 disease records and 0 climate records
+02:01:57 | Prepared 14 training samples with 16 features
+02:01:57 | Training set: 11 samples, Test set: 3 samples
+02:01:57 | Training XGBoost forecaster on 11 samples
+02:01:57 | Dropping non-numeric column: startdate
+02:01:57 | Dropping non-numeric column: enddate
+02:01:57 | Training XGBoost model with 11 samples
+02:01:57 | XGBoost model trained successfully
+02:01:57 | Ensemble (XGBoost) trained successfully
+02:01:57 | Ensemble model saved to models/Yellow Fever/PMa2VCrupOd/ensemble_model.pkl
+02:01:57 | Model trained successfully. MAE: 3.23, RMSE: 3.92
+02:01:57 | ✓ Training successful!
+02:01:57 |   Training: 11 samples
+02:01:57 |   Testing: 3 samples
+02:01:57 |   MAE: 3.23
+02:01:57 |   RMSE: 3.92
+02:01:57 |   R²: 0.982
+02:01:57 | Generating initial forecast...
+02:01:57 | Generating forecast for Yellow Fever in PMa2VCrupOd, horizon=4, force_retrain=False
+02:01:57 | Fetched 10 disease time series records for disease
+02:01:57 | Fetched 0 climate records
+02:01:57 | Prepared 2 training samples with 16 features
+02:01:57 | ✗ Forecast failed: Insufficient historical data for forecasting. Found 2 points, need at least 10
+02:01:58 | 
+[32/39] Yellow Fever in Kenema
+02:01:58 | --------------------------------------------------------------------------------
+02:01:58 | Training model...
+02:01:58 | Training model for Yellow Fever in kJq2mPyFEHo
+02:01:58 | Fetched 22 disease time series records for disease
+02:01:58 | Fetched 0 climate records
+02:01:58 | Fetched 22 disease records and 0 climate records
+02:01:58 | Prepared 14 training samples with 16 features
+02:01:58 | Training set: 11 samples, Test set: 3 samples
+02:01:58 | Training XGBoost forecaster on 11 samples
+02:01:58 | Dropping non-numeric column: startdate
+02:01:58 | Dropping non-numeric column: enddate
+02:01:58 | Training XGBoost model with 11 samples
+02:01:58 | XGBoost model trained successfully
+02:01:58 | Ensemble (XGBoost) trained successfully
+02:01:58 | Ensemble model saved to models/Yellow Fever/kJq2mPyFEHo/ensemble_model.pkl
+02:01:58 | Model trained successfully. MAE: 29.71, RMSE: 47.04
+02:01:58 | ✓ Training successful!
+02:01:58 |   Training: 11 samples
+02:01:58 |   Testing: 3 samples
+02:01:58 |   MAE: 29.71
+02:01:58 |   RMSE: 47.04
+02:01:58 |   R²: 0.451
+02:01:58 | Generating initial forecast...
+02:01:58 | Generating forecast for Yellow Fever in kJq2mPyFEHo, horizon=4, force_retrain=False
+02:01:58 | Fetched 10 disease time series records for disease
+02:01:58 | Fetched 0 climate records
+02:01:58 | Prepared 2 training samples with 16 features
+02:01:58 | ✗ Forecast failed: Insufficient historical data for forecasting. Found 2 points, need at least 10
+02:01:59 | 
+[33/39] Yellow Fever in Koinadugu
+02:01:59 | --------------------------------------------------------------------------------
+02:01:59 | Training model...
+02:01:59 | Training model for Yellow Fever in qhqAxPSTUXp
+02:01:59 | Fetched 19 disease time series records for disease
+02:01:59 | Fetched 0 climate records
+02:01:59 | Fetched 19 disease records and 0 climate records
+02:01:59 | Prepared 11 training samples with 16 features
+02:01:59 | Training set: 8 samples, Test set: 3 samples
+02:01:59 | Training XGBoost forecaster on 8 samples
+02:01:59 | Dropping non-numeric column: startdate
+02:01:59 | Dropping non-numeric column: enddate
+02:01:59 | Training XGBoost model with 8 samples
+02:01:59 | XGBoost model trained successfully
+02:01:59 | Ensemble (XGBoost) trained successfully
+02:01:59 | Ensemble model saved to models/Yellow Fever/qhqAxPSTUXp/ensemble_model.pkl
+02:01:59 | Model trained successfully. MAE: 13.44, RMSE: 22.27
+02:01:59 | ✓ Training successful!
+02:01:59 |   Training: 8 samples
+02:01:59 |   Testing: 3 samples
+02:01:59 |   MAE: 13.44
+02:01:59 |   RMSE: 22.27
+02:01:59 |   R²: 0.823
+02:01:59 | Generating initial forecast...
+02:01:59 | Generating forecast for Yellow Fever in qhqAxPSTUXp, horizon=4, force_retrain=False
+02:01:59 | Fetched 9 disease time series records for disease
+02:01:59 | Fetched 0 climate records
+02:01:59 | Prepared 1 training samples with 16 features
+02:01:59 | ✗ Forecast failed: Insufficient historical data for forecasting. Found 1 points, need at least 10
+02:02:00 | 
+[34/39] Yellow Fever in Kono
+02:02:00 | --------------------------------------------------------------------------------
+02:02:00 | Training model...
+02:02:00 | Training model for Yellow Fever in Vth0fbpFcsO
+02:02:00 | Fetched 20 disease time series records for disease
+02:02:00 | Fetched 0 climate records
+02:02:00 | Fetched 20 disease records and 0 climate records
+02:02:00 | Prepared 12 training samples with 16 features
+02:02:00 | Training set: 9 samples, Test set: 3 samples
+02:02:00 | Training XGBoost forecaster on 9 samples
+02:02:00 | Dropping non-numeric column: startdate
+02:02:00 | Dropping non-numeric column: enddate
+02:02:00 | Training XGBoost model with 9 samples
+02:02:00 | XGBoost model trained successfully
+02:02:00 | Ensemble (XGBoost) trained successfully
+02:02:00 | Ensemble model saved to models/Yellow Fever/Vth0fbpFcsO/ensemble_model.pkl
+02:02:00 | Model trained successfully. MAE: 17.25, RMSE: 29.84
+02:02:00 | ✓ Training successful!
+02:02:00 |   Training: 9 samples
+02:02:00 |   Testing: 3 samples
+02:02:00 |   MAE: 17.25
+02:02:00 |   RMSE: 29.84
+02:02:00 |   R²: -12.309
+02:02:00 | Generating initial forecast...
+02:02:00 | Generating forecast for Yellow Fever in Vth0fbpFcsO, horizon=4, force_retrain=False
+02:02:00 | Fetched 10 disease time series records for disease
+02:02:00 | Fetched 0 climate records
+02:02:00 | Prepared 2 training samples with 16 features
+02:02:00 | ✗ Forecast failed: Insufficient historical data for forecasting. Found 2 points, need at least 10
+02:02:01 | 
+[35/39] Yellow Fever in Moyamba
+02:02:01 | --------------------------------------------------------------------------------
+02:02:01 | Training model...
+02:02:01 | Training model for Yellow Fever in jmIPBj66vD6
+02:02:01 | Fetched 22 disease time series records for disease
+02:02:01 | Fetched 53 climate records
+02:02:01 | Fetched 22 disease records and 53 climate records
+/Users/Rishabh.Dev/Documents/Projects/experiments/slewars/server/ml-service/feature_engineering.py:154: FutureWarning: DataFrame.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  df = df.fillna(method='ffill').fillna(method='bfill')
+02:02:01 | Merged 4 climate features
+02:02:01 | Prepared 22 training samples with 30 features
+02:02:01 | Training set: 17 samples, Test set: 5 samples
+02:02:01 | Training XGBoost forecaster on 17 samples
+02:02:01 | Dropping non-numeric column: startdate
+02:02:01 | Dropping non-numeric column: enddate
+02:02:01 | Training XGBoost model with 17 samples
+02:02:01 | XGBoost model trained successfully
+02:02:01 | Ensemble (XGBoost) trained successfully
+02:02:01 | Ensemble model saved to models/Yellow Fever/jmIPBj66vD6/ensemble_model.pkl
+02:02:01 | Model trained successfully. MAE: 22.97, RMSE: 26.48
+02:02:01 | ✓ Training successful!
+02:02:01 |   Training: 17 samples
+02:02:01 |   Testing: 5 samples
+02:02:01 |   MAE: 22.97
+02:02:01 |   RMSE: 26.48
+02:02:01 |   R²: 0.734
+02:02:01 | Generating initial forecast...
+02:02:01 | Generating forecast for Yellow Fever in jmIPBj66vD6, horizon=4, force_retrain=False
+02:02:01 | Fetched 10 disease time series records for disease
+02:02:01 | Fetched 8 climate records
+/Users/Rishabh.Dev/Documents/Projects/experiments/slewars/server/ml-service/feature_engineering.py:154: FutureWarning: DataFrame.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  df = df.fillna(method='ffill').fillna(method='bfill')
+02:02:01 | Merged 4 climate features
+02:02:01 | Prepared 10 training samples with 30 features
+02:02:01 | Prepared forecast features for 4 periods
+02:02:01 | Generating 4-step forecast
+02:02:01 | Forecast generated successfully for 4 weeks
+02:02:01 | ✓ Forecast generated!
+02:02:02 | 
+[36/39] Yellow Fever in Port Loko
+02:02:02 | --------------------------------------------------------------------------------
+02:02:02 | Training model...
+02:02:02 | Training model for Yellow Fever in TEQlaapDQoK
+02:02:02 | Fetched 20 disease time series records for disease
+02:02:02 | Fetched 0 climate records
+02:02:02 | Fetched 20 disease records and 0 climate records
+02:02:02 | Prepared 12 training samples with 16 features
+02:02:02 | Training set: 9 samples, Test set: 3 samples
+02:02:02 | Training XGBoost forecaster on 9 samples
+02:02:02 | Dropping non-numeric column: startdate
+02:02:02 | Dropping non-numeric column: enddate
+02:02:02 | Training XGBoost model with 9 samples
+02:02:02 | XGBoost model trained successfully
+02:02:02 | Ensemble (XGBoost) trained successfully
+02:02:02 | Ensemble model saved to models/Yellow Fever/TEQlaapDQoK/ensemble_model.pkl
+02:02:02 | Model trained successfully. MAE: 98.49, RMSE: 121.02
+02:02:02 | ✓ Training successful!
+02:02:02 |   Training: 9 samples
+02:02:02 |   Testing: 3 samples
+02:02:02 |   MAE: 98.49
+02:02:02 |   RMSE: 121.02
+02:02:02 |   R²: 0.023
+02:02:02 | Generating initial forecast...
+02:02:02 | Generating forecast for Yellow Fever in TEQlaapDQoK, horizon=4, force_retrain=False
+02:02:03 | Fetched 9 disease time series records for disease
+02:02:03 | Fetched 0 climate records
+02:02:03 | Prepared 1 training samples with 16 features
+02:02:03 | ✗ Forecast failed: Insufficient historical data for forecasting. Found 1 points, need at least 10
+02:02:03 | 
+[37/39] Yellow Fever in Pujehun
+02:02:03 | --------------------------------------------------------------------------------
+02:02:03 | Training model...
+02:02:03 | Training model for Yellow Fever in bL4ooGhyHRQ
+02:02:03 | Fetched 18 disease time series records for disease
+02:02:03 | Fetched 0 climate records
+02:02:03 | Fetched 18 disease records and 0 climate records
+02:02:03 | Prepared 10 training samples with 16 features
+02:02:03 | Training set: 8 samples, Test set: 2 samples
+02:02:03 | Training XGBoost forecaster on 8 samples
+02:02:03 | Dropping non-numeric column: startdate
+02:02:03 | Dropping non-numeric column: enddate
+02:02:03 | Training XGBoost model with 8 samples
+02:02:03 | XGBoost model trained successfully
+02:02:03 | Ensemble (XGBoost) trained successfully
+02:02:03 | Ensemble model saved to models/Yellow Fever/bL4ooGhyHRQ/ensemble_model.pkl
+02:02:03 | Model trained successfully. MAE: 29.16, RMSE: 41.21
+02:02:03 | ✓ Training successful!
+02:02:03 |   Training: 8 samples
+02:02:03 |   Testing: 2 samples
+02:02:03 |   MAE: 29.16
+02:02:03 |   RMSE: 41.21
+02:02:03 |   R²: -9.871
+02:02:03 | Generating initial forecast...
+02:02:03 | Generating forecast for Yellow Fever in bL4ooGhyHRQ, horizon=4, force_retrain=False
+02:02:03 | Fetched 9 disease time series records for disease
+02:02:03 | Fetched 0 climate records
+02:02:03 | Prepared 1 training samples with 16 features
+02:02:03 | ✗ Forecast failed: Insufficient historical data for forecasting. Found 1 points, need at least 10
+02:02:04 | 
+[38/39] Yellow Fever in Tonkolili
+02:02:04 | --------------------------------------------------------------------------------
+02:02:04 | Training model...
+02:02:04 | Training model for Yellow Fever in eIQbndfxQMb
+02:02:04 | Fetched 22 disease time series records for disease
+02:02:04 | Fetched 0 climate records
+02:02:04 | Fetched 22 disease records and 0 climate records
+02:02:04 | Prepared 14 training samples with 16 features
+02:02:04 | Training set: 11 samples, Test set: 3 samples
+02:02:04 | Training XGBoost forecaster on 11 samples
+02:02:04 | Dropping non-numeric column: startdate
+02:02:04 | Dropping non-numeric column: enddate
+02:02:04 | Training XGBoost model with 11 samples
+02:02:04 | XGBoost model trained successfully
+02:02:04 | Ensemble (XGBoost) trained successfully
+02:02:04 | Ensemble model saved to models/Yellow Fever/eIQbndfxQMb/ensemble_model.pkl
+02:02:04 | Model trained successfully. MAE: 11.40, RMSE: 17.69
+02:02:04 | ✓ Training successful!
+02:02:04 |   Training: 11 samples
+02:02:04 |   Testing: 3 samples
+02:02:04 |   MAE: 11.40
+02:02:04 |   RMSE: 17.69
+02:02:04 |   R²: 0.242
+02:02:04 | Generating initial forecast...
+02:02:04 | Generating forecast for Yellow Fever in eIQbndfxQMb, horizon=4, force_retrain=False
+02:02:04 | Fetched 10 disease time series records for disease
+02:02:04 | Fetched 0 climate records
+02:02:04 | Prepared 2 training samples with 16 features
+02:02:04 | ✗ Forecast failed: Insufficient historical data for forecasting. Found 2 points, need at least 10
+02:02:05 | 
+[39/39] Yellow Fever in Western Area
+02:02:05 | --------------------------------------------------------------------------------
+02:02:05 | Training model...
+02:02:05 | Training model for Yellow Fever in at6UHUQatSo
+02:02:05 | Fetched 22 disease time series records for disease
+02:02:05 | Fetched 0 climate records
+02:02:05 | Fetched 22 disease records and 0 climate records
+02:02:05 | Prepared 14 training samples with 16 features
+02:02:05 | Training set: 11 samples, Test set: 3 samples
+02:02:05 | Training XGBoost forecaster on 11 samples
+02:02:05 | Dropping non-numeric column: startdate
+02:02:05 | Dropping non-numeric column: enddate
+02:02:05 | Training XGBoost model with 11 samples
+02:02:05 | XGBoost model trained successfully
+02:02:05 | Ensemble (XGBoost) trained successfully
+02:02:05 | Ensemble model saved to models/Yellow Fever/at6UHUQatSo/ensemble_model.pkl
+02:02:05 | Model trained successfully. MAE: 81.20, RMSE: 116.02
+02:02:05 | ✓ Training successful!
+02:02:05 |   Training: 11 samples
+02:02:05 |   Testing: 3 samples
+02:02:05 |   MAE: 81.20
+02:02:05 |   RMSE: 116.02
+02:02:05 |   R²: 0.438
+02:02:05 | Generating initial forecast...
+02:02:05 | Generating forecast for Yellow Fever in at6UHUQatSo, horizon=4, force_retrain=False
+02:02:06 | Fetched 10 disease time series records for disease
+02:02:06 | Fetched 0 climate records
+02:02:06 | Prepared 2 training samples with 16 features
+02:02:06 | ✗ Forecast failed: Insufficient historical data for forecasting. Found 2 points, need at least 10
+02:02:06 | 
+================================================================================
+02:02:06 | TRAINING COMPLETE
+02:02:06 | ================================================================================
+02:02:06 | Total combinations: 39
+02:02:06 | ✓ Successful: 39
+02:02:06 | ✗ Failed: 0
+02:02:06 | Time taken: 42.0 seconds (0.7 minutes)
+02:02:06 | ================================================================================

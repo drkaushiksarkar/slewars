@@ -10,7 +10,8 @@
     "server:dev": "tsx watch server/src/index.ts",
     "server:build": "tsc -p server/tsconfig.json",
     "server:start": "node server/dist/index.js",
-    "dev:full": "concurrently \"npm run server:dev\" \"npm run dev\"",
+    "ml:start": "cd server/ml-service && ./start.sh",
+    "dev:full": "concurrently -n \"API,FRONTEND,ML\" -c \"blue,green,yellow\" \"npm run server:dev\" \"npm run dev\" \"npm run ml:start\"",
     "build:full": "npm run server:build && npm run build"
   },
   "dependencies": {

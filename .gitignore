@@ -1,3 +1,4 @@
 node_modules/
 .env
 Inspiration/
+server/ml-service/venv

@@ -258,13 +258,19 @@ class LocationService {
       `;
             const params = [uid, diseaseUIDs];
             let paramIndex = 3;
-            if (startDate) {
-                query += ` AND p.startdate >= $${paramIndex}`;
+            // Use overlap logic to include monthly/weekly periods
+            if (startDate && endDate) {
+                query += ` AND p.startdate <= $${paramIndex + 1} AND p.enddate >= $${paramIndex}`;
+                params.push(startDate, endDate);
+                paramIndex += 2;
+            }
+            else if (startDate) {
+                query += ` AND p.enddate >= $${paramIndex}`;
                 params.push(startDate);
                 paramIndex++;
             }
-            if (endDate) {
-                query += ` AND p.enddate <= $${paramIndex}`;
+            else if (endDate) {
+                query += ` AND p.startdate <= $${paramIndex}`;
                 params.push(endDate);
                 paramIndex++;
             }
@@ -340,12 +346,28 @@ class LocationService {
     /**
      * Get facility-level data with performance metrics
      */
-    async getFacilityPerformance(districtUid, startDate, endDate) {
+    async getFacilityPerformance(districtUid, startDate, endDate, diseaseFilter) {
         try {
-            logger.debug({ districtUid, startDate, endDate }, "Fetching facility performance data");
-            // Disease case and death data element UIDs
-            const caseUIDs = ['vq2qO3eTrNi', 'YazgqXbizv1', 'Cj5rTc9nEvl', 'XWU1Huh0Luy', 'UsSUX0cpKsH', 'NCteyX2xpMf'];
-            const deathUIDs = ['r6nrJANOqMw', 'f7n9E0hX8qk', 'Yy9NtNfwYZJ', 'USBq0VHSkZq', 'eY5ehpbEsB7'];
+            logger.debug({ districtUid, startDate, endDate, diseaseFilter }, "Fetching facility performance data");
+            // Disease case and death data element UIDs - filter by specific disease if provided
+            let caseUIDs = ['vq2qO3eTrNi', 'YazgqXbizv1', 'Cj5rTc9nEvl', 'XWU1Huh0Luy', 'UsSUX0cpKsH', 'NCteyX2xpMf'];
+            let deathUIDs = ['r6nrJANOqMw', 'f7n9E0hX8qk', 'Yy9NtNfwYZJ', 'USBq0VHSkZq', 'eY5ehpbEsB7'];
+            if (diseaseFilter && diseaseFilter !== 'all') {
+                // For specific disease, get only that disease's UIDs
+                const diseaseMap = {
+                    'malaria': { case: 'vq2qO3eTrNi', death: 'r6nrJANOqMw' },
+                    'measles': { case: 'YazgqXbizv1', death: 'f7n9E0hX8qk' },
+                    'typhoid': { case: 'Cj5rTc9nEvl', death: 'Yy9NtNfwYZJ' },
+                    'yellowFever': { case: 'XWU1Huh0Luy', death: 'USBq0VHSkZq' },
+                    'cholera': { case: 'UsSUX0cpKsH', death: 'eY5ehpbEsB7' },
+                    'lassaFever': { case: 'NCteyX2xpMf', death: '' },
+                };
+                const diseaseUIDs = diseaseMap[diseaseFilter];
+                if (diseaseUIDs) {
+                    caseUIDs = [diseaseUIDs.case];
+                    deathUIDs = diseaseUIDs.death ? [diseaseUIDs.death] : [];
+                }
+            }
             let query = `
         WITH facility_data AS (
           SELECT
@@ -374,13 +396,19 @@ class LocationService {
                 params.push(districtUid);
                 paramIndex++;
             }
-            if (startDate) {
-                query += ` AND p.startdate >= $${paramIndex}`;
+            // Use overlap logic to include monthly/weekly periods
+            if (startDate && endDate) {
+                query += ` AND p.startdate <= $${paramIndex + 1} AND p.enddate >= $${paramIndex}`;
+                params.push(startDate, endDate);
+                paramIndex += 2;
+            }
+            else if (startDate) {
+                query += ` AND p.enddate >= $${paramIndex}`;
                 params.push(startDate);
                 paramIndex++;
             }
-            if (endDate) {
-                query += ` AND p.enddate <= $${paramIndex}`;
+            else if (endDate) {
+                query += ` AND p.startdate <= $${paramIndex}`;
                 params.push(endDate);
                 paramIndex++;
             }
@@ -471,13 +499,19 @@ class LocationService {
         WHERE district.uid = $1
           AND ou.hierarchylevel = 3
       `;
-            if (startDate) {
-                query += ` AND p.startdate >= $${paramIndex}`;
+            // Use overlap logic to include monthly/weekly periods
+            if (startDate && endDate) {
+                query += ` AND p.startdate <= $${paramIndex + 1} AND p.enddate >= $${paramIndex}`;
+                params.push(startDate, endDate);
+                paramIndex += 2;
+            }
+            else if (startDate) {
+                query += ` AND p.enddate >= $${paramIndex}`;
                 params.push(startDate);
                 paramIndex++;
             }
-            if (endDate) {
-                query += ` AND p.enddate <= $${paramIndex}`;
+            else if (endDate) {
+                query += ` AND p.startdate <= $${paramIndex}`;
                 params.push(endDate);
                 paramIndex++;
             }
