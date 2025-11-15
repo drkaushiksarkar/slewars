@@ -8,7 +8,8 @@ import {
   Database,
   Languages,
   Clock,
-  Phone
+  Phone,
+  MapPin
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCountry } from "@/contexts/CountryContext";
@@ -19,6 +20,8 @@ import Training from "./Training";
 import Simulation from "./Simulation";
 import DataGenerator from "./DataGenerator";
 import Response from "./Response";
+import DiseaseAnalysis from "./DiseaseAnalysis";
+import LocationAnalysis from "./LocationAnalysis";
 
 const Dashboard = () => {
   const [activeTab, setActiveTab] = React.useState("overview");
@@ -51,6 +54,8 @@ const Dashboard = () => {
 
   const tabs = [
     { id: "overview", label: "Overview", icon: Activity },
+    { id: "disease-analysis", label: "Disease Analysis", icon: Activity },
+    { id: "location-analysis", label: "Location Analysis", icon: MapPin },
     { id: "response", label: "Alerts", icon: Activity },
     { id: "climate", label: "Climate Impact", icon: CloudRain },
     { id: "training", label: "Training", icon: GraduationCap },
@@ -163,6 +168,8 @@ const Dashboard = () => {
         className="bg-card rounded-lg p-6 shadow-lg"
       >
         {activeTab === "overview" && <NewOverview />}
+        {activeTab === "disease-analysis" && <DiseaseAnalysis />}
+        {activeTab === "location-analysis" && <LocationAnalysis />}
         {activeTab === "response" && <Response />}
         {activeTab === "climate" && <ClimateData />}
         {activeTab === "training" && <Training />}

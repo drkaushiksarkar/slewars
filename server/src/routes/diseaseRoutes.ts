@@ -126,3 +126,75 @@ diseaseRouter.get("/breakdown/all", async (req, res, next) => {
     next(error);
   }
 });
+
+/**
+ * GET /api/diseases/:diseaseId/facilities
+ * Get facility performance data for a disease
+ * Query params: locationUid, limit
+ */
+diseaseRouter.get("/:diseaseId/facilities", async (req, res, next) => {
+  try {
+    const { diseaseId } = req.params;
+    const locationUid = req.query.locationUid as string | undefined;
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
+
+    logger.debug({ diseaseId, locationUid, limit }, "GET /api/diseases/:diseaseId/facilities");
+
+    const facilities = await diseaseService.getFacilityPerformance(diseaseId, locationUid, limit);
+
+    res.json({
+      success: true,
+      data: facilities,
+      count: facilities.length,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/diseases/malaria/species
+ * Get malaria species distribution
+ * Query params: locationUid
+ */
+diseaseRouter.get("/malaria/species", async (req, res, next) => {
+  try {
+    const locationUid = req.query.locationUid as string | undefined;
+
+    logger.debug({ locationUid }, "GET /api/diseases/malaria/species");
+
+    const species = await diseaseService.getMalariaSpeciesDistribution(locationUid);
+
+    res.json({
+      success: true,
+      data: species,
+      count: species.length,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/diseases/:diseaseId/treatment
+ * Get treatment timeline data (currently only for malaria)
+ * Query params: locationUid
+ */
+diseaseRouter.get("/:diseaseId/treatment", async (req, res, next) => {
+  try {
+    const { diseaseId } = req.params;
+    const locationUid = req.query.locationUid as string | undefined;
+
+    logger.debug({ diseaseId, locationUid }, "GET /api/diseases/:diseaseId/treatment");
+
+    const treatment = await diseaseService.getTreatmentTimeline(diseaseId, locationUid);
+
+    res.json({
+      success: true,
+      data: treatment,
+      count: treatment.length,
+    });
+  } catch (error) {
+    next(error);
+  }
+});

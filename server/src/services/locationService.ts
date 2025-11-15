@@ -395,6 +395,181 @@ class LocationService {
       throw error;
     }
   }
+
+  /**
+   * Get facility-level data with performance metrics
+   */
+  async getFacilityPerformance(districtUid?: string, startDate?: string, endDate?: string): Promise<any[]> {
+    try {
+      logger.debug({ districtUid, startDate, endDate }, "Fetching facility performance data");
+
+      let query = `
+        WITH facility_data AS (
+          SELECT
+            ou.organisationunitid,
+            ou.uid,
+            ou.name as facility_name,
+            parent.name as district_name,
+            parent.uid as district_uid,
+            ou.hierarchylevel,
+            SUM(CASE WHEN dv.value ~ '^[0-9]+$' AND de.name NOT ILIKE '%death%' THEN CAST(dv.value AS INTEGER) ELSE 0 END) as total_cases,
+            SUM(CASE WHEN dv.value ~ '^[0-9]+$' AND de.name ILIKE '%death%' THEN CAST(dv.value AS INTEGER) ELSE 0 END) as total_deaths,
+            MAX(dv.lastupdated) as last_report_date,
+            COUNT(DISTINCT dv.periodid) as reporting_periods,
+            COUNT(DISTINCT de.dataelementid) as data_elements_reported
+          FROM organisationunit ou
+          LEFT JOIN organisationunit parent ON ou.parentid = parent.organisationunitid
+          LEFT JOIN datavalue dv ON dv.sourceid = ou.organisationunitid AND dv.deleted = false
+          LEFT JOIN dataelement de ON dv.dataelementid = de.dataelementid
+          LEFT JOIN period p ON dv.periodid = p.periodid
+          WHERE ou.hierarchylevel = 4
+      `;
+
+      const params: any[] = [];
+      let paramIndex = 1;
+
+      if (districtUid) {
+        query += ` AND parent.uid = $${paramIndex}`;
+        params.push(districtUid);
+        paramIndex++;
+      }
+
+      if (startDate) {
+        query += ` AND p.startdate >= $${paramIndex}`;
+        params.push(startDate);
+        paramIndex++;
+      }
+
+      if (endDate) {
+        query += ` AND p.enddate <= $${paramIndex}`;
+        params.push(endDate);
+        paramIndex++;
+      }
+
+      query += `
+          GROUP BY ou.organisationunitid, ou.uid, ou.name, parent.name, parent.uid, ou.hierarchylevel
+        )
+        SELECT
+          uid,
+          facility_name,
+          district_name,
+          district_uid,
+          hierarchylevel,
+          total_cases,
+          total_deaths,
+          CASE
+            WHEN total_cases > 0 THEN ROUND((total_deaths::DECIMAL / total_cases::DECIMAL) * 100, 2)
+            ELSE 0
+          END as case_fatality_rate,
+          last_report_date,
+          reporting_periods,
+          data_elements_reported,
+          CASE
+            WHEN last_report_date > NOW() - INTERVAL '7 days' THEN 'Active'
+            WHEN last_report_date > NOW() - INTERVAL '30 days' THEN 'Delayed'
+            ELSE 'Inactive'
+          END as status,
+          CASE
+            WHEN last_report_date IS NULL THEN NULL
+            ELSE EXTRACT(EPOCH FROM (NOW() - last_report_date)) / 86400
+          END as days_since_report
+        FROM facility_data
+        ORDER BY total_cases DESC, facility_name
+        LIMIT 500
+      `;
+
+      const result = await postgresService.query(query, params);
+
+      return result.rows.map((row) => ({
+        uid: row.uid,
+        facilityName: row.facility_name,
+        districtName: row.district_name,
+        districtUid: row.district_uid,
+        hierarchyLevel: row.hierarchylevel,
+        totalCases: parseInt(row.total_cases) || 0,
+        totalDeaths: parseInt(row.total_deaths) || 0,
+        caseFatalityRate: parseFloat(row.case_fatality_rate) || 0,
+        lastReportDate: row.last_report_date,
+        reportingPeriods: parseInt(row.reporting_periods) || 0,
+        dataElementsReported: parseInt(row.data_elements_reported) || 0,
+        status: row.status,
+        daysSinceReport: row.days_since_report ? Math.floor(parseFloat(row.days_since_report)) : null,
+      }));
+    } catch (error) {
+      logger.error({ error }, "Error fetching facility performance data");
+      throw error;
+    }
+  }
+
+  /**
+   * Get chiefdom-level data for a district
+   */
+  async getChiefdomData(districtUid: string, startDate?: string, endDate?: string): Promise<any[]> {
+    try {
+      logger.debug({ districtUid, startDate, endDate }, "Fetching chiefdom data");
+
+      let query = `
+        SELECT
+          ou.uid,
+          ou.name as chiefdom_name,
+          ST_AsGeoJSON(ou.geometry) as geometry,
+          SUM(CASE WHEN dv.value ~ '^[0-9]+$' THEN CAST(dv.value AS INTEGER) ELSE 0 END) as total_cases,
+          COUNT(DISTINCT dv.sourceid) as facilities_count,
+          COUNT(DISTINCT de.dataelementid) as disease_types
+        FROM organisationunit district
+        JOIN organisationunit ou ON ou.parentid = district.organisationunitid
+        LEFT JOIN datavalue dv ON dv.sourceid IN (
+          SELECT child.organisationunitid
+          FROM organisationunit child
+          WHERE child.path LIKE '%' || ou.uid || '%'
+        )
+        LEFT JOIN dataelement de ON dv.dataelementid = de.dataelementid AND dv.deleted = false
+      `;
+
+      const params: any[] = [districtUid];
+      let paramIndex = 2;
+
+      if (startDate || endDate) {
+        query += ` LEFT JOIN period p ON dv.periodid = p.periodid`;
+      }
+
+      query += `
+        WHERE district.uid = $1
+          AND ou.hierarchylevel = 3
+      `;
+
+      if (startDate) {
+        query += ` AND p.startdate >= $${paramIndex}`;
+        params.push(startDate);
+        paramIndex++;
+      }
+
+      if (endDate) {
+        query += ` AND p.enddate <= $${paramIndex}`;
+        params.push(endDate);
+        paramIndex++;
+      }
+
+      query += `
+        GROUP BY ou.uid, ou.name, ou.geometry
+        ORDER BY total_cases DESC
+      `;
+
+      const result = await postgresService.query(query, params);
+
+      return result.rows.map((row) => ({
+        uid: row.uid,
+        chiefdomName: row.chiefdom_name,
+        geometry: row.geometry ? JSON.parse(row.geometry) : null,
+        totalCases: parseInt(row.total_cases) || 0,
+        facilitiesCount: parseInt(row.facilities_count) || 0,
+        diseaseTypes: parseInt(row.disease_types) || 0,
+      }));
+    } catch (error) {
+      logger.error({ error, districtUid }, "Error fetching chiefdom data");
+      throw error;
+    }
+  }
 }
 
 export const locationService = new LocationService();

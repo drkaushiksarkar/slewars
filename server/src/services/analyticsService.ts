@@ -367,36 +367,71 @@ class AnalyticsService {
 
   /**
    * Get geographic heat map data
+   * Simplified for performance - only aggregates district-level data and immediate child facilities
    */
-  async getGeographicHeatMap(): Promise<GeographicData[]> {
+  async getGeographicHeatMap(days: number = 90, startDate?: string, endDate?: string): Promise<GeographicData[]> {
     try {
-      logger.debug("Fetching geographic heat map data");
+      logger.debug({ days, startDate, endDate }, "Fetching geographic heat map data");
+
+      // Build time filter condition
+      let timeFilter = '';
+      if (startDate && endDate) {
+        timeFilter = `AND p.startdate >= '${startDate}' AND p.enddate <= '${endDate}'`;
+      } else {
+        timeFilter = `AND p.enddate >= NOW() - INTERVAL '${days} days'`;
+      }
 
       const query = `
-        WITH district_cases AS (
+        WITH time_filtered_cases AS (
+          -- First filter by time to reduce dataset
           SELECT
-            ou.organisationunitid,
-            ou.uid,
-            ou.name as district_name,
-            ST_AsGeoJSON(ou.geometry) as geometry,
-            de.name as disease,
-            SUM(CASE WHEN dv.value ~ '^[0-9]+$' THEN CAST(dv.value AS INTEGER) ELSE 0 END) as cases
+            dv.sourceid,
+            dv.dataelementid,
+            dv.value
           FROM datavalue dv
-          JOIN dataelement de ON dv.dataelementid = de.dataelementid
-          JOIN organisationunit ou ON dv.sourceid = ou.organisationunitid
+          JOIN period p ON dv.periodid = p.periodid
           WHERE dv.deleted = false
-            AND ou.hierarchylevel = 2
             AND dv.value IS NOT NULL
-          GROUP BY ou.organisationunitid, ou.uid, ou.name, ou.geometry, de.name
+            AND dv.value ~ '^[0-9]+$'
+            ${timeFilter}
+        ),
+        facility_district_mapping AS (
+          -- Map facilities to districts using path extraction
+          SELECT DISTINCT
+            tfc.sourceid,
+            CASE
+              WHEN ou.hierarchylevel = 4 THEN split_part(ou.path, '/', 3)
+              WHEN ou.hierarchylevel = 3 THEN split_part(ou.path, '/', 3)
+              WHEN ou.hierarchylevel = 2 THEN ou.uid
+            END as district_uid
+          FROM time_filtered_cases tfc
+          JOIN organisationunit ou ON tfc.sourceid = ou.organisationunitid
+          WHERE ou.hierarchylevel IN (2, 3, 4)
+        ),
+        district_cases AS (
+          -- Aggregate cases by district and disease
+          SELECT
+            fdm.district_uid,
+            de.name as disease,
+            SUM(CAST(tfc.value AS INTEGER)) as cases
+          FROM time_filtered_cases tfc
+          JOIN facility_district_mapping fdm ON tfc.sourceid = fdm.sourceid
+          JOIN dataelement de ON tfc.dataelementid = de.dataelementid
+          GROUP BY fdm.district_uid, de.name
         )
         SELECT
-          dc.uid,
-          dc.district_name,
-          dc.geometry,
-          SUM(dc.cases) as total_cases,
-          json_object_agg(dc.disease, dc.cases) as cases_by_disease
-        FROM district_cases dc
-        GROUP BY dc.uid, dc.district_name, dc.geometry
+          ou.uid,
+          ou.name as district_name,
+          ST_AsGeoJSON(ou.geometry) as geometry,
+          COALESCE(SUM(dc.cases), 0) as total_cases,
+          COUNT(DISTINCT dc.disease) as disease_types,
+          1 as facilities_reporting,
+          COALESCE(json_object_agg(dc.disease, dc.cases) FILTER (WHERE dc.disease IS NOT NULL), '{}'::json) as cases_by_disease
+        FROM organisationunit ou
+        LEFT JOIN district_cases dc ON ou.uid = dc.district_uid
+        WHERE ou.hierarchylevel = 2
+        GROUP BY ou.uid, ou.name, ou.geometry
+        HAVING SUM(dc.cases) > 0
         ORDER BY total_cases DESC
       `;
 
@@ -427,6 +462,8 @@ class AnalyticsService {
           districtName: row.district_name,
           geometry: row.geometry ? JSON.parse(row.geometry) : null,
           totalCases,
+          diseaseTypes: parseInt(row.disease_types) || 0,
+          facilitiesReporting: parseInt(row.facilities_reporting) || 0,
           casesByDisease,
           dominantDisease,
           riskLevel,

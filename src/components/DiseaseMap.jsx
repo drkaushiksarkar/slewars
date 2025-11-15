@@ -12,7 +12,7 @@ import { apiClient } from "@/lib/api";
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || "";
 const GEOJSON_ENDPOINT = "/data/geojson/sierra-leone";
 
-const DiseaseMap = () => {
+const DiseaseMap = ({ selectedDisease = "all", timeRange = "7d" }) => {
   const { toast } = useToast();
   const { countryConfig } = useCountry();
   const { translate } = useLanguage();
@@ -72,16 +72,34 @@ const DiseaseMap = () => {
 
   const decoratedGeojson = React.useMemo(() => {
     if (!geojson) return null;
-    const regionStats = overview?.alertStats?.byRegion || {};
+
+    // Get alerts and filter by disease if a specific disease is selected
+    const alerts = overview?.alerts || [];
+    const filteredAlerts = selectedDisease === "all"
+      ? alerts
+      : alerts.filter(alert => alert.disease?.toLowerCase() === selectedDisease.toLowerCase());
+
+    // Aggregate cases by region from filtered alerts
+    const regionStats = filteredAlerts.reduce((acc, alert) => {
+      const region = alert.region || "";
+      acc[region] = (acc[region] || 0) + (alert.cases || 0);
+      return acc;
+    }, {});
+
+    // If no filtered alerts, fall back to byRegion (for "all" diseases)
+    const stats = Object.keys(regionStats).length > 0
+      ? regionStats
+      : overview?.alertStats?.byRegion || {};
+
     const maxValue =
-      Object.values(regionStats).reduce((max, value) => Math.max(max, value), 0) || 1;
+      Object.values(stats).reduce((max, value) => Math.max(max, value), 0) || 1;
 
     return {
       ...geojson,
       features: geojson.features.map((feature) => {
         const shapeName = feature?.properties?.shapeName || "";
         const normalized = normalizeRegionName(shapeName);
-        const matchedEntry = Object.entries(regionStats).find(
+        const matchedEntry = Object.entries(stats).find(
           ([regionName]) => normalizeRegionName(regionName) === normalized
         );
         const cases = matchedEntry ? matchedEntry[1] : 0;
@@ -100,7 +118,7 @@ const DiseaseMap = () => {
         };
       })
     };
-  }, [geojson, overview, normalizeRegionName]);
+  }, [geojson, overview, normalizeRegionName, selectedDisease]);
 
   const fillLayer = React.useMemo(
     () => ({
@@ -136,10 +154,18 @@ const DiseaseMap = () => {
     []
   );
 
+  const mapTitle = React.useMemo(() => {
+    const baseTitle = translate("diseaseMap");
+    if (selectedDisease === "all") {
+      return `${baseTitle} - All Diseases`;
+    }
+    return `${baseTitle} - ${selectedDisease}`;
+  }, [translate, selectedDisease]);
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">{translate("diseaseMap")}</h2>
+        <h2 className="text-xl font-semibold">{mapTitle}</h2>
         <div className="flex gap-2">
           <Button variant="outline" className="flex items-center space-x-2">
             <Filter className="h-4 w-4" />

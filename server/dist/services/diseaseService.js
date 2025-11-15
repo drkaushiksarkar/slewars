@@ -1,11 +1,5 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.diseaseService = void 0;
-const postgresService_js_1 = require("./postgresService.js");
-const logger_js_1 = __importDefault(require("./logger.js"));
+import { postgresService } from "./postgresService.js";
+import logger from "./logger.js";
 // Disease UIDs from DHIS2 Sierra Leone
 const DISEASE_DATA_ELEMENTS = {
     malaria: {
@@ -13,6 +7,17 @@ const DISEASE_DATA_ELEMENTS = {
         cases: "vq2qO3eTrNi",
         deaths: "r6nrJANOqMw",
         inpatient: "p4K11MFEWtw",
+        // Malaria species UIDs
+        pf: "jt8mzqlDEjd", // P. falciparum
+        pv: "ImgnHPhcNYE", // P. vivax
+        po: "E2K6KluoF7L", // P. ovale
+        pm: "sJ23PICb6Fy", // P. malariae
+        pk: "HUPFagklWaN", // P. knowlesi (if available)
+        // Treatment UIDs
+        treated_act_24hrs: "AFM5H0wNq3t",
+        treated_act_after_24hrs: "smYVxAw2lLO",
+        rdt_positive: "wZwzzRnr9N4",
+        rdt_negative: "Qk9nnX0i7lZ",
     },
     measles: {
         name: "Measles",
@@ -46,7 +51,7 @@ class DiseaseService {
      */
     async getAllDiseases() {
         try {
-            logger_js_1.default.debug("Fetching all diseases");
+            logger.debug("Fetching all diseases");
             const diseases = Object.entries(DISEASE_DATA_ELEMENTS).map(([id, config]) => ({
                 id,
                 name: config.name,
@@ -55,7 +60,7 @@ class DiseaseService {
             return diseases;
         }
         catch (error) {
-            logger_js_1.default.error({ error }, "Error fetching all diseases");
+            logger.error({ error }, "Error fetching all diseases");
             throw error;
         }
     }
@@ -64,10 +69,10 @@ class DiseaseService {
      */
     async getDiseaseSummary(diseaseId) {
         try {
-            logger_js_1.default.debug({ diseaseId }, "Fetching disease summary");
+            logger.debug({ diseaseId }, "Fetching disease summary");
             const diseaseConfig = DISEASE_DATA_ELEMENTS[diseaseId];
             if (!diseaseConfig) {
-                logger_js_1.default.warn({ diseaseId }, "Disease not found");
+                logger.warn({ diseaseId }, "Disease not found");
                 return null;
             }
             // Get data element IDs
@@ -94,7 +99,7 @@ class DiseaseService {
           AND dv.value IS NOT NULL
         GROUP BY de.uid, de.name
       `;
-            const result = await postgresService_js_1.postgresService.query(query, [dataElementUIDs]);
+            const result = await postgresService.query(query, [dataElementUIDs]);
             if (result.rows.length === 0) {
                 return null;
             }
@@ -118,7 +123,7 @@ class DiseaseService {
             };
         }
         catch (error) {
-            logger_js_1.default.error({ error, diseaseId }, "Error fetching disease summary");
+            logger.error({ error, diseaseId }, "Error fetching disease summary");
             throw error;
         }
     }
@@ -127,10 +132,10 @@ class DiseaseService {
      */
     async getDiseaseTimeSeries(diseaseId, startDate, endDate, locationUid) {
         try {
-            logger_js_1.default.debug({ diseaseId, startDate, endDate, locationUid }, "Fetching disease time series");
+            logger.debug({ diseaseId, startDate, endDate, locationUid }, "Fetching disease time series");
             const diseaseConfig = DISEASE_DATA_ELEMENTS[diseaseId];
             if (!diseaseConfig) {
-                logger_js_1.default.warn({ diseaseId }, "Disease not found");
+                logger.warn({ diseaseId }, "Disease not found");
                 return [];
             }
             let query = `
@@ -174,7 +179,7 @@ class DiseaseService {
         GROUP BY p.periodid, p.startdate, p.enddate
         ORDER BY p.startdate ASC
       `;
-            const result = await postgresService_js_1.postgresService.query(query, params);
+            const result = await postgresService.query(query, params);
             return result.rows.map((row) => ({
                 disease: diseaseConfig.name,
                 date: row.startdate,
@@ -185,7 +190,7 @@ class DiseaseService {
             }));
         }
         catch (error) {
-            logger_js_1.default.error({ error, diseaseId }, "Error fetching disease time series");
+            logger.error({ error, diseaseId }, "Error fetching disease time series");
             throw error;
         }
     }
@@ -194,7 +199,7 @@ class DiseaseService {
      */
     async getDiseaseBreakdown(locationUid, days, diseaseId) {
         try {
-            logger_js_1.default.debug({ locationUid, days, diseaseId }, "Fetching disease breakdown");
+            logger.debug({ locationUid, days, diseaseId }, "Fetching disease breakdown");
             // Build disease UIDs array based on filter
             let allCaseUIDs;
             if (diseaseId && diseaseId !== 'all') {
@@ -245,7 +250,7 @@ class DiseaseService {
         GROUP BY de.uid, de.name
         ORDER BY total_cases DESC
       `;
-            const result = await postgresService_js_1.postgresService.query(query, params);
+            const result = await postgresService.query(query, params);
             return result.rows.map((row) => ({
                 disease: row.disease,
                 totalCases: parseInt(row.total_cases) || 0,
@@ -255,7 +260,7 @@ class DiseaseService {
             }));
         }
         catch (error) {
-            logger_js_1.default.error({ error }, "Error fetching disease breakdown");
+            logger.error({ error }, "Error fetching disease breakdown");
             throw error;
         }
     }
@@ -265,10 +270,10 @@ class DiseaseService {
     async getDiseaseCasesByLocation(diseaseId, hierarchyLevel = 2 // 2 = districts
     ) {
         try {
-            logger_js_1.default.debug({ diseaseId, hierarchyLevel }, "Fetching disease cases by location");
+            logger.debug({ diseaseId, hierarchyLevel }, "Fetching disease cases by location");
             const diseaseConfig = DISEASE_DATA_ELEMENTS[diseaseId];
             if (!diseaseConfig) {
-                logger_js_1.default.warn({ diseaseId }, "Disease not found");
+                logger.warn({ diseaseId }, "Disease not found");
                 return [];
             }
             const query = `
@@ -289,7 +294,7 @@ class DiseaseService {
         GROUP BY ou.organisationunitid, ou.uid, ou.name, ou.hierarchylevel, ou.geometry
         ORDER BY total_cases DESC
       `;
-            const result = await postgresService_js_1.postgresService.query(query, [diseaseConfig.cases, hierarchyLevel]);
+            const result = await postgresService.query(query, [diseaseConfig.cases, hierarchyLevel]);
             return result.rows.map((row) => ({
                 uid: row.uid,
                 locationName: row.location_name,
@@ -300,9 +305,222 @@ class DiseaseService {
             }));
         }
         catch (error) {
-            logger_js_1.default.error({ error, diseaseId }, "Error fetching disease cases by location");
+            logger.error({ error, diseaseId }, "Error fetching disease cases by location");
+            throw error;
+        }
+    }
+    /**
+     * Get facility performance data for a disease
+     */
+    async getFacilityPerformance(diseaseId, locationUid, limit = 50) {
+        try {
+            logger.debug({ diseaseId, locationUid, limit }, "Fetching facility performance");
+            const diseaseConfig = DISEASE_DATA_ELEMENTS[diseaseId];
+            if (!diseaseConfig) {
+                logger.warn({ diseaseId }, "Disease not found");
+                return [];
+            }
+            // Build UIDs array for cases and deaths
+            const dataElementUIDs = [diseaseConfig.cases];
+            const deathsUid = "deaths" in diseaseConfig && diseaseConfig.deaths ? diseaseConfig.deaths : null;
+            if (deathsUid) {
+                dataElementUIDs.push(deathsUid);
+            }
+            let query = `
+        WITH facility_cases AS (
+          SELECT
+            ou.organisationunitid,
+            ou.uid,
+            ou.name as facility_name,
+            parent_ou.name as district,
+            de.uid as data_element_uid,
+            SUM(CASE WHEN dv.value ~ '^[0-9]+$' THEN CAST(dv.value AS INTEGER) ELSE 0 END) as total_value,
+            MAX(dv.lastupdated) as last_report_date
+          FROM datavalue dv
+          JOIN dataelement de ON dv.dataelementid = de.dataelementid
+          JOIN organisationunit ou ON dv.sourceid = ou.organisationunitid
+          LEFT JOIN organisationunit parent_ou ON ou.parentid = parent_ou.organisationunitid
+          WHERE dv.deleted = false
+            AND ou.hierarchylevel = 4
+            AND de.uid = ANY($1::text[])
+            AND dv.value IS NOT NULL
+      `;
+            const params = [dataElementUIDs];
+            let paramIndex = 2;
+            if (locationUid) {
+                query += ` AND ou.path LIKE '%' || $${paramIndex} || '%'`;
+                params.push(locationUid);
+                paramIndex++;
+            }
+            query += `
+          GROUP BY ou.organisationunitid, ou.uid, ou.name, parent_ou.name, de.uid
+        )
+        SELECT
+          fc.uid as facility_uid,
+          fc.facility_name,
+          fc.district,
+          COALESCE(MAX(CASE WHEN fc.data_element_uid = $${paramIndex} THEN fc.total_value ELSE 0 END), 0) as cases,
+          COALESCE(MAX(CASE WHEN fc.data_element_uid = $${paramIndex + 1} THEN fc.total_value ELSE 0 END), 0) as deaths,
+          MAX(fc.last_report_date) as last_report_date
+        FROM facility_cases fc
+        GROUP BY fc.organisationunitid, fc.uid, fc.facility_name, fc.district
+        HAVING COALESCE(MAX(CASE WHEN fc.data_element_uid = $${paramIndex} THEN fc.total_value ELSE 0 END), 0) > 0
+        ORDER BY cases DESC
+        LIMIT $${paramIndex + 2}
+      `;
+            params.push(diseaseConfig.cases);
+            params.push(deathsUid || diseaseConfig.cases); // Use cases UID if deaths not available
+            params.push(limit);
+            const result = await postgresService.query(query, params);
+            return result.rows.map((row) => {
+                const cases = parseInt(row.cases) || 0;
+                const deaths = parseInt(row.deaths) || 0;
+                const cfr = cases > 0 ? (deaths / cases) * 100 : 0;
+                const lastReportDate = row.last_report_date;
+                const daysSinceReport = lastReportDate
+                    ? Math.floor((Date.now() - new Date(lastReportDate).getTime()) / (1000 * 60 * 60 * 24))
+                    : 999;
+                let status = "Active";
+                if (daysSinceReport > 30) {
+                    status = "Inactive";
+                }
+                else if (daysSinceReport > 14) {
+                    status = "Delayed";
+                }
+                return {
+                    facilityUid: row.facility_uid,
+                    facilityName: row.facility_name,
+                    district: row.district || "Unknown",
+                    cases,
+                    deaths,
+                    cfr: parseFloat(cfr.toFixed(2)),
+                    lastReportDate: lastReportDate || "Unknown",
+                    status,
+                };
+            });
+        }
+        catch (error) {
+            logger.error({ error, diseaseId }, "Error fetching facility performance");
+            throw error;
+        }
+    }
+    /**
+     * Get malaria species distribution
+     */
+    async getMalariaSpeciesDistribution(locationUid) {
+        try {
+            logger.debug({ locationUid }, "Fetching malaria species distribution");
+            const malariaConfig = DISEASE_DATA_ELEMENTS.malaria;
+            const speciesUIDs = [malariaConfig.pf, malariaConfig.pv, malariaConfig.po, malariaConfig.pm];
+            let query = `
+        WITH species_data AS (
+          SELECT
+            de.shortname as species,
+            de.name as full_name,
+            SUM(CASE WHEN dv.value ~ '^[0-9]+$' THEN CAST(dv.value AS INTEGER) ELSE 0 END) as cases
+          FROM datavalue dv
+          JOIN dataelement de ON dv.dataelementid = de.dataelementid
+      `;
+            const params = [speciesUIDs];
+            let paramIndex = 2;
+            if (locationUid) {
+                query += `
+          JOIN organisationunit ou ON dv.sourceid = ou.organisationunitid
+        `;
+            }
+            query += `
+          WHERE dv.deleted = false
+            AND de.uid = ANY($1::text[])
+            AND dv.value IS NOT NULL
+      `;
+            if (locationUid) {
+                query += ` AND ou.path LIKE '%' || $${paramIndex} || '%'`;
+                params.push(locationUid);
+                paramIndex++;
+            }
+            query += `
+          GROUP BY de.uid, de.shortname, de.name
+        )
+        SELECT
+          species,
+          full_name,
+          cases,
+          ROUND(cases * 100.0 / NULLIF(SUM(cases) OVER (), 0), 2) as percentage
+        FROM species_data
+        WHERE cases > 0
+        ORDER BY cases DESC
+      `;
+            const result = await postgresService.query(query, params);
+            return result.rows.map((row) => ({
+                species: row.species || row.full_name || "Unknown",
+                cases: parseInt(row.cases) || 0,
+                percentage: parseFloat(row.percentage) || 0,
+            }));
+        }
+        catch (error) {
+            logger.error({ error }, "Error fetching malaria species distribution");
+            throw error;
+        }
+    }
+    /**
+     * Get treatment timeline data (for Malaria)
+     */
+    async getTreatmentTimeline(diseaseId, locationUid) {
+        try {
+            logger.debug({ diseaseId, locationUid }, "Fetching treatment timeline");
+            if (diseaseId !== "malaria") {
+                logger.warn({ diseaseId }, "Treatment timeline only available for malaria");
+                return [];
+            }
+            const malariaConfig = DISEASE_DATA_ELEMENTS.malaria;
+            const treatmentUIDs = [malariaConfig.treated_act_24hrs, malariaConfig.treated_act_after_24hrs];
+            let query = `
+        WITH treatment_data AS (
+          SELECT
+            de.name as category,
+            SUM(CASE WHEN dv.value ~ '^[0-9]+$' THEN CAST(dv.value AS INTEGER) ELSE 0 END) as cases
+          FROM datavalue dv
+          JOIN dataelement de ON dv.dataelementid = de.dataelementid
+      `;
+            const params = [treatmentUIDs];
+            let paramIndex = 2;
+            if (locationUid) {
+                query += `
+          JOIN organisationunit ou ON dv.sourceid = ou.organisationunitid
+        `;
+            }
+            query += `
+          WHERE dv.deleted = false
+            AND de.uid = ANY($1::text[])
+            AND dv.value IS NOT NULL
+      `;
+            if (locationUid) {
+                query += ` AND ou.path LIKE '%' || $${paramIndex} || '%'`;
+                params.push(locationUid);
+                paramIndex++;
+            }
+            query += `
+          GROUP BY de.uid, de.name
+        )
+        SELECT
+          category,
+          cases,
+          ROUND(cases * 100.0 / NULLIF(SUM(cases) OVER (), 0), 2) as percentage
+        FROM treatment_data
+        WHERE cases > 0
+        ORDER BY cases DESC
+      `;
+            const result = await postgresService.query(query, params);
+            return result.rows.map((row) => ({
+                category: row.category || "Unknown",
+                cases: parseInt(row.cases) || 0,
+                percentage: parseFloat(row.percentage) || 0,
+            }));
+        }
+        catch (error) {
+            logger.error({ error, diseaseId }, "Error fetching treatment timeline");
             throw error;
         }
     }
 }
-exports.diseaseService = new DiseaseService();
+export const diseaseService = new DiseaseService();

@@ -1,12 +1,6 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.postgresService = void 0;
-const pg_1 = require("pg");
-const env_js_1 = require("../config/env.js");
-const logger_js_1 = __importDefault(require("./logger.js"));
+import { Pool } from "pg";
+import { env } from "../config/env.js";
+import logger from "./logger.js";
 class PostgresService {
     constructor() {
         this.pool = null;
@@ -14,23 +8,23 @@ class PostgresService {
     getPool() {
         if (!this.pool) {
             const config = {
-                host: env_js_1.env.POSTGRES_HOST,
-                port: env_js_1.env.POSTGRES_PORT,
-                database: env_js_1.env.POSTGRES_DB,
+                host: env.POSTGRES_HOST,
+                port: env.POSTGRES_PORT,
+                database: env.POSTGRES_DB,
                 max: 20,
                 idleTimeoutMillis: 30000,
                 connectionTimeoutMillis: 2000,
             };
             // Only add user/password if they are provided
-            if (env_js_1.env.POSTGRES_USER) {
-                config.user = env_js_1.env.POSTGRES_USER;
+            if (env.POSTGRES_USER) {
+                config.user = env.POSTGRES_USER;
             }
-            if (env_js_1.env.POSTGRES_PASSWORD) {
-                config.password = env_js_1.env.POSTGRES_PASSWORD;
+            if (env.POSTGRES_PASSWORD) {
+                config.password = env.POSTGRES_PASSWORD;
             }
-            this.pool = new pg_1.Pool(config);
+            this.pool = new Pool(config);
             this.pool.on("error", (err) => {
-                logger_js_1.default.error({ err }, "Unexpected error on idle PostgreSQL client");
+                logger.error({ err }, "Unexpected error on idle PostgreSQL client");
             });
         }
         return this.pool;
@@ -41,11 +35,11 @@ class PostgresService {
         try {
             const result = await pool.query(text, params);
             const duration = Date.now() - start;
-            logger_js_1.default.debug({ text, duration, rows: result.rowCount }, "Executed PostgreSQL query");
+            logger.debug({ text, duration, rows: result.rowCount }, "Executed PostgreSQL query");
             return result;
         }
         catch (error) {
-            logger_js_1.default.error({ error, text }, "PostgreSQL query failed");
+            logger.error({ error, text }, "PostgreSQL query failed");
             throw error;
         }
     }
@@ -55,7 +49,7 @@ class PostgresService {
             return true;
         }
         catch (error) {
-            logger_js_1.default.error({ error }, "PostgreSQL health check failed");
+            logger.error({ error }, "PostgreSQL health check failed");
             return false;
         }
     }
@@ -63,7 +57,7 @@ class PostgresService {
         if (this.pool) {
             await this.pool.end();
             this.pool = null;
-            logger_js_1.default.info("PostgreSQL connection pool closed");
+            logger.info("PostgreSQL connection pool closed");
         }
     }
     // DHIS2 specific queries
@@ -233,4 +227,4 @@ class PostgresService {
         return result.rows;
     }
 }
-exports.postgresService = new PostgresService();
+export const postgresService = new PostgresService();

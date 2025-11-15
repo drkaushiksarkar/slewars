@@ -8,6 +8,17 @@ const DISEASE_DATA_ELEMENTS = {
     cases: "vq2qO3eTrNi",
     deaths: "r6nrJANOqMw",
     inpatient: "p4K11MFEWtw",
+    // Malaria species UIDs
+    pf: "jt8mzqlDEjd", // P. falciparum
+    pv: "ImgnHPhcNYE", // P. vivax
+    po: "E2K6KluoF7L", // P. ovale
+    pm: "sJ23PICb6Fy", // P. malariae
+    pk: "HUPFagklWaN", // P. knowlesi (if available)
+    // Treatment UIDs
+    treated_act_24hrs: "AFM5H0wNq3t",
+    treated_act_after_24hrs: "smYVxAw2lLO",
+    rdt_positive: "wZwzzRnr9N4",
+    rdt_negative: "Qk9nnX0i7lZ",
   },
   measles: {
     name: "Measles",
@@ -63,6 +74,29 @@ export interface DiseaseBreakdown {
   facilitiesAffected: number;
   avgCasesPerPeriod: number;
   peakCases: number;
+}
+
+export interface FacilityPerformance {
+  facilityUid: string;
+  facilityName: string;
+  district: string;
+  cases: number;
+  deaths: number;
+  cfr: number; // Case Fatality Rate
+  lastReportDate: string;
+  status: string;
+}
+
+export interface SpeciesDistribution {
+  species: string;
+  cases: number;
+  percentage: number;
+}
+
+export interface TreatmentData {
+  category: string;
+  cases: number;
+  percentage: number;
 }
 
 class DiseaseService {
@@ -368,6 +402,252 @@ class DiseaseService {
       }));
     } catch (error) {
       logger.error({ error, diseaseId }, "Error fetching disease cases by location");
+      throw error;
+    }
+  }
+
+  /**
+   * Get facility performance data for a disease
+   */
+  async getFacilityPerformance(
+    diseaseId: string,
+    locationUid?: string,
+    limit: number = 50
+  ): Promise<FacilityPerformance[]> {
+    try {
+      logger.debug({ diseaseId, locationUid, limit }, "Fetching facility performance");
+
+      const diseaseConfig = DISEASE_DATA_ELEMENTS[diseaseId as keyof typeof DISEASE_DATA_ELEMENTS];
+      if (!diseaseConfig) {
+        logger.warn({ diseaseId }, "Disease not found");
+        return [];
+      }
+
+      // Build UIDs array for cases and deaths
+      const dataElementUIDs = [diseaseConfig.cases];
+      const deathsUid = "deaths" in diseaseConfig && diseaseConfig.deaths ? diseaseConfig.deaths : null;
+      if (deathsUid) {
+        dataElementUIDs.push(deathsUid);
+      }
+
+      let query = `
+        WITH facility_cases AS (
+          SELECT
+            ou.organisationunitid,
+            ou.uid,
+            ou.name as facility_name,
+            parent_ou.name as district,
+            de.uid as data_element_uid,
+            SUM(CASE WHEN dv.value ~ '^[0-9]+$' THEN CAST(dv.value AS INTEGER) ELSE 0 END) as total_value,
+            MAX(dv.lastupdated) as last_report_date
+          FROM datavalue dv
+          JOIN dataelement de ON dv.dataelementid = de.dataelementid
+          JOIN organisationunit ou ON dv.sourceid = ou.organisationunitid
+          LEFT JOIN organisationunit parent_ou ON ou.parentid = parent_ou.organisationunitid
+          WHERE dv.deleted = false
+            AND ou.hierarchylevel = 4
+            AND de.uid = ANY($1::text[])
+            AND dv.value IS NOT NULL
+      `;
+
+      const params: any[] = [dataElementUIDs];
+      let paramIndex = 2;
+
+      if (locationUid) {
+        query += ` AND ou.path LIKE '%' || $${paramIndex} || '%'`;
+        params.push(locationUid);
+        paramIndex++;
+      }
+
+      query += `
+          GROUP BY ou.organisationunitid, ou.uid, ou.name, parent_ou.name, de.uid
+        )
+        SELECT
+          fc.uid as facility_uid,
+          fc.facility_name,
+          fc.district,
+          COALESCE(MAX(CASE WHEN fc.data_element_uid = $${paramIndex} THEN fc.total_value ELSE 0 END), 0) as cases,
+          COALESCE(MAX(CASE WHEN fc.data_element_uid = $${paramIndex + 1} THEN fc.total_value ELSE 0 END), 0) as deaths,
+          MAX(fc.last_report_date) as last_report_date
+        FROM facility_cases fc
+        GROUP BY fc.organisationunitid, fc.uid, fc.facility_name, fc.district
+        HAVING COALESCE(MAX(CASE WHEN fc.data_element_uid = $${paramIndex} THEN fc.total_value ELSE 0 END), 0) > 0
+        ORDER BY cases DESC
+        LIMIT $${paramIndex + 2}
+      `;
+
+      params.push(diseaseConfig.cases);
+      params.push(deathsUid || diseaseConfig.cases); // Use cases UID if deaths not available
+      params.push(limit);
+
+      const result = await postgresService.query(query, params);
+
+      return result.rows.map((row) => {
+        const cases = parseInt(row.cases) || 0;
+        const deaths = parseInt(row.deaths) || 0;
+        const cfr = cases > 0 ? (deaths / cases) * 100 : 0;
+        const lastReportDate = row.last_report_date;
+        const daysSinceReport = lastReportDate
+          ? Math.floor((Date.now() - new Date(lastReportDate).getTime()) / (1000 * 60 * 60 * 24))
+          : 999;
+
+        let status = "Active";
+        if (daysSinceReport > 30) {
+          status = "Inactive";
+        } else if (daysSinceReport > 14) {
+          status = "Delayed";
+        }
+
+        return {
+          facilityUid: row.facility_uid,
+          facilityName: row.facility_name,
+          district: row.district || "Unknown",
+          cases,
+          deaths,
+          cfr: parseFloat(cfr.toFixed(2)),
+          lastReportDate: lastReportDate || "Unknown",
+          status,
+        };
+      });
+    } catch (error) {
+      logger.error({ error, diseaseId }, "Error fetching facility performance");
+      throw error;
+    }
+  }
+
+  /**
+   * Get malaria species distribution
+   */
+  async getMalariaSpeciesDistribution(locationUid?: string): Promise<SpeciesDistribution[]> {
+    try {
+      logger.debug({ locationUid }, "Fetching malaria species distribution");
+
+      const malariaConfig = DISEASE_DATA_ELEMENTS.malaria;
+      const speciesUIDs = [malariaConfig.pf, malariaConfig.pv, malariaConfig.po, malariaConfig.pm];
+
+      let query = `
+        WITH species_data AS (
+          SELECT
+            de.shortname as species,
+            de.name as full_name,
+            SUM(CASE WHEN dv.value ~ '^[0-9]+$' THEN CAST(dv.value AS INTEGER) ELSE 0 END) as cases
+          FROM datavalue dv
+          JOIN dataelement de ON dv.dataelementid = de.dataelementid
+      `;
+
+      const params: any[] = [speciesUIDs];
+      let paramIndex = 2;
+
+      if (locationUid) {
+        query += `
+          JOIN organisationunit ou ON dv.sourceid = ou.organisationunitid
+        `;
+      }
+
+      query += `
+          WHERE dv.deleted = false
+            AND de.uid = ANY($1::text[])
+            AND dv.value IS NOT NULL
+      `;
+
+      if (locationUid) {
+        query += ` AND ou.path LIKE '%' || $${paramIndex} || '%'`;
+        params.push(locationUid);
+        paramIndex++;
+      }
+
+      query += `
+          GROUP BY de.uid, de.shortname, de.name
+        )
+        SELECT
+          species,
+          full_name,
+          cases,
+          ROUND(cases * 100.0 / NULLIF(SUM(cases) OVER (), 0), 2) as percentage
+        FROM species_data
+        WHERE cases > 0
+        ORDER BY cases DESC
+      `;
+
+      const result = await postgresService.query(query, params);
+
+      return result.rows.map((row) => ({
+        species: row.species || row.full_name || "Unknown",
+        cases: parseInt(row.cases) || 0,
+        percentage: parseFloat(row.percentage) || 0,
+      }));
+    } catch (error) {
+      logger.error({ error }, "Error fetching malaria species distribution");
+      throw error;
+    }
+  }
+
+  /**
+   * Get treatment timeline data (for Malaria)
+   */
+  async getTreatmentTimeline(diseaseId: string, locationUid?: string): Promise<TreatmentData[]> {
+    try {
+      logger.debug({ diseaseId, locationUid }, "Fetching treatment timeline");
+
+      if (diseaseId !== "malaria") {
+        logger.warn({ diseaseId }, "Treatment timeline only available for malaria");
+        return [];
+      }
+
+      const malariaConfig = DISEASE_DATA_ELEMENTS.malaria;
+      const treatmentUIDs = [malariaConfig.treated_act_24hrs, malariaConfig.treated_act_after_24hrs];
+
+      let query = `
+        WITH treatment_data AS (
+          SELECT
+            de.name as category,
+            SUM(CASE WHEN dv.value ~ '^[0-9]+$' THEN CAST(dv.value AS INTEGER) ELSE 0 END) as cases
+          FROM datavalue dv
+          JOIN dataelement de ON dv.dataelementid = de.dataelementid
+      `;
+
+      const params: any[] = [treatmentUIDs];
+      let paramIndex = 2;
+
+      if (locationUid) {
+        query += `
+          JOIN organisationunit ou ON dv.sourceid = ou.organisationunitid
+        `;
+      }
+
+      query += `
+          WHERE dv.deleted = false
+            AND de.uid = ANY($1::text[])
+            AND dv.value IS NOT NULL
+      `;
+
+      if (locationUid) {
+        query += ` AND ou.path LIKE '%' || $${paramIndex} || '%'`;
+        params.push(locationUid);
+        paramIndex++;
+      }
+
+      query += `
+          GROUP BY de.uid, de.name
+        )
+        SELECT
+          category,
+          cases,
+          ROUND(cases * 100.0 / NULLIF(SUM(cases) OVER (), 0), 2) as percentage
+        FROM treatment_data
+        WHERE cases > 0
+        ORDER BY cases DESC
+      `;
+
+      const result = await postgresService.query(query, params);
+
+      return result.rows.map((row) => ({
+        category: row.category || "Unknown",
+        cases: parseInt(row.cases) || 0,
+        percentage: parseFloat(row.percentage) || 0,
+      }));
+    } catch (error) {
+      logger.error({ error, diseaseId }, "Error fetching treatment timeline");
       throw error;
     }
   }

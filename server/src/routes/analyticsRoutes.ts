@@ -80,12 +80,17 @@ analyticsRouter.get("/trends", async (req, res, next) => {
 /**
  * GET /api/analytics/heatmap
  * Get geographic heat map data
+ * Query params: days (default: 90), startDate, endDate
  */
-analyticsRouter.get("/heatmap", async (_req, res, next) => {
+analyticsRouter.get("/heatmap", async (req, res, next) => {
   try {
-    logger.debug("GET /api/analytics/heatmap");
+    const days = req.query.days ? parseInt(req.query.days as string) : 90;
+    const startDate = req.query.startDate as string | undefined;
+    const endDate = req.query.endDate as string | undefined;
 
-    const heatmap = await analyticsService.getGeographicHeatMap();
+    logger.debug({ days, startDate, endDate }, "GET /api/analytics/heatmap");
+
+    const heatmap = await analyticsService.getGeographicHeatMap(days, startDate, endDate);
 
     res.json({
       success: true,

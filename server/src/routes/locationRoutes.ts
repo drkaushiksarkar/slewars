@@ -152,3 +152,56 @@ locationRouter.get("/districts/comparison", async (_req, res, next) => {
     next(error);
   }
 });
+
+/**
+ * GET /api/locations/facilities/performance
+ * Get facility performance data with rankings
+ * Query params: districtUid, startDate, endDate
+ */
+locationRouter.get("/facilities/performance", async (req, res, next) => {
+  try {
+    const { districtUid, startDate, endDate } = req.query;
+    logger.debug({ districtUid, startDate, endDate }, "GET /api/locations/facilities/performance");
+
+    const facilities = await locationService.getFacilityPerformance(
+      districtUid as string | undefined,
+      startDate as string | undefined,
+      endDate as string | undefined
+    );
+
+    res.json({
+      success: true,
+      data: facilities,
+      count: facilities.length,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
+ * GET /api/locations/districts/:districtUid/chiefdoms
+ * Get chiefdom-level data for a district
+ * Query params: startDate, endDate
+ */
+locationRouter.get("/districts/:districtUid/chiefdoms", async (req, res, next) => {
+  try {
+    const { districtUid } = req.params;
+    const { startDate, endDate } = req.query;
+    logger.debug({ districtUid, startDate, endDate }, "GET /api/locations/districts/:districtUid/chiefdoms");
+
+    const chiefdoms = await locationService.getChiefdomData(
+      districtUid,
+      startDate as string | undefined,
+      endDate as string | undefined
+    );
+
+    res.json({
+      success: true,
+      data: chiefdoms,
+      count: chiefdoms.length,
+    });
+  } catch (error) {
+    next(error);
+  }
+});

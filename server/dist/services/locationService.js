@@ -1,18 +1,12 @@
-"use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.locationService = void 0;
-const postgresService_js_1 = require("./postgresService.js");
-const logger_js_1 = __importDefault(require("./logger.js"));
+import { postgresService } from "./postgresService.js";
+import logger from "./logger.js";
 class LocationService {
     /**
      * Get all organization units
      */
     async getAllLocations() {
         try {
-            logger_js_1.default.debug("Fetching all locations");
+            logger.debug("Fetching all locations");
             const query = `
         SELECT
           ou.uid,
@@ -27,7 +21,7 @@ class LocationService {
         FROM organisationunit ou
         ORDER BY ou.hierarchylevel, ou.name
       `;
-            const result = await postgresService_js_1.postgresService.query(query);
+            const result = await postgresService.query(query);
             return result.rows.map((row) => ({
                 uid: row.uid,
                 name: row.name,
@@ -41,7 +35,7 @@ class LocationService {
             }));
         }
         catch (error) {
-            logger_js_1.default.error({ error }, "Error fetching all locations");
+            logger.error({ error }, "Error fetching all locations");
             throw error;
         }
     }
@@ -50,7 +44,7 @@ class LocationService {
      */
     async getLocationsByLevel(level) {
         try {
-            logger_js_1.default.debug({ level }, "Fetching locations by level");
+            logger.debug({ level }, "Fetching locations by level");
             const query = `
         SELECT
           ou.uid,
@@ -68,7 +62,7 @@ class LocationService {
         WHERE ou.hierarchylevel = $1
         ORDER BY ou.name
       `;
-            const result = await postgresService_js_1.postgresService.query(query, [level]);
+            const result = await postgresService.query(query, [level]);
             return result.rows.map((row) => ({
                 uid: row.uid,
                 name: row.name,
@@ -83,7 +77,7 @@ class LocationService {
             }));
         }
         catch (error) {
-            logger_js_1.default.error({ error, level }, "Error fetching locations by level");
+            logger.error({ error, level }, "Error fetching locations by level");
             throw error;
         }
     }
@@ -92,7 +86,7 @@ class LocationService {
      */
     async getLocationByUid(uid) {
         try {
-            logger_js_1.default.debug({ uid }, "Fetching location by UID");
+            logger.debug({ uid }, "Fetching location by UID");
             const query = `
         SELECT
           ou.uid,
@@ -109,7 +103,7 @@ class LocationService {
         LEFT JOIN organisationunit parent ON ou.parentid = parent.organisationunitid
         WHERE ou.uid = $1
       `;
-            const result = await postgresService_js_1.postgresService.query(query, [uid]);
+            const result = await postgresService.query(query, [uid]);
             if (result.rows.length === 0) {
                 return null;
             }
@@ -128,7 +122,7 @@ class LocationService {
             };
         }
         catch (error) {
-            logger_js_1.default.error({ error, uid }, "Error fetching location by UID");
+            logger.error({ error, uid }, "Error fetching location by UID");
             throw error;
         }
     }
@@ -137,7 +131,7 @@ class LocationService {
      */
     async getLocationChildren(uid) {
         try {
-            logger_js_1.default.debug({ uid }, "Fetching location children");
+            logger.debug({ uid }, "Fetching location children");
             const query = `
         SELECT
           child.uid,
@@ -154,7 +148,7 @@ class LocationService {
         WHERE parent.uid = $1
         ORDER BY child.name
       `;
-            const result = await postgresService_js_1.postgresService.query(query, [uid]);
+            const result = await postgresService.query(query, [uid]);
             return result.rows.map((row) => ({
                 uid: row.uid,
                 name: row.name,
@@ -168,7 +162,7 @@ class LocationService {
             }));
         }
         catch (error) {
-            logger_js_1.default.error({ error, uid }, "Error fetching location children");
+            logger.error({ error, uid }, "Error fetching location children");
             throw error;
         }
     }
@@ -177,7 +171,7 @@ class LocationService {
      */
     async getLocationHierarchy(rootUid) {
         try {
-            logger_js_1.default.debug({ rootUid }, "Fetching location hierarchy");
+            logger.debug({ rootUid }, "Fetching location hierarchy");
             // First, get all locations
             let query = `
         SELECT
@@ -195,7 +189,7 @@ class LocationService {
                 params.push(rootUid);
             }
             query += ` ORDER BY ou.hierarchylevel, ou.name`;
-            const result = await postgresService_js_1.postgresService.query(query, params);
+            const result = await postgresService.query(query, params);
             // Build the tree structure
             const locationsMap = new Map();
             const roots = [];
@@ -229,7 +223,7 @@ class LocationService {
             return roots;
         }
         catch (error) {
-            logger_js_1.default.error({ error, rootUid }, "Error fetching location hierarchy");
+            logger.error({ error, rootUid }, "Error fetching location hierarchy");
             throw error;
         }
     }
@@ -238,7 +232,7 @@ class LocationService {
      */
     async getLocationData(uid, startDate, endDate) {
         try {
-            logger_js_1.default.debug({ uid, startDate, endDate }, "Fetching location data");
+            logger.debug({ uid, startDate, endDate }, "Fetching location data");
             // First get the location details
             const location = await this.getLocationByUid(uid);
             if (!location) {
@@ -273,7 +267,7 @@ class LocationService {
         GROUP BY de.name
         ORDER BY cases DESC
       `;
-            const result = await postgresService_js_1.postgresService.query(query, params);
+            const result = await postgresService.query(query, params);
             const diseases = result.rows.map((row) => ({
                 disease: row.disease,
                 cases: parseInt(row.cases) || 0,
@@ -292,7 +286,7 @@ class LocationService {
             };
         }
         catch (error) {
-            logger_js_1.default.error({ error, uid }, "Error fetching location data");
+            logger.error({ error, uid }, "Error fetching location data");
             throw error;
         }
     }
@@ -301,7 +295,7 @@ class LocationService {
      */
     async getDistrictComparison() {
         try {
-            logger_js_1.default.debug("Fetching district comparison data");
+            logger.debug("Fetching district comparison data");
             const query = `
         SELECT
           ou.uid,
@@ -321,7 +315,7 @@ class LocationService {
         GROUP BY ou.uid, ou.name, ou.geometry
         ORDER BY total_cases DESC
       `;
-            const result = await postgresService_js_1.postgresService.query(query);
+            const result = await postgresService.query(query);
             return result.rows.map((row) => ({
                 uid: row.uid,
                 districtName: row.district_name,
@@ -332,9 +326,167 @@ class LocationService {
             }));
         }
         catch (error) {
-            logger_js_1.default.error({ error }, "Error fetching district comparison data");
+            logger.error({ error }, "Error fetching district comparison data");
+            throw error;
+        }
+    }
+    /**
+     * Get facility-level data with performance metrics
+     */
+    async getFacilityPerformance(districtUid, startDate, endDate) {
+        try {
+            logger.debug({ districtUid, startDate, endDate }, "Fetching facility performance data");
+            let query = `
+        WITH facility_data AS (
+          SELECT
+            ou.organisationunitid,
+            ou.uid,
+            ou.name as facility_name,
+            parent.name as district_name,
+            parent.uid as district_uid,
+            ou.hierarchylevel,
+            SUM(CASE WHEN dv.value ~ '^[0-9]+$' AND de.name NOT ILIKE '%death%' THEN CAST(dv.value AS INTEGER) ELSE 0 END) as total_cases,
+            SUM(CASE WHEN dv.value ~ '^[0-9]+$' AND de.name ILIKE '%death%' THEN CAST(dv.value AS INTEGER) ELSE 0 END) as total_deaths,
+            MAX(dv.lastupdated) as last_report_date,
+            COUNT(DISTINCT dv.periodid) as reporting_periods,
+            COUNT(DISTINCT de.dataelementid) as data_elements_reported
+          FROM organisationunit ou
+          LEFT JOIN organisationunit parent ON ou.parentid = parent.organisationunitid
+          LEFT JOIN datavalue dv ON dv.sourceid = ou.organisationunitid AND dv.deleted = false
+          LEFT JOIN dataelement de ON dv.dataelementid = de.dataelementid
+          LEFT JOIN period p ON dv.periodid = p.periodid
+          WHERE ou.hierarchylevel = 4
+      `;
+            const params = [];
+            let paramIndex = 1;
+            if (districtUid) {
+                query += ` AND parent.uid = $${paramIndex}`;
+                params.push(districtUid);
+                paramIndex++;
+            }
+            if (startDate) {
+                query += ` AND p.startdate >= $${paramIndex}`;
+                params.push(startDate);
+                paramIndex++;
+            }
+            if (endDate) {
+                query += ` AND p.enddate <= $${paramIndex}`;
+                params.push(endDate);
+                paramIndex++;
+            }
+            query += `
+          GROUP BY ou.organisationunitid, ou.uid, ou.name, parent.name, parent.uid, ou.hierarchylevel
+        )
+        SELECT
+          uid,
+          facility_name,
+          district_name,
+          district_uid,
+          hierarchylevel,
+          total_cases,
+          total_deaths,
+          CASE
+            WHEN total_cases > 0 THEN ROUND((total_deaths::DECIMAL / total_cases::DECIMAL) * 100, 2)
+            ELSE 0
+          END as case_fatality_rate,
+          last_report_date,
+          reporting_periods,
+          data_elements_reported,
+          CASE
+            WHEN last_report_date > NOW() - INTERVAL '7 days' THEN 'Active'
+            WHEN last_report_date > NOW() - INTERVAL '30 days' THEN 'Delayed'
+            ELSE 'Inactive'
+          END as status,
+          CASE
+            WHEN last_report_date IS NULL THEN NULL
+            ELSE EXTRACT(EPOCH FROM (NOW() - last_report_date)) / 86400
+          END as days_since_report
+        FROM facility_data
+        ORDER BY total_cases DESC, facility_name
+        LIMIT 500
+      `;
+            const result = await postgresService.query(query, params);
+            return result.rows.map((row) => ({
+                uid: row.uid,
+                facilityName: row.facility_name,
+                districtName: row.district_name,
+                districtUid: row.district_uid,
+                hierarchyLevel: row.hierarchylevel,
+                totalCases: parseInt(row.total_cases) || 0,
+                totalDeaths: parseInt(row.total_deaths) || 0,
+                caseFatalityRate: parseFloat(row.case_fatality_rate) || 0,
+                lastReportDate: row.last_report_date,
+                reportingPeriods: parseInt(row.reporting_periods) || 0,
+                dataElementsReported: parseInt(row.data_elements_reported) || 0,
+                status: row.status,
+                daysSinceReport: row.days_since_report ? Math.floor(parseFloat(row.days_since_report)) : null,
+            }));
+        }
+        catch (error) {
+            logger.error({ error }, "Error fetching facility performance data");
+            throw error;
+        }
+    }
+    /**
+     * Get chiefdom-level data for a district
+     */
+    async getChiefdomData(districtUid, startDate, endDate) {
+        try {
+            logger.debug({ districtUid, startDate, endDate }, "Fetching chiefdom data");
+            let query = `
+        SELECT
+          ou.uid,
+          ou.name as chiefdom_name,
+          ST_AsGeoJSON(ou.geometry) as geometry,
+          SUM(CASE WHEN dv.value ~ '^[0-9]+$' THEN CAST(dv.value AS INTEGER) ELSE 0 END) as total_cases,
+          COUNT(DISTINCT dv.sourceid) as facilities_count,
+          COUNT(DISTINCT de.dataelementid) as disease_types
+        FROM organisationunit district
+        JOIN organisationunit ou ON ou.parentid = district.organisationunitid
+        LEFT JOIN datavalue dv ON dv.sourceid IN (
+          SELECT child.organisationunitid
+          FROM organisationunit child
+          WHERE child.path LIKE '%' || ou.uid || '%'
+        )
+        LEFT JOIN dataelement de ON dv.dataelementid = de.dataelementid AND dv.deleted = false
+      `;
+            const params = [districtUid];
+            let paramIndex = 2;
+            if (startDate || endDate) {
+                query += ` LEFT JOIN period p ON dv.periodid = p.periodid`;
+            }
+            query += `
+        WHERE district.uid = $1
+          AND ou.hierarchylevel = 3
+      `;
+            if (startDate) {
+                query += ` AND p.startdate >= $${paramIndex}`;
+                params.push(startDate);
+                paramIndex++;
+            }
+            if (endDate) {
+                query += ` AND p.enddate <= $${paramIndex}`;
+                params.push(endDate);
+                paramIndex++;
+            }
+            query += `
+        GROUP BY ou.uid, ou.name, ou.geometry
+        ORDER BY total_cases DESC
+      `;
+            const result = await postgresService.query(query, params);
+            return result.rows.map((row) => ({
+                uid: row.uid,
+                chiefdomName: row.chiefdom_name,
+                geometry: row.geometry ? JSON.parse(row.geometry) : null,
+                totalCases: parseInt(row.total_cases) || 0,
+                facilitiesCount: parseInt(row.facilities_count) || 0,
+                diseaseTypes: parseInt(row.disease_types) || 0,
+            }));
+        }
+        catch (error) {
+            logger.error({ error, districtUid }, "Error fetching chiefdom data");
             throw error;
         }
     }
 }
-exports.locationService = new LocationService();
+export const locationService = new LocationService();

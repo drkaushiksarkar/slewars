@@ -255,7 +255,7 @@ const Overview = () => {
       <div className="border rounded-lg p-6">
         {/* <h3 className="text-lg font-semibold mb-4 text-center">Disease Map</h3> */}
         <div className="w-full h-[600px]">
-          <DiseaseMap />
+          <DiseaseMap selectedDisease={selectedDisease} timeRange={timeRange} />
         </div>
       </div>
 
