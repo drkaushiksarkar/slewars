@@ -10,7 +10,7 @@ const envSchema = z.object({
     .default("development"),
   PORT: z.coerce.number().default(4000),
   DASHBOARD_DATA_SOURCE: z
-    .enum(["synthetic", "dhis2", "hybrid"])
+    .enum(["synthetic", "dhis2", "hybrid", "postgres"])
     .default("synthetic"),
   DHIS2_BASE_URL: z.string().optional(),
   DHIS2_USERNAME: z.string().optional(),
@@ -23,7 +23,12 @@ const envSchema = z.object({
   COUNTRY_CONFIG_PATH: z
     .string()
     .optional()
-    .default(path.join(process.cwd(), "server", "config", "country-config.json"))
+    .default(path.join(process.cwd(), "server", "config", "country-config.json")),
+  POSTGRES_HOST: z.string().optional().default("localhost"),
+  POSTGRES_PORT: z.coerce.number().optional().default(5432),
+  POSTGRES_DB: z.string().optional().default("dhis2"),
+  POSTGRES_USER: z.string().optional().default("dhis"),
+  POSTGRES_PASSWORD: z.string().optional().default("dhis")
 });
 
 const parsed = envSchema.safeParse(process.env);
