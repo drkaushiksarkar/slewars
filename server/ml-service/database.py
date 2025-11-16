@@ -51,7 +51,7 @@ def fetch_disease_timeseries(disease: str, location_uid: str, start_date: str = 
 
         query = """
             SELECT
-                DATE_TRUNC('week', p.startdate) as week,
+                p.enddate as week,
                 p.startdate,
                 p.enddate,
                 SUM(CAST(dv.value AS INTEGER)) as cases,
@@ -84,8 +84,13 @@ def fetch_disease_timeseries(disease: str, location_uid: str, start_date: str = 
             params['start_date'] = start_date
 
         if end_date:
-            query += " AND p.enddate <= %(end_date)s::date"
+            # CRITICAL: Only include periods that have actually ENDED
+            # This prevents using future data in forecasts
+            query += " AND p.enddate < %(end_date)s::date"
             params['end_date'] = end_date
+        else:
+            # If no end_date specified, only use periods that have ended before today
+            query += " AND p.enddate < CURRENT_DATE"
 
         query += """
             GROUP BY week, p.startdate, p.enddate

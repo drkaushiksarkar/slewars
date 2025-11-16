@@ -10,7 +10,7 @@ class ForecastService {
      */
     async generateForecast(params) {
         try {
-            const forceRetrain = params.force_retrain || false;
+            const forceRetrain = params.force_retrain || true;
             logger.info(`Generating forecast for ${params.disease} in ${params.location_uid} (force_retrain: ${forceRetrain})`);
             const response = await axios.post(`${this.mlServiceUrl}/forecast`, {
                 disease: params.disease,

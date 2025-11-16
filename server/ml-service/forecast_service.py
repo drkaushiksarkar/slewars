@@ -41,9 +41,9 @@ class ForecastService:
             if not end_date:
                 end_date = datetime.now().strftime('%Y-%m-%d')
 
-            if not start_date:
-                # Use 2 years of data
-                start_date = (datetime.now() - timedelta(days=730)).strftime('%Y-%m-%d')
+            # Use ALL available historical data for training if start_date not specified
+            # This allows us to leverage 10+ years of data for diseases like Measles and Yellow Fever
+            # start_date will be None, which tells fetch_disease_timeseries to get all data
 
             # Fetch disease time series
             disease_data = fetch_disease_timeseries(disease, location_uid, start_date, end_date)
@@ -148,7 +148,7 @@ class ForecastService:
         location_uid: str,
         horizon: int = 4,
         auto_train: bool = True,
-        force_retrain: bool = False
+        force_retrain: bool = True
     ):
         """
         Generate forecast for a disease and location
@@ -197,9 +197,10 @@ class ForecastService:
 
             ensemble = self.models[model_key]
 
-            # Fetch recent historical data for forecasting
+            # Fetch historical data for forecasting
+            # Use all available data to properly compute lag features and trends
             end_date = datetime.now().strftime('%Y-%m-%d')
-            start_date = (datetime.now() - timedelta(days=365)).strftime('%Y-%m-%d')
+            start_date = None  # Use all available historical data
 
             disease_data = fetch_disease_timeseries(disease, location_uid, start_date, end_date)
             climate_data = fetch_climate_data(location_uid, start_date, end_date)
@@ -221,8 +222,12 @@ class ForecastService:
                     'error': f'Insufficient historical data for forecasting. Found {len(historical_df)} points, need at least {min_required_points}'
                 }
 
-            # Prepare forecast features
-            forecast_df = self.feature_engineer.prepare_forecast_features(historical_df, horizon)
+            # Prepare forecast features - always forecast from today for production use
+            forecast_df = self.feature_engineer.prepare_forecast_features(
+                historical_df,
+                horizon,
+                start_from_today=True  # Always forecast from current date
+            )
 
             # Generate forecast
             forecast_result = ensemble.forecast(forecast_df, steps=horizon)
@@ -240,14 +245,21 @@ class ForecastService:
                         'impact': float(importance)
                     })
 
-            # Prepare forecast dates
-            last_date = historical_df.index[-1]
+            # Prepare forecast dates - ALWAYS forecast from current date, not last data point
+            # This ensures forecasts are always in the future for production use
+            today = datetime.now().date()
             forecast_dates = [
-                (last_date + timedelta(weeks=i)).strftime('%Y-%m-%d')
+                (today + timedelta(weeks=i)).strftime('%Y-%m-%d')
                 for i in range(1, horizon + 1)
             ]
 
-            forecast_date = datetime.now().date()
+            forecast_date = today
+
+            # Log data freshness warning if data is old
+            last_date = historical_df.index[-1]
+            days_since_data = (today - last_date.date()).days
+            if days_since_data > 30:
+                logger.warning(f"Data is {days_since_data} days old. Last data: {last_date.date()}, Today: {today}")
 
             # Save forecasts to database
             for i, target_date in enumerate(forecast_dates):

@@ -161,13 +161,14 @@ class FeatureEngineer:
             logger.error(f"Error merging climate features: {e}")
             return df
 
-    def prepare_forecast_features(self, historical_df, forecast_horizon=4):
+    def prepare_forecast_features(self, historical_df, forecast_horizon=4, start_from_today=False):
         """
         Prepare features for forecasting
 
         Args:
             historical_df: DataFrame with historical data and features
             forecast_horizon: Number of periods to forecast
+            start_from_today: If True, forecast from today instead of from last data point
 
         Returns:
             DataFrame with features for forecasting
@@ -186,9 +187,18 @@ class FeatureEngineer:
             last_row = historical_df.iloc[-1].copy()
             last_date = historical_df.index[-1]
 
+            # If forecasting from today, calculate offset from last data point
+            if start_from_today:
+                today = pd.Timestamp(datetime.now().date())
+                weeks_gap = int((today - last_date).days / 7)
+                logger.info(f"Forecasting from today ({today.date()}), {weeks_gap} weeks after last data ({last_date.date()})")
+            else:
+                today = last_date
+                weeks_gap = 0
+
             for i in range(1, forecast_horizon + 1):
-                # Calculate next date (weekly increment)
-                next_date = last_date + timedelta(weeks=i)
+                # Calculate next date (weekly increment from today or last data point)
+                next_date = today + timedelta(weeks=i)
 
                 # Create features for this forecast period
                 features = {}

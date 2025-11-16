@@ -220,6 +220,37 @@ function ForecastDashboardContent() {
               <>
                 <ForecastChart forecast={forecast} />
 
+                {/* Data Freshness Warning */}
+                {forecast.predictions && forecast.predictions.length > 0 && (() => {
+                  const lastForecastDate = new Date(forecast.predictions[forecast.predictions.length - 1].date);
+                  const today = new Date();
+                  const isStale = lastForecastDate < today;
+                  const lastDataDate = forecast.data_availability?.end_date;
+
+                  if (isStale && lastDataDate) {
+                    return (
+                      <div className="mt-4 bg-amber-50 border-l-4 border-amber-400 p-4 rounded">
+                        <div className="flex items-start">
+                          <svg className="w-5 h-5 text-amber-400 mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                          </svg>
+                          <div className="flex-1">
+                            <h3 className="text-sm font-semibold text-amber-800 mb-1">
+                              Outdated Forecast - Data Lag Detected
+                            </h3>
+                            <p className="text-sm text-amber-700">
+                              The most recent data available is from <strong>{new Date(lastDataDate).toLocaleDateString()}</strong>.
+                              The forecast predicts from that date forward, resulting in predictions that are now in the past.
+                              Please contact data administrators to ensure recent disease surveillance data is being reported to the system.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+
                 {/* Contributing Factors */}
                 {forecast.predictions?.[0]?.contributing_factors?.length > 0 && (
                   <div className="mt-6 bg-blue-50 rounded-lg p-4 border border-blue-200">
@@ -263,36 +294,65 @@ function ForecastDashboardContent() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Data Availability */}
-            {forecast?.data_availability && (
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.2 }}
-                className="bg-blue-50 border border-blue-200 rounded-xl p-6"
-              >
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Data Availability</h3>
-                <div className="space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Data Range:</span>
-                    <span className="font-semibold text-gray-900">
-                      {new Date(forecast.data_availability.start_date).toLocaleDateString()} - {new Date(forecast.data_availability.end_date).toLocaleDateString()}
-                    </span>
+            {forecast?.data_availability && (() => {
+              const lastDataDate = new Date(forecast.data_availability.end_date);
+              const today = new Date();
+              const daysOld = Math.floor((today - lastDataDate) / (1000 * 60 * 60 * 24));
+              const isStale = daysOld > 30; // More than 30 days old
+              const isVeryStale = daysOld > 60; // More than 60 days old
+
+              return (
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className={`rounded-xl p-6 border ${
+                    isVeryStale ? 'bg-red-50 border-red-300' :
+                    isStale ? 'bg-amber-50 border-amber-300' :
+                    'bg-blue-50 border-blue-200'
+                  }`}
+                >
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">Data Availability</h3>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-600">Latest Data:</span>
+                      <div className="text-right">
+                        <div className="font-semibold text-gray-900">
+                          {lastDataDate.toLocaleDateString()}
+                        </div>
+                        {daysOld > 0 && (
+                          <div className={`text-xs ${
+                            isVeryStale ? 'text-red-600' :
+                            isStale ? 'text-amber-600' :
+                            'text-gray-500'
+                          }`}>
+                            {daysOld} days ago
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Data Range:</span>
+                      <span className="font-semibold text-gray-900 text-right">
+                        {new Date(forecast.data_availability.start_date).toLocaleDateString()} - {new Date(forecast.data_availability.end_date).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Total Points:</span>
+                      <span className="font-semibold text-gray-900">
+                        {forecast.data_availability.total_points}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Climate Data:</span>
+                      <span className={`font-semibold ${forecast.data_availability.has_climate_data ? 'text-green-600' : 'text-gray-500'}`}>
+                        {forecast.data_availability.has_climate_data ? 'Available' : 'Not Available'}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Total Points:</span>
-                    <span className="font-semibold text-gray-900">
-                      {forecast.data_availability.total_points}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Climate Data:</span>
-                    <span className={`font-semibold ${forecast.data_availability.has_climate_data ? 'text-green-600' : 'text-gray-500'}`}>
-                      {forecast.data_availability.has_climate_data ? 'Available' : 'Not Available'}
-                    </span>
-                  </div>
-                </div>
-              </motion.div>
-            )}
+                </motion.div>
+              );
+            })()}
 
             {/* Model Performance */}
             <motion.div
@@ -312,29 +372,29 @@ function ForecastDashboardContent() {
                   <div className="bg-gray-50 rounded-lg p-3">
                     <div className="text-xs text-gray-600 mb-1">Mean Absolute Error</div>
                     <div className="text-2xl font-bold text-gray-900">
-                      {performance.mae?.toFixed(2) || 'N/A'}
+                      {performance.mae != null ? Number(performance.mae).toFixed(2) : 'N/A'}
                     </div>
                   </div>
 
                   <div className="bg-gray-50 rounded-lg p-3">
                     <div className="text-xs text-gray-600 mb-1">RMSE</div>
                     <div className="text-2xl font-bold text-gray-900">
-                      {performance.rmse?.toFixed(2) || 'N/A'}
+                      {performance.rmse != null ? Number(performance.rmse).toFixed(2) : 'N/A'}
                     </div>
                   </div>
 
                   <div className="bg-gray-50 rounded-lg p-3">
                     <div className="text-xs text-gray-600 mb-1">R² Score</div>
                     <div className="text-2xl font-bold text-gray-900">
-                      {performance.r_squared?.toFixed(3) || 'N/A'}
+                      {performance.r_squared != null ? Number(performance.r_squared).toFixed(3) : 'N/A'}
                     </div>
                   </div>
 
-                  {performance.mape && (
+                  {performance.mape != null && (
                     <div className="bg-gray-50 rounded-lg p-3">
                       <div className="text-xs text-gray-600 mb-1">MAPE</div>
                       <div className="text-2xl font-bold text-gray-900">
-                        {performance.mape.toFixed(2)}%
+                        {Number(performance.mape).toFixed(2)}%
                       </div>
                     </div>
                   )}

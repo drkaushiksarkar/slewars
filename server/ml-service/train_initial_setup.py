@@ -106,10 +106,7 @@ def check_disease_data(disease, disease_uid, location_uid):
     try:
         cursor = conn.cursor(cursor_factory=RealDictCursor)
 
-        # Calculate date range (last 2 years)
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=730)
-
+        # Check all available historical data (no date limits)
         query = """
             SELECT COUNT(*) as count
             FROM datavalue dv
@@ -119,8 +116,6 @@ def check_disease_data(disease, disease_uid, location_uid):
             WHERE dv.deleted = false
                 AND de.uid = %s
                 AND dv.value ~ '^[0-9]+$'
-                AND p.startdate >= %s::date
-                AND p.enddate <= %s::date
                 AND EXISTS (
                     SELECT 1 FROM organisationunit parent
                     WHERE parent.uid = %s
@@ -128,8 +123,7 @@ def check_disease_data(disease, disease_uid, location_uid):
                 )
         """
 
-        cursor.execute(query, (disease_uid, start_date.strftime('%Y-%m-%d'),
-                               end_date.strftime('%Y-%m-%d'), location_uid))
+        cursor.execute(query, (disease_uid, location_uid))
         result = cursor.fetchone()
         count = result['count'] if result else 0
 
@@ -165,7 +159,7 @@ def train_and_forecast(service, disease, location_uid, location_name):
             location_uid=location_uid,
             horizon=4,
             auto_train=False,
-            force_retrain=False
+            force_retrain=True
         )
 
         if not forecast_result['success']:

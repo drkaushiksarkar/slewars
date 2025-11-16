@@ -1,9 +1,16 @@
+- Database Setup (First time only)
+
+cd server/migrations
+./run_migrations.sh
+
 - Training
 
 cd server/ml-service
 rm -rf venv
 
+
 brew install python@3.12
+brew install libomp
 virtualenv -p python3.12 venv
 source venv/bin/activate
 pip install psycopg2-binary xgboost pandas numpy scikit-learn loguru python-dotenv

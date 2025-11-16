@@ -39,7 +39,7 @@ def main():
     logger.info(f"Found {len(locations)} districts")
 
     # All diseases
-    diseases = ['Malaria', 'Measles', 'Yellow Fever']
+    diseases = ['Malaria', 'Measles', 'Yellow Fever', 'Cholera', 'Lassa Fever', 'Typhoid']
 
     successful = 0
     failed = 0

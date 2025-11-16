@@ -79,7 +79,7 @@ def generate_initial_forecasts(disease, location_uid):
                 "location_uid": location_uid,
                 "horizon": 4,
                 "auto_train": False,  # Model already trained
-                "force_retrain": False
+                "force_retrain": True
             },
             timeout=60
         )

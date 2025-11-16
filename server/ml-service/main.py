@@ -49,7 +49,7 @@ class ForecastRequest(BaseModel):
     location_uid: str = Field(..., description="DHIS2 organization unit UID")
     horizon: int = Field(4, description="Number of weeks to forecast", ge=1, le=12)
     auto_train: bool = Field(True, description="Automatically train if model doesn't exist")
-    force_retrain: bool = Field(False, description="Force retrain model with latest data")
+    force_retrain: bool = Field(True, description="Force retrain model with latest data")
 
 class BatchForecastRequest(BaseModel):
     diseases: List[str] = Field(..., description="List of disease names")
@@ -154,7 +154,7 @@ async def get_forecast(
     disease: str,
     location_uid: str,
     horizon: int = 4,
-    force_retrain: bool = False
+    force_retrain: bool = True
 ):
     """
     Get forecast for disease and location (GET method)
