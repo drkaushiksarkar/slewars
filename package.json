@@ -7,7 +7,7 @@
     "dev": "vite --host :: --port 3000",
     "build": "vite build",
     "preview": "vite preview --host :: --port 3000",
-    "server:dev": "tsx watch server/src/index.ts",
+    "server-dev": "npx --yes tsx watch server/src/index.ts",
     "server:build": "tsc -p server/tsconfig.json",
     "server:start": "node server/dist/index.js",
     "ml:start": "cd server/ml-service && ./start.sh",

@@ -10,7 +10,7 @@ const router = Router();
  */
 router.post('/generate', async (req: Request, res: Response) => {
   try {
-    const { disease, location_uid, horizon = 4, auto_train = true } = req.body;
+    const { disease, location_uid, horizon = 4, auto_train = true, force_retrain = false } = req.body;
 
     if (!disease || !location_uid) {
       return res.status(400).json({
@@ -19,13 +19,14 @@ router.post('/generate', async (req: Request, res: Response) => {
       });
     }
 
-    logger.info(`Forecast generation request: ${disease} in ${location_uid}`);
+    logger.info(`Forecast generation request: ${disease} in ${location_uid} (force_retrain: ${force_retrain})`);
 
     const result = await forecastService.generateForecast({
       disease,
       location_uid,
       horizon,
-      auto_train
+      auto_train,
+      force_retrain
     });
 
     res.json({
