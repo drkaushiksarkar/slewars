@@ -11,28 +11,57 @@ Modern climate-aware Early Warning, Alert, and Response System with a Sierra Leo
 
 ## Getting Started
 
+### First-Time Setup
+
 1. **Install dependencies**
    ```bash
    npm install
    ```
-2. **Copy environment template**
+
+2. **Configure environment variables**
    ```bash
    cp .env.example .env
    ```
-   Fill in DHIS2 connection details if you want live data. Leave them blank to keep the synthetic demo feed.
-3. **Run both servers**
+   Edit `.env` and configure the following:
+   - `PORT` - Backend server port (default: 4000)
+   - `POSTGRES_USER` and `POSTGRES_PASSWORD` - Your PostgreSQL credentials
+   - API keys for OpenWeather, Mapbox, ERA5
+   - DHIS2 credentials (if using DHIS2 as data source)
+
+3. **Set up ML service**
    ```bash
    cd server/ml-service && ./setup.sh
-   npm run dev:full
+   cd ../..
    ```
-   - Frontend: http://localhost:3000 (Vite proxies `/api` calls to the backend)
-   - Backend API: http://localhost:4000
-4. **Production builds**
+
+4. **Build the backend**
    ```bash
-   npm run build:full           # Builds server (TS -> JS) and the SPA
-   npm run preview              # Optional: preview the built SPA
-   npm run server:start        # Serve compiled backend from server/dist
+   npm run server:build
    ```
+
+### Running the Application
+
+**Development mode** (runs frontend, backend, and ML service):
+```bash
+npm run dev:full
+```
+- Frontend: http://localhost:3000 (Vite proxies `/api` calls to the backend)
+- Backend API: http://localhost:4000
+- ML Service: http://localhost:8000
+
+**Production builds**:
+```bash
+npm run build:full           # Builds server (TS -> JS) and the SPA
+npm run preview              # Optional: preview the built SPA
+npm run server:start        # Serve compiled backend from server/dist
+```
+
+### Important Notes
+
+- **NEVER commit** `node_modules/`, `dist/`, or `.env` files to git
+- Always use `.env.example` as a template when setting up on a new machine
+- Ensure the backend server is running before starting the frontend
+- The PORT in `.env` must match the proxy configuration in `vite.config.js`
 
 ## Environment Variables (`.env`)
 
@@ -73,7 +102,59 @@ Responses are cached for 2 minutes; use the Dashboard's “Refresh” button to 
 ## Deployment Notes
 
 - Serve `dist/` via any static host (S3 + CloudFront, Azure Blob, etc.).
-- Deploy the backend to any Node 18+ environment (Docker, PM2, serverless) and ensure the SPA’s `/api` proxy points to the deployed host (set `VITE_API_BASE_URL` at build time).
+- Deploy the backend to any Node 18+ environment (Docker, PM2, serverless) and ensure the SPA's `/api` proxy points to the deployed host (set `VITE_API_BASE_URL` at build time).
 - Keep DHIS2 credentials in your secret manager (Vault, AWS Secrets Manager) and surface them as env vars at runtime.
 
 This setup gives you a configurable, DHIS2-aware EWARS stack with explainable ML, ready for enterprise hardening (observability, auth, CI/CD) as your next steps.
+
+## Troubleshooting
+
+### HTTP Proxy Error at `/api/config/countries`
+
+If you encounter proxy errors when running on a different machine:
+
+1. **Ensure the backend is running**
+   ```bash
+   # Check if the backend is running on port 4000 (or your configured PORT)
+   lsof -i :4000
+   ```
+
+2. **Verify environment variables**
+   - Make sure you've created `.env` from `.env.example`
+   - Confirm `PORT` matches in both `.env` and the backend process
+
+3. **Clean install dependencies**
+   ```bash
+   # Remove old dependencies and reinstall
+   rm -rf node_modules package-lock.json
+   npm install
+   ```
+
+4. **Rebuild the backend**
+   ```bash
+   npm run server:build
+   ```
+
+5. **Check proxy configuration**
+   - The vite dev server proxies `/api/*` to `http://localhost:${PORT}`
+   - Ensure the PORT environment variable is set correctly
+
+### Common Issues
+
+- **Port already in use**: Change the `PORT` in `.env` or kill the process using that port
+- **Database connection errors**: Verify PostgreSQL is running and credentials in `.env` are correct
+- **ML service errors**: Run `cd server/ml-service && ./setup.sh` to ensure Python dependencies are installed
+- **Build errors**: Delete `server/dist/` and `dist/` directories, then run `npm run build:full`
+
+### Setup on a New Machine
+
+When cloning this repository on a new machine:
+
+1. Install Node.js 18+ and PostgreSQL
+2. Run `npm install` to install dependencies
+3. Copy `.env.example` to `.env` and configure all variables
+4. Set up the ML service: `cd server/ml-service && ./setup.sh`
+5. Build the backend: `npm run server:build`
+6. Run the application: `npm run dev:full`
+
+**IMPORTANT**: Never pull `node_modules/`, `dist/`, or `.env` from git. Always install fresh on each machine.
