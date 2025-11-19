@@ -1,49 +1,219 @@
 import { postgresService } from "./postgresService.js";
 import logger from "./logger.js";
 
+// Disease categories
+export const DISEASE_CATEGORIES = {
+  VECTOR_BORNE: "Vector-Borne",
+  WATER_BORNE: "Water-Borne & Diarrheal",
+  AIR_BORNE: "Air-Borne & Respiratory",
+  NEGLECTED_TROPICAL: "Neglected Tropical Diseases",
+  VACCINE_PREVENTABLE: "Vaccine-Preventable",
+  OTHER_INFECTIONS: "Other Infections & NCDs",
+  VIRAL_HEMORRHAGIC: "Viral Hemorrhagic",
+} as const;
+
 // Disease UIDs from DHIS2 Sierra Leone
 const DISEASE_DATA_ELEMENTS = {
-  malaria: {
-    name: "Malaria",
+  // Vector-Borne (4 diseases)
+  malariaIDSR: {
+    name: "IDSR Malaria",
     cases: "vq2qO3eTrNi",
     deaths: "r6nrJANOqMw",
-    inpatient: "p4K11MFEWtw",
-    // Malaria species UIDs
-    pf: "jt8mzqlDEjd", // P. falciparum
-    pv: "ImgnHPhcNYE", // P. vivax
-    po: "E2K6KluoF7L", // P. ovale
-    pm: "sJ23PICb6Fy", // P. malariae
-    pk: "HUPFagklWaN", // P. knowlesi (if available)
-    // Treatment UIDs
-    treated_act_24hrs: "AFM5H0wNq3t",
-    treated_act_after_24hrs: "smYVxAw2lLO",
-    rdt_positive: "wZwzzRnr9N4",
-    rdt_negative: "Qk9nnX0i7lZ",
+    category: DISEASE_CATEGORIES.VECTOR_BORNE,
   },
-  measles: {
-    name: "Measles",
-    cases: "YazgqXbizv1",
-    deaths: "f7n9E0hX8qk",
-    newCases: "GCvqIM3IzN0",
-  },
-  typhoid: {
-    name: "Typhoid Fever",
-    cases: "Cj5rTc9nEvl",
-    deaths: "Yy9NtNfwYZJ",
+  yellowFeverIDSR: {
+    name: "IDSR Yellow Fever",
+    cases: "noIzB569hTM",
+    deaths: "USBq0VHSkZq",
+    category: DISEASE_CATEGORIES.VECTOR_BORNE,
   },
   yellowFever: {
     name: "Yellow Fever",
     cases: "XWU1Huh0Luy",
     deaths: "USBq0VHSkZq",
+    category: DISEASE_CATEGORIES.VECTOR_BORNE,
+  },
+  plague: {
+    name: "IDSR Plague",
+    cases: "HS9zqaBdOQ4",
+    deaths: "lXolhoWewYH",
+    category: DISEASE_CATEGORIES.VECTOR_BORNE,
+  },
+
+  // Water-Borne & Diarrheal (5 diseases)
+  diarrhoeaNoDehydration: {
+    name: "Diarrhoea without Severe Dehydration",
+    cases: "U3jd8zVFKxY",
+    category: DISEASE_CATEGORIES.WATER_BORNE,
+  },
+  diarrhoeaDysentery: {
+    name: "Diarrhoea with Blood (Dysentery)",
+    cases: "nymNRxmnj4z",
+    deaths: "Ix2HsbDMLea",
+    category: DISEASE_CATEGORIES.WATER_BORNE,
+  },
+  diarrhoeaSevere: {
+    name: "Diarrhoea with Severe Dehydration",
+    cases: "UfZcabJUVcZ",
+    category: DISEASE_CATEGORIES.WATER_BORNE,
+  },
+  typhoid: {
+    name: "Typhoid Fever",
+    cases: "Cj5rTc9nEvl",
+    deaths: "Yy9NtNfwYZJ",
+    category: DISEASE_CATEGORIES.WATER_BORNE,
   },
   cholera: {
-    name: "Cholera",
+    name: "IDSR Cholera",
     cases: "UsSUX0cpKsH",
     deaths: "eY5ehpbEsB7",
+    category: DISEASE_CATEGORIES.WATER_BORNE,
   },
+
+  // Air-Borne & Respiratory (6 diseases)
+  ariPneumonia: {
+    name: "ARI Treated with Antibiotics (Pneumonia)",
+    cases: "iKGjnOOaPlE",
+    category: DISEASE_CATEGORIES.AIR_BORNE,
+  },
+  ariCough: {
+    name: "ARI Treated without Antibiotics (Cough)",
+    cases: "Cm4XUw6VAxv",
+    category: DISEASE_CATEGORIES.AIR_BORNE,
+  },
+  measlesIDSR: {
+    name: "IDSR Measles",
+    cases: "YazgqXbizv1",
+    deaths: "f7n9E0hX8qk",
+    category: DISEASE_CATEGORIES.AIR_BORNE,
+  },
+  measles: {
+    name: "Measles",
+    cases: "GCvqIM3IzN0",
+    deaths: "f7n9E0hX8qk",
+    category: DISEASE_CATEGORIES.AIR_BORNE,
+  },
+  tuberculosis: {
+    name: "Tuberculosis",
+    cases: "z9dYcQ2DlBG",
+    category: DISEASE_CATEGORIES.AIR_BORNE,
+  },
+  meningitis: {
+    name: "Meningitis/Severe Bacterial Infection",
+    cases: "JFFUt8yR2iW",
+    deaths: "MSZuQ1mTsia",
+    category: DISEASE_CATEGORIES.AIR_BORNE,
+  },
+
+  // Neglected Tropical Diseases (5 diseases)
+  wormInfestation: {
+    name: "Worm Infestation",
+    cases: "Usk9Asj5DED",
+    category: DISEASE_CATEGORIES.NEGLECTED_TROPICAL,
+  },
+  schistosomiasis: {
+    name: "Schistosomiasis",
+    cases: "Y7Oq71I3ASg",
+    category: DISEASE_CATEGORIES.NEGLECTED_TROPICAL,
+  },
+  onchocerciasis: {
+    name: "Onchocerciasis",
+    cases: "DrEOxW8mbbh",
+    category: DISEASE_CATEGORIES.NEGLECTED_TROPICAL,
+  },
+  yaws: {
+    name: "Yaws",
+    cases: "FF3Ev33BuCh",
+    category: DISEASE_CATEGORIES.NEGLECTED_TROPICAL,
+  },
+  leprosy: {
+    name: "Leprosy",
+    cases: "zAW6b5Owalk",
+    category: DISEASE_CATEGORIES.NEGLECTED_TROPICAL,
+  },
+
+  // Vaccine-Preventable (3 diseases - measles counted in Air-Borne)
+  tetanus: {
+    name: "Tetanus (not incl. 0-28 days)",
+    cases: "Uoj2wmnr5Dw",
+    deaths: "hM4ya5T2AqX",
+    category: DISEASE_CATEGORIES.VACCINE_PREVENTABLE,
+  },
+  neonatalTetanus: {
+    name: "Neonatal Tetanus",
+    cases: "wcwbN1jR0ar",
+    deaths: "Vp12ncSU1Av",
+    category: DISEASE_CATEGORIES.VACCINE_PREVENTABLE,
+  },
+  afp: {
+    name: "Acute Flaccid Paralysis (AFP)",
+    cases: "FQ2o8UBlcrS",
+    deaths: "FTRrcoaog83",
+    category: DISEASE_CATEGORIES.VACCINE_PREVENTABLE,
+  },
+
+  // Other Infections & NCDs (11 diseases)
+  allOther: {
+    name: "All Other",
+    cases: "A2VfEfPflHV",
+    category: DISEASE_CATEGORIES.OTHER_INFECTIONS,
+  },
+  skinInfection: {
+    name: "Skin Infection",
+    cases: "Y4cFzB4A9ZQ",
+    category: DISEASE_CATEGORIES.OTHER_INFECTIONS,
+  },
+  malnutrition: {
+    name: "Clinical Malnutrition",
+    cases: "TBbCcJfZ91x",
+    category: DISEASE_CATEGORIES.OTHER_INFECTIONS,
+  },
+  stiDischarge: {
+    name: "STI - Genital Discharge",
+    cases: "CN9Oxawn7bD",
+    category: DISEASE_CATEGORIES.OTHER_INFECTIONS,
+  },
+  anaemia: {
+    name: "Anaemia",
+    cases: "HLPuaFB7Frw",
+    category: DISEASE_CATEGORIES.OTHER_INFECTIONS,
+  },
+  wounds: {
+    name: "Wounds/Trauma",
+    cases: "FJs8ZjlQE6f",
+    category: DISEASE_CATEGORIES.OTHER_INFECTIONS,
+  },
+  eyeInfection: {
+    name: "Eye Infection",
+    cases: "BQI18TPLR7W",
+    category: DISEASE_CATEGORIES.OTHER_INFECTIONS,
+  },
+  hypertension: {
+    name: "Hypertension",
+    cases: "UXW5hWW8dE1",
+    category: DISEASE_CATEGORIES.OTHER_INFECTIONS,
+  },
+  otitisMedia: {
+    name: "Otitis Media",
+    cases: "DWLCM68Q7Zl",
+    category: DISEASE_CATEGORIES.OTHER_INFECTIONS,
+  },
+  stiUlcer: {
+    name: "STI - Genital Ulcer",
+    cases: "IeO1sWXVyp6",
+    category: DISEASE_CATEGORIES.OTHER_INFECTIONS,
+  },
+  burns: {
+    name: "Burns",
+    cases: "zMGEd921xd3",
+    category: DISEASE_CATEGORIES.OTHER_INFECTIONS,
+  },
+
+  // Viral Hemorrhagic (1 disease)
   lassaFever: {
     name: "Lassa Fever",
     cases: "NCteyX2xpMf",
+    category: DISEASE_CATEGORIES.VIRAL_HEMORRHAGIC,
   },
 };
 
@@ -87,23 +257,12 @@ export interface FacilityPerformance {
   status: string;
 }
 
-export interface SpeciesDistribution {
-  species: string;
-  cases: number;
-  percentage: number;
-}
-
-export interface TreatmentData {
-  category: string;
-  cases: number;
-  percentage: number;
-}
 
 class DiseaseService {
   /**
    * Get list of all diseases with available data
    */
-  async getAllDiseases(): Promise<{ id: string; name: string; uid: string }[]> {
+  async getAllDiseases(): Promise<{ id: string; name: string; uid: string; category: string }[]> {
     try {
       logger.debug("Fetching all diseases");
 
@@ -111,11 +270,62 @@ class DiseaseService {
         id,
         name: config.name,
         uid: config.cases,
+        category: config.category,
       }));
 
       return diseases;
     } catch (error) {
       logger.error({ error }, "Error fetching all diseases");
+      throw error;
+    }
+  }
+
+  /**
+   * Helper function to extract disease group name from full disease name
+   */
+  private extractDiseaseGroup(diseaseName: string): string {
+    // Normalize the name for grouping
+    const name = diseaseName.toLowerCase();
+
+    // Define disease group patterns
+    if (name.includes('diarrhoea')) return 'Diarrhoea';
+    if (name.includes('ari ')) return 'ARI';
+    if (name.includes('measles')) return 'Measles';
+    if (name.includes('yellow fever')) return 'Yellow Fever';
+    if (name.includes('sti ')) return 'STI';
+    if (name.includes('tetanus')) return 'Tetanus';
+
+    // For diseases without variants, use the disease name itself
+    return diseaseName;
+  }
+
+  /**
+   * Get diseases grouped by category with disease group hierarchy
+   */
+  async getDiseasesByCategory(): Promise<Record<string, { id: string; name: string; uid: string; group: string }[]>> {
+    try {
+      logger.debug("Fetching diseases grouped by category with disease groups");
+
+      const diseasesByCategory: Record<string, { id: string; name: string; uid: string; group: string }[]> = {};
+
+      Object.entries(DISEASE_DATA_ELEMENTS).forEach(([id, config]) => {
+        if (!diseasesByCategory[config.category]) {
+          diseasesByCategory[config.category] = [];
+        }
+
+        const diseaseGroup = this.extractDiseaseGroup(config.name);
+
+        diseasesByCategory[config.category].push({
+          id,
+          name: config.name,
+          uid: config.cases,
+          group: diseaseGroup,
+        });
+      });
+
+      return diseasesByCategory;
+    } catch (error) {
+      logger.error({ error }, "Error fetching diseases by category");
       throw error;
     }
   }
@@ -515,142 +725,6 @@ class DiseaseService {
     }
   }
 
-  /**
-   * Get malaria species distribution
-   */
-  async getMalariaSpeciesDistribution(locationUid?: string): Promise<SpeciesDistribution[]> {
-    try {
-      logger.debug({ locationUid }, "Fetching malaria species distribution");
-
-      const malariaConfig = DISEASE_DATA_ELEMENTS.malaria;
-      const speciesUIDs = [malariaConfig.pf, malariaConfig.pv, malariaConfig.po, malariaConfig.pm];
-
-      let query = `
-        WITH species_data AS (
-          SELECT
-            de.shortname as species,
-            de.name as full_name,
-            SUM(CASE WHEN dv.value ~ '^[0-9]+$' THEN CAST(dv.value AS INTEGER) ELSE 0 END) as cases
-          FROM datavalue dv
-          JOIN dataelement de ON dv.dataelementid = de.dataelementid
-      `;
-
-      const params: any[] = [speciesUIDs];
-      let paramIndex = 2;
-
-      if (locationUid) {
-        query += `
-          JOIN organisationunit ou ON dv.sourceid = ou.organisationunitid
-        `;
-      }
-
-      query += `
-          WHERE dv.deleted = false
-            AND de.uid = ANY($1::text[])
-            AND dv.value IS NOT NULL
-      `;
-
-      if (locationUid) {
-        query += ` AND ou.path LIKE '%' || $${paramIndex} || '%'`;
-        params.push(locationUid);
-        paramIndex++;
-      }
-
-      query += `
-          GROUP BY de.uid, de.shortname, de.name
-        )
-        SELECT
-          species,
-          full_name,
-          cases,
-          ROUND(cases * 100.0 / NULLIF(SUM(cases) OVER (), 0), 2) as percentage
-        FROM species_data
-        WHERE cases > 0
-        ORDER BY cases DESC
-      `;
-
-      const result = await postgresService.query(query, params);
-
-      return result.rows.map((row) => ({
-        species: row.species || row.full_name || "Unknown",
-        cases: parseInt(row.cases) || 0,
-        percentage: parseFloat(row.percentage) || 0,
-      }));
-    } catch (error) {
-      logger.error({ error }, "Error fetching malaria species distribution");
-      throw error;
-    }
-  }
-
-  /**
-   * Get treatment timeline data (for Malaria)
-   */
-  async getTreatmentTimeline(diseaseId: string, locationUid?: string): Promise<TreatmentData[]> {
-    try {
-      logger.debug({ diseaseId, locationUid }, "Fetching treatment timeline");
-
-      if (diseaseId !== "malaria") {
-        logger.warn({ diseaseId }, "Treatment timeline only available for malaria");
-        return [];
-      }
-
-      const malariaConfig = DISEASE_DATA_ELEMENTS.malaria;
-      const treatmentUIDs = [malariaConfig.treated_act_24hrs, malariaConfig.treated_act_after_24hrs];
-
-      let query = `
-        WITH treatment_data AS (
-          SELECT
-            de.name as category,
-            SUM(CASE WHEN dv.value ~ '^[0-9]+$' THEN CAST(dv.value AS INTEGER) ELSE 0 END) as cases
-          FROM datavalue dv
-          JOIN dataelement de ON dv.dataelementid = de.dataelementid
-      `;
-
-      const params: any[] = [treatmentUIDs];
-      let paramIndex = 2;
-
-      if (locationUid) {
-        query += `
-          JOIN organisationunit ou ON dv.sourceid = ou.organisationunitid
-        `;
-      }
-
-      query += `
-          WHERE dv.deleted = false
-            AND de.uid = ANY($1::text[])
-            AND dv.value IS NOT NULL
-      `;
-
-      if (locationUid) {
-        query += ` AND ou.path LIKE '%' || $${paramIndex} || '%'`;
-        params.push(locationUid);
-        paramIndex++;
-      }
-
-      query += `
-          GROUP BY de.uid, de.name
-        )
-        SELECT
-          category,
-          cases,
-          ROUND(cases * 100.0 / NULLIF(SUM(cases) OVER (), 0), 2) as percentage
-        FROM treatment_data
-        WHERE cases > 0
-        ORDER BY cases DESC
-      `;
-
-      const result = await postgresService.query(query, params);
-
-      return result.rows.map((row) => ({
-        category: row.category || "Unknown",
-        cases: parseInt(row.cases) || 0,
-        percentage: parseFloat(row.percentage) || 0,
-      }));
-    } catch (error) {
-      logger.error({ error, diseaseId }, "Error fetching treatment timeline");
-      throw error;
-    }
-  }
 }
 
 export const diseaseService = new DiseaseService();

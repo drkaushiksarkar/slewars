@@ -23,6 +23,23 @@ diseaseRouter.get("/", async (_req, res, next) => {
 });
 
 /**
+ * GET /api/diseases/categories
+ * Get diseases grouped by category
+ */
+diseaseRouter.get("/categories", async (_req, res, next) => {
+  try {
+    logger.debug("GET /api/diseases/categories");
+    const diseasesByCategory = await diseaseService.getDiseasesByCategory();
+    res.json({
+      success: true,
+      data: diseasesByCategory,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+/**
  * GET /api/diseases/:diseaseId/summary
  * Get disease summary statistics
  */
@@ -152,49 +169,3 @@ diseaseRouter.get("/:diseaseId/facilities", async (req, res, next) => {
   }
 });
 
-/**
- * GET /api/diseases/malaria/species
- * Get malaria species distribution
- * Query params: locationUid
- */
-diseaseRouter.get("/malaria/species", async (req, res, next) => {
-  try {
-    const locationUid = req.query.locationUid as string | undefined;
-
-    logger.debug({ locationUid }, "GET /api/diseases/malaria/species");
-
-    const species = await diseaseService.getMalariaSpeciesDistribution(locationUid);
-
-    res.json({
-      success: true,
-      data: species,
-      count: species.length,
-    });
-  } catch (error) {
-    next(error);
-  }
-});
-
-/**
- * GET /api/diseases/:diseaseId/treatment
- * Get treatment timeline data (currently only for malaria)
- * Query params: locationUid
- */
-diseaseRouter.get("/:diseaseId/treatment", async (req, res, next) => {
-  try {
-    const { diseaseId } = req.params;
-    const locationUid = req.query.locationUid as string | undefined;
-
-    logger.debug({ diseaseId, locationUid }, "GET /api/diseases/:diseaseId/treatment");
-
-    const treatment = await diseaseService.getTreatmentTimeline(diseaseId, locationUid);
-
-    res.json({
-      success: true,
-      data: treatment,
-      count: treatment.length,
-    });
-  } catch (error) {
-    next(error);
-  }
-});

@@ -35,11 +35,11 @@ class PostgresService {
         try {
             const result = await pool.query(text, params);
             const duration = Date.now() - start;
-            logger.debug({ text, duration, rows: result.rowCount }, "Executed PostgreSQL query");
+            logger.debug({ duration, rows: result.rowCount }, "Executed PostgreSQL query");
             return result;
         }
         catch (error) {
-            logger.error({ error, text }, "PostgreSQL query failed");
+            logger.error({ error }, "PostgreSQL query failed");
             throw error;
         }
     }

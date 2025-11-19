@@ -15,11 +15,14 @@ import { Button } from "@/components/ui/button";
 import { useDashboardData } from "@/contexts/DashboardDataContext";
 import DiseaseMap from "./DiseaseMap";
 import { fetchWeatherData } from "@/services/weatherService";
+import DiseaseBreakdown from "./dashboard/DiseaseBreakdown";
+import DiseaseTrend from "./dashboard/DiseaseTrend";
 
 const Overview = () => {
   const [selectedAlert, setSelectedAlert] = React.useState(null);
   const [selectedDisease, setSelectedDisease] = React.useState("all");
-  const [timeRange, setTimeRange] = React.useState("7d");
+  const [selectedLocation, setSelectedLocation] = React.useState("all");
+  const [timeRange, setTimeRange] = React.useState("30d");
   const [weatherData, setWeatherData] = React.useState(null);
   const { overview, isLoading, refresh } = useDashboardData();
 
@@ -87,9 +90,12 @@ const Overview = () => {
       {/* Dropdowns Row */}
       <div className="flex items-center space-x-3">
         <select
+          value={selectedLocation}
+          onChange={(e) => setSelectedLocation(e.target.value)}
           className="flex-1 rounded-md border border-input bg-background px-4 py-2"
         >
-          <option>Location</option>
+          <option value="all">All Locations</option>
+          {/* Additional locations will be loaded dynamically */}
         </select>
 
         <select
@@ -107,7 +113,7 @@ const Overview = () => {
           onChange={(e) => setSelectedDisease(e.target.value)}
           className="flex-1 rounded-md border border-input bg-background px-4 py-2"
         >
-          <option value="all">Disease</option>
+          <option value="all">All Diseases</option>
           {diseaseOptions.map((disease) => (
             <option key={disease} value={disease}>
               {disease}
@@ -249,6 +255,15 @@ const Overview = () => {
             </div>
           </motion.div>
         </div>
+      </div>
+
+      {/* Disease Breakdown and Trend Cards Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Disease Breakdown Card */}
+        <DiseaseBreakdown locationUid={selectedLocation} timeRange={timeRange} />
+
+        {/* Disease Trend Card */}
+        <DiseaseTrend locationUid={selectedLocation} />
       </div>
 
       {/* Bottom - Full Width Disease Map */}
