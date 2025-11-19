@@ -9,6 +9,8 @@ node_modules/
 # Build outputs
 dist/
 build/
+logs/
+*.log
 server/dist/
 
 # IDE
@@ -37,3 +39,5 @@ __pycache__/
 # Other
 Inspiration/
 .cache/
+.claude
+/plugins
