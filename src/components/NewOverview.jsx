@@ -5,13 +5,16 @@ import {
   MapPin,
   Users,
   Building2,
+  Thermometer,
+  CloudRain,
+  Droplets,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import KPICard from './dashboard/KPICard';
 import DiseaseBarChart from './dashboard/DiseaseBarChart';
 import TimeSeriesChart from './dashboard/TimeSeriesChart';
 import DiseaseMap from './DiseaseMap';
 import { useDashboardAnalytics } from '@/hooks/useDashboardAnalytics';
+import { useCurrentWeather } from '@/hooks/useCurrentWeather';
 
 /**
  * NewOverview - Phase 2 implementation using real DHIS2 data from Phase 1 APIs
@@ -36,6 +39,9 @@ const NewOverview = () => {
     days: selectedDays,
     diseaseId: selectedDisease,
   });
+
+  // Fetch current weather data (default location: Bo)
+  const { data: currentWeather, loading: weatherLoading } = useCurrentWeather('Bo');
 
   if (error) {
     return (
@@ -105,42 +111,136 @@ const NewOverview = () => {
         </Button>
       </div>
 
-      {/* KPI Cards Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard
-          title={`Total Cases (${selectedDays} days)`}
-          value={overview?.totalCases || 0}
-          icon={Activity}
-          colorScheme="blue"
-          trend={overview?.totalCases > 0 ? 'up' : 'neutral'}
-          trendValue={overview?.changePercent ? `${overview.changePercent}%` : null}
-          delay={0}
-        />
-        <KPICard
-          title={`Total Deaths (${selectedDays} days)`}
-          value={overview?.totalDeaths || 0}
-          icon={Users}
-          colorScheme="rose"
-          trend={overview?.totalDeaths > 0 ? 'up' : 'neutral'}
-          subtitle="All diseases"
-          delay={0.1}
-        />
-        <KPICard
-          title="High Risk Districts"
-          value={overview?.highRiskDistricts || 0}
-          icon={MapPin}
-          colorScheme="purple"
-          subtitle={`Out of 13 districts`}
-          delay={0.2}
-        />
-        <KPICard
-          title="Affected Facilities"
-          value={overview?.affectedFacilities || 0}
-          icon={Building2}
-          colorScheme="green"
-          subtitle="Reporting facilities"
-          delay={0.3}
-        />
+      {/* Combined KPI and Weather Cards Row - All 7 Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3">
+        {/* KPI Card 1 - Total Cases */}
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0 }}
+          className="bg-card p-3 rounded-lg border-2 border-blue-300 flex flex-col items-center justify-center min-h-[160px]"
+        >
+          <Activity className="h-8 w-8 text-blue-400 mb-2 flex-shrink-0" />
+          <h3 className="text-xs font-medium text-muted-foreground text-center mb-1">Total Cases</h3>
+          <p className="text-xl font-bold">{overview?.totalCases || 0}</p>
+          {overview?.changePercent && (
+            <span className="text-xs text-green-500 mt-1">+{overview.changePercent}%</span>
+          )}
+        </motion.div>
+
+        {/* KPI Card 2 - Total Deaths */}
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="bg-card p-3 rounded-lg border-2 border-rose-300 flex flex-col items-center justify-center min-h-[160px]"
+        >
+          <Users className="h-8 w-8 text-rose-400 mb-2 flex-shrink-0" />
+          <h3 className="text-xs font-medium text-muted-foreground text-center mb-1">Total Deaths</h3>
+          <p className="text-xl font-bold">{overview?.totalDeaths || 0}</p>
+          <span className="text-xs text-muted-foreground mt-1">All diseases</span>
+        </motion.div>
+
+        {/* KPI Card 3 - High Risk Districts */}
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="bg-card p-3 rounded-lg border-2 border-purple-300 flex flex-col items-center justify-center min-h-[160px]"
+        >
+          <MapPin className="h-8 w-8 text-purple-400 mb-2 flex-shrink-0" />
+          <h3 className="text-xs font-medium text-muted-foreground text-center mb-1">High Risk</h3>
+          <p className="text-xl font-bold">{overview?.highRiskDistricts || 0}</p>
+          <span className="text-xs text-muted-foreground mt-1">Districts</span>
+        </motion.div>
+
+        {/* KPI Card 4 - Affected Facilities */}
+        <motion.div
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="bg-card p-3 rounded-lg border-2 border-green-300 flex flex-col items-center justify-center min-h-[160px]"
+        >
+          <Building2 className="h-8 w-8 text-green-400 mb-2 flex-shrink-0" />
+          <h3 className="text-xs font-medium text-muted-foreground text-center mb-1">Affected</h3>
+          <p className="text-xl font-bold">{overview?.affectedFacilities || 0}</p>
+          <span className="text-xs text-muted-foreground mt-1">Facilities</span>
+        </motion.div>
+
+        {/* Weather Card 1 - Temperature */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className="relative rounded-lg overflow-hidden min-h-[160px] cursor-pointer bg-rose-100"
+        >
+          <div className="flex flex-col items-center justify-center h-full p-3 text-rose-900">
+            <Thermometer className="h-8 w-8 mb-2" />
+            <span className="text-xs font-semibold mb-1">Temperature</span>
+            {currentWeather && !weatherLoading ? (
+              <>
+                <span className="text-xl font-bold">
+                  {currentWeather.temperature.toFixed(1)}°C
+                </span>
+                <span className="text-xs opacity-70 mt-1">
+                  Feels {currentWeather.feels_like.toFixed(0)}°C
+                </span>
+              </>
+            ) : (
+              <span className="text-sm">Loading...</span>
+            )}
+          </div>
+        </motion.div>
+
+        {/* Weather Card 2 - Rainfall */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.5 }}
+          className="relative rounded-lg overflow-hidden min-h-[160px] cursor-pointer bg-sky-100"
+        >
+          <div className="flex flex-col items-center justify-center h-full p-3 text-sky-900">
+            <CloudRain className="h-8 w-8 mb-2" />
+            <span className="text-xs font-semibold mb-1">Rainfall</span>
+            {currentWeather && !weatherLoading ? (
+              <>
+                <span className="text-xl font-bold">
+                  {currentWeather.rainfall_today.toFixed(1)} mm
+                </span>
+                <span className="text-xs opacity-70 mt-1">
+                  {currentWeather.weather}
+                </span>
+              </>
+            ) : (
+              <span className="text-sm">Loading...</span>
+            )}
+          </div>
+        </motion.div>
+
+        {/* Weather Card 3 - Humidity */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+          className="relative rounded-lg overflow-hidden min-h-[160px] cursor-pointer bg-amber-100"
+        >
+          <div className="flex flex-col items-center justify-center h-full p-3 text-amber-900">
+            <Droplets className="h-8 w-8 mb-2" />
+            <span className="text-xs font-semibold mb-1">Humidity</span>
+            {currentWeather && !weatherLoading ? (
+              <>
+                <span className="text-xl font-bold">
+                  {currentWeather.humidity}%
+                </span>
+                <span className="text-xs opacity-70 mt-1">
+                  Wind {currentWeather.wind_speed.toFixed(1)} m/s
+                </span>
+              </>
+            ) : (
+              <span className="text-sm">Loading...</span>
+            )}
+          </div>
+        </motion.div>
       </div>
 
       {/* Disease Breakdown and Trends Row */}

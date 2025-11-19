@@ -5,12 +5,13 @@ import {
   CloudRain,
   GraduationCap,
   PlayCircle,
-  Database,
   Languages,
   Clock,
   Phone,
   MapPin,
-  TrendingUp
+  TrendingUp,
+  Info,
+  Globe2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCountry } from "@/contexts/CountryContext";
@@ -20,7 +21,6 @@ import ClimateData from "./ClimateData";
 import Training from "./Training";
 import Simulation from "./Simulation";
 import DataGenerator from "./DataGenerator";
-import Response from "./Response";
 import DiseaseAnalysis from "./DiseaseAnalysis";
 import LocationAnalysis from "./LocationAnalysis";
 import ForecastDashboard from "./forecast/ForecastDashboard";
@@ -56,13 +56,13 @@ const Dashboard = () => {
 
   const tabs = [
     { id: "overview", label: "Overview", icon: Activity },
-    { id: "disease-analysis", label: "Disease Analysis", icon: Activity },
-    { id: "location-analysis", label: "Location Analysis", icon: MapPin },
-    { id: "forecast", label: "ML Forecasting", icon: TrendingUp },
+    { id: "forecast", label: "Prediction Risk", icon: TrendingUp },
     { id: "climate", label: "Climate Impact", icon: CloudRain },
-    { id: "training", label: "Training", icon: GraduationCap },
+    { id: "location-analysis", label: "Location Analysis", icon: MapPin },
+    { id: "disease-analysis", label: "Disease Analysis", icon: Activity },
     { id: "simulation", label: "Simulation", icon: PlayCircle },
-    { id: "data", label: "Data Gen", icon: Database },
+    { id: "training", label: "Training", icon: GraduationCap },
+    { id: "data", label: "Info", icon: Info },
   ];
 
   return (
@@ -75,9 +75,7 @@ const Dashboard = () => {
       >
         <div className="flex justify-between items-start mb-2">
           <div className="flex items-center space-x-3">
-            {countryConfig?.flag && (
-              <span className="text-4xl">{countryConfig.flag}</span>
-            )}
+            <Globe2 className="h-10 w-10 text-primary" />
             <div>
               <h1 className="text-3xl font-bold text-foreground">
                 {countryConfig ? `${countryConfig.name} EWARS Dashboard` : "Loading..."}
