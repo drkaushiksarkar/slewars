@@ -11,7 +11,7 @@
     "server:build": "tsc -p server/tsconfig.json",
     "server:start": "node server/dist/index.js",
     "ml:start": "cd server/ml-service && ./start.sh",
-    "dev:full": "concurrently -n \"API,FRONTEND,ML\" -c \"blue,green,yellow\" \"npm run server:dev\" \"npm run dev\" \"npm run ml:start\"",
+    "dev:full": "concurrently -n \"API,FRONTEND,ML\" -c \"blue,green,yellow\" \"npm run server-dev\" \"npm run dev\" \"npm run ml:start\"",
     "build:full": "npm run server:build && npm run build"
   },
   "dependencies": {

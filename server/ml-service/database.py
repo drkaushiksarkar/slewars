@@ -106,7 +106,6 @@ def fetch_disease_timeseries(disease: str, location_uid: str, start_date: str = 
             return results
         except Exception as e:
             logger.error(f"Error executing disease query: {e}")
-            logger.error(f"Query params: {params}")
             if cursor:
                 cursor.close()
             raise
@@ -155,7 +154,6 @@ def fetch_climate_data(location_uid: str, start_date: str = None, end_date: str 
             return results
         except Exception as e:
             logger.error(f"Error executing climate query: {e}")
-            logger.error(f"Query params: {params}")
             if cursor:
                 cursor.close()
             # Return empty list if climate data not available
