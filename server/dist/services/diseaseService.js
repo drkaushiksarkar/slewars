@@ -11,7 +11,7 @@ export const DISEASE_CATEGORIES = {
     VIRAL_HEMORRHAGIC: "Viral Hemorrhagic",
 };
 // Disease UIDs from DHIS2 Sierra Leone
-const DISEASE_DATA_ELEMENTS = {
+export const DISEASE_DATA_ELEMENTS = {
     // Vector-Borne (4 diseases)
     malariaIDSR: {
         name: "IDSR Malaria",
@@ -407,11 +407,12 @@ class DiseaseService {
         }
     }
     /**
-     * Get disease breakdown for all diseases (for overview)
+     * Get Disease Breakdown by Category for all diseases (for overview)
+     * Returns data grouped by category to ensure all 7 categories are always shown
      */
     async getDiseaseBreakdown(locationUid, days, diseaseId) {
         try {
-            logger.debug({ locationUid, days, diseaseId }, "Fetching disease breakdown");
+            logger.debug({ locationUid, days, diseaseId }, "Fetching Disease Breakdown by Category");
             // Build disease UIDs array based on filter
             let allCaseUIDs;
             if (diseaseId && diseaseId !== 'all') {
@@ -447,11 +448,12 @@ class DiseaseService {
         WHERE dv.deleted = false
           AND de.uid = ANY($${paramIndex}::text[])
           AND dv.value IS NOT NULL
+          AND p.startdate <= NOW()
       `;
             params.push(allCaseUIDs);
             paramIndex++;
             if (days) {
-                query += ` AND p.enddate >= NOW() - INTERVAL '${days} days'`;
+                query += ` AND p.startdate >= NOW() - INTERVAL '${days} days' AND p.startdate <= NOW()`;
             }
             if (locationUid && locationUid !== 'all') {
                 query += ` AND ou.path LIKE '%' || $${paramIndex} || '%'`;
@@ -472,7 +474,7 @@ class DiseaseService {
             }));
         }
         catch (error) {
-            logger.error({ error }, "Error fetching disease breakdown");
+            logger.error({ error }, "Error fetching Disease Breakdown by Category");
             throw error;
         }
     }

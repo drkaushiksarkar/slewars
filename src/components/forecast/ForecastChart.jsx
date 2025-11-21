@@ -241,7 +241,7 @@ export default function ForecastChart({ forecast, height = 400 }) {
       </svg>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4 mt-6">
+      <div className="grid grid-cols-4 gap-3 mt-6">
         {predictions.map((p, i) => (
           <div key={i} className="bg-gray-50 rounded-lg p-3 border border-gray-200">
             <div className="text-xs text-gray-600 mb-1">

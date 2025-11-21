@@ -80,7 +80,7 @@ analyticsRouter.get("/trends", async (req, res, next) => {
 /**
  * GET /api/analytics/heatmap
  * Get geographic heat map data
- * Query params: days (default: 90), startDate, endDate, disease, location
+ * Query params: days (default: 90), startDate, endDate, disease, location, adminLevel (2=District, 3=Chiefdom, 4=Facility)
  */
 analyticsRouter.get("/heatmap", async (req, res, next) => {
   try {
@@ -89,10 +89,11 @@ analyticsRouter.get("/heatmap", async (req, res, next) => {
     const endDate = req.query.endDate as string | undefined;
     const disease = req.query.disease as string | undefined;
     const location = req.query.location as string | undefined;
+    const adminLevel = req.query.adminLevel ? parseInt(req.query.adminLevel as string) : 2;
 
-    logger.debug({ days, startDate, endDate, disease, location }, "GET /api/analytics/heatmap");
+    logger.debug({ days, startDate, endDate, disease, location, adminLevel }, "GET /api/analytics/heatmap");
 
-    const heatmap = await analyticsService.getGeographicHeatMap(days, startDate, endDate, disease, location);
+    const heatmap = await analyticsService.getGeographicHeatMap(days, startDate, endDate, disease, location, adminLevel);
 
     res.json({
       success: true,

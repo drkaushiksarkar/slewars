@@ -43,6 +43,7 @@ function ForecastDashboardContent() {
   const [locations, setLocations] = useState([]);
   const [diseases] = useState(['Malaria', 'Measles', 'Typhoid', 'Yellow Fever', 'Cholera', 'Lassa Fever']);
   const [showRetrainModal, setShowRetrainModal] = useState(false);
+  const [showForecastInfo, setShowForecastInfo] = useState(false);
 
   console.log('Component state:', { selectedDisease, selectedLocation, locations });
 
@@ -92,29 +93,50 @@ function ForecastDashboardContent() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Disease Forecasting</h1>
-          <p className="text-gray-600">
-            AI-powered predictions using ensemble SARIMA + XGBoost models
-          </p>
-        </motion.div>
-
-        {/* Info Banner */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.05 }}
-          className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6"
-        >
-          <div className="flex items-start gap-3">
-            <svg className="w-5 h-5 text-blue-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-            </svg>
-            <div className="flex-1 text-sm text-blue-800">
-              <p className="font-semibold mb-1">How Forecasting Works</p>
-              <p>
-                Forecasts automatically load using saved models for fast predictions.
-                Click <strong>Refresh & Retrain</strong> to pull the latest ERA5 climate data, retrain the model, and generate updated predictions (~2-3 min).
+          <div className="flex items-center gap-3">
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Disease Forecasting</h1>
+              <p className="text-gray-600">
+                AI-powered predictions using ensemble SARIMA + XGBoost models
               </p>
+            </div>
+
+            {/* Info Button */}
+            <div className="relative">
+              <button
+                onClick={() => setShowForecastInfo(!showForecastInfo)}
+                className="w-9 h-9 rounded-full bg-blue-100 hover:bg-blue-200 flex items-center justify-center transition-colors group"
+                title="How Forecasting Works"
+              >
+                <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+              </button>
+
+              {/* Info Popover */}
+              {showForecastInfo && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 p-4 z-50"
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <h3 className="font-semibold text-gray-900 text-sm">How Forecasting Works</h3>
+                    <button
+                      onClick={() => setShowForecastInfo(false)}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  </div>
+                  <p className="text-sm text-gray-700">
+                    Forecasts automatically load using saved models for fast predictions.
+                    Click <strong>Refresh & Retrain</strong> to pull the latest ERA5 climate data, retrain the model, and generate updated predictions (~2-3 min).
+                  </p>
+                </motion.div>
+              )}
             </div>
           </div>
         </motion.div>
@@ -251,32 +273,47 @@ function ForecastDashboardContent() {
                   return null;
                 })()}
 
-                {/* Contributing Factors */}
-                {forecast.predictions?.[0]?.contributing_factors?.length > 0 && (
-                  <div className="mt-6 bg-blue-50 rounded-lg p-4 border border-blue-200">
-                    <h3 className="text-sm font-semibold text-blue-900 mb-3">
-                      Key Contributing Factors
-                    </h3>
-                    <div className="space-y-2">
-                      {forecast.predictions[0].contributing_factors.map((factor, i) => (
-                        <div key={i} className="flex items-center justify-between">
-                          <span className="text-sm text-blue-800">{factor.factor}</span>
-                          <div className="flex items-center">
-                            <div className="w-32 bg-blue-200 rounded-full h-2 mr-2">
-                              <div
-                                className="bg-blue-600 h-2 rounded-full"
-                                style={{ width: `${factor.impact * 100}%` }}
-                              />
+                {/* Contributing Factors - Climate Variables Only */}
+                {(() => {
+                  // Filter to only show climate-related variables
+                  const climateFactors = forecast.predictions?.[0]?.contributing_factors?.filter(factor => {
+                    const factorName = factor.factor.toLowerCase();
+                    return factorName.includes('temp') ||
+                           factorName.includes('precip') ||
+                           factorName.includes('rain') ||
+                           factorName.includes('humid') ||
+                           factorName.includes('climate') ||
+                           factorName.includes('weather') ||
+                           factorName.includes('pressure') ||
+                           factorName.includes('wind');
+                  }) || [];
+
+                  return climateFactors.length > 0 && (
+                    <div className="mt-6 bg-blue-50 rounded-lg p-4 border border-blue-200">
+                      <h3 className="text-sm font-semibold text-blue-900 mb-3">
+                        Key Contributing Factors (Climate Variables)
+                      </h3>
+                      <div className="space-y-2">
+                        {climateFactors.map((factor, i) => (
+                          <div key={i} className="flex items-center justify-between">
+                            <span className="text-sm text-blue-800">{factor.factor}</span>
+                            <div className="flex items-center">
+                              <div className="w-32 bg-blue-200 rounded-full h-2 mr-2">
+                                <div
+                                  className="bg-blue-600 h-2 rounded-full"
+                                  style={{ width: `${factor.impact * 100}%` }}
+                                />
+                              </div>
+                              <span className="text-xs font-medium text-blue-900">
+                                {(factor.impact * 100).toFixed(1)}%
+                              </span>
                             </div>
-                            <span className="text-xs font-medium text-blue-900">
-                              {(factor.impact * 100).toFixed(1)}%
-                            </span>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
               </>
             ) : (
               <div className="flex items-center justify-center h-96 text-gray-500">

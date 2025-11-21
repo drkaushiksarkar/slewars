@@ -1,15 +1,35 @@
 import React, { useState, useEffect } from "react";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  Bug,
+  Droplets,
+  Wind,
+  Microscope,
+  Syringe,
+  Stethoscope,
+  AlertTriangle,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const CATEGORY_ICONS = {
-  "Vector-Borne": "🦟",
-  "Water-Borne & Diarrheal": "💧",
-  "Air-Borne & Respiratory": "🫁",
-  "Neglected Tropical Diseases": "🪱",
-  "Vaccine-Preventable": "💉",
-  "Other Infections & NCDs": "🩺",
-  "Viral Hemorrhagic": "🩸",
+  "Vector-Borne": Bug,
+  "Water-Borne & Diarrheal": Droplets,
+  "Air-Borne & Respiratory": Wind,
+  "Neglected Tropical Diseases": Microscope,
+  "Vaccine-Preventable": Syringe,
+  "Other Infections & NCDs": Stethoscope,
+  "Viral Hemorrhagic": AlertTriangle,
+};
+
+const CATEGORY_COLORS = {
+  "Vector-Borne": "text-amber-600",
+  "Water-Borne & Diarrheal": "text-blue-600",
+  "Air-Borne & Respiratory": "text-sky-600",
+  "Neglected Tropical Diseases": "text-purple-600",
+  "Vaccine-Preventable": "text-green-600",
+  "Other Infections & NCDs": "text-slate-600",
+  "Viral Hemorrhagic": "text-red-600",
 };
 
 const DiseaseBreakdown = ({ locationUid = "all", timeRange = "30d" }) => {
@@ -60,8 +80,19 @@ const DiseaseBreakdown = ({ locationUid = "all", timeRange = "30d" }) => {
           });
         }
 
-        // Organize data by category with disease groups
+        // Initialize organized data with all 7 categories to ensure they're always shown
         const organized = {};
+
+        // First, initialize all categories with empty data
+        Object.keys(CATEGORY_ICONS).forEach((category) => {
+          organized[category] = {
+            diseaseGroups: [],
+            totalCases: 0,
+            totalFacilities: 0,
+          };
+        });
+
+        // Now populate with actual data
         if (categoriesData.success && categoriesData.data) {
           Object.entries(categoriesData.data).forEach(([category, diseases]) => {
             // First, map diseases with breakdown data
@@ -109,22 +140,17 @@ const DiseaseBreakdown = ({ locationUid = "all", timeRange = "30d" }) => {
             // Sort disease groups by total cases (descending)
             diseaseGroupsArray.sort((a, b) => b.totalCases - a.totalCases);
 
+            // Update the category with data
             organized[category] = {
               diseaseGroups: diseaseGroupsArray,
+              totalCases: diseaseGroupsArray.reduce((sum, g) => sum + g.totalCases, 0),
+              totalFacilities: diseaseGroupsArray.reduce((sum, g) => sum + g.facilitiesAffected, 0),
             };
-            // Calculate category totals
-            organized[category].totalCases = organized[category].diseaseGroups.reduce(
-              (sum, g) => sum + g.totalCases,
-              0
-            );
-            organized[category].totalFacilities = organized[category].diseaseGroups.reduce(
-              (sum, g) => sum + g.facilitiesAffected,
-              0
-            );
           });
         }
 
         // Sort categories by total cases (prevalence) - descending
+        // But ensure all 7 categories remain in the output, even if they have 0 cases
         const sortedOrganized = Object.entries(organized)
           .sort(([, a], [, b]) => b.totalCases - a.totalCases)
           .reduce((acc, [key, value]) => {
@@ -134,8 +160,8 @@ const DiseaseBreakdown = ({ locationUid = "all", timeRange = "30d" }) => {
 
         setDiseaseData(sortedOrganized);
       } catch (err) {
-        console.error("Error fetching disease breakdown:", err);
-        setError("Failed to load disease breakdown data");
+        console.error("Error fetching Disease Breakdown:", err);
+        setError("Failed to load Disease Breakdown data");
       } finally {
         setLoading(false);
       }
@@ -201,7 +227,9 @@ const DiseaseBreakdown = ({ locationUid = "all", timeRange = "30d" }) => {
                 ) : (
                   <ChevronRight className="h-4 w-4 text-muted-foreground" />
                 )}
-                <span className="text-2xl">{CATEGORY_ICONS[category] || "📊"}</span>
+                {React.createElement(CATEGORY_ICONS[category] || Stethoscope, {
+                  className: `h-5 w-5 ${CATEGORY_COLORS[category] || "text-gray-600"}`,
+                })}
                 <div className="text-left">
                   <div className="font-medium">{category}</div>
                   <div className="text-sm text-muted-foreground">
@@ -225,8 +253,13 @@ const DiseaseBreakdown = ({ locationUid = "all", timeRange = "30d" }) => {
                   transition={{ duration: 0.2 }}
                   className="border-t bg-muted/20"
                 >
-                  <div className="divide-y">
-                    {data.diseaseGroups.map((group) => {
+                  {data.diseaseGroups.length === 0 ? (
+                    <div className="px-4 py-6 text-center text-sm text-muted-foreground">
+                      No cases reported for this category in the selected time range and location
+                    </div>
+                  ) : (
+                    <div className="divide-y">
+                      {data.diseaseGroups.map((group) => {
                       const groupKey = `${category}-${group.name}`;
                       const isGroupExpanded = expandedGroups.has(groupKey);
 
@@ -313,9 +346,10 @@ const DiseaseBreakdown = ({ locationUid = "all", timeRange = "30d" }) => {
                             </AnimatePresence>
                           )}
                         </div>
-                      );
-                    })}
-                  </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -323,11 +357,7 @@ const DiseaseBreakdown = ({ locationUid = "all", timeRange = "30d" }) => {
         ))}
       </div>
 
-      {Object.keys(diseaseData).length === 0 && (
-        <div className="text-center text-muted-foreground py-8">
-          No disease data available for the selected filters
-        </div>
-      )}
+      {/* Show message only if no data at all, but categories will still be visible with 0 cases */}
     </div>
   );
 };

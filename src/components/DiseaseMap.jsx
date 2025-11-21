@@ -12,20 +12,24 @@ import { apiClient } from "@/lib/api";
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || "";
 const GEOJSON_ENDPOINT = "/data/geojson/sierra-leone";
 
-const DiseaseMap = ({ selectedDisease = "all", timeRange = "7d" }) => {
+const DiseaseMap = ({
+  heatmapData = [],
+  selectedDisease = "all",
+  timeRange = "7d",
+  adminLevel = 2,
+  isLoading = false
+}) => {
   const { toast } = useToast();
   const { countryConfig } = useCountry();
   const { translate } = useLanguage();
-  const { overview } = useDashboardData();
 
   const [viewState, setViewState] = React.useState({
     longitude: -11.7799,
     latitude: 8.4606,
-    zoom: 7
+    zoom: adminLevel === 2 ? 7 : adminLevel === 3 ? 8 : 9
   });
-  const [geojson, setGeojson] = React.useState(null);
   const [hoverInfo, setHoverInfo] = React.useState(null);
-  const [isLoadingBoundary, setIsLoadingBoundary] = React.useState(true);
+  const [mapError, setMapError] = React.useState(null);
 
   React.useEffect(() => {
     if (!countryConfig?.map) return;
@@ -36,93 +40,87 @@ const DiseaseMap = ({ selectedDisease = "all", timeRange = "7d" }) => {
     });
   }, [countryConfig]);
 
+  // Update zoom level when admin level changes
   React.useEffect(() => {
-    let isMounted = true;
-    setIsLoadingBoundary(true);
-    apiClient
-      .get(GEOJSON_ENDPOINT)
-      .then((data) => {
-        if (isMounted) {
-          setGeojson(data);
-        }
-      })
-      .catch((error) => {
-        if (isMounted) {
-          toast({
-            title: "Boundary data error",
-            description: error.message,
-            variant: "destructive"
-          });
-        }
-      })
-      .finally(() => {
-        if (isMounted) {
-          setIsLoadingBoundary(false);
+    setViewState(prev => ({
+      ...prev,
+      zoom: adminLevel === 2 ? 7 : adminLevel === 3 ? 8 : 9
+    }));
+  }, [adminLevel]);
+
+  // Build GeoJSON from heatmap data - separate polygons and points
+  const { polygonGeojson, pointGeojson } = React.useMemo(() => {
+    try {
+      setMapError(null);
+
+      if (!heatmapData || heatmapData.length === 0) {
+        return { polygonGeojson: null, pointGeojson: null };
+      }
+
+      const maxValue = Math.max(...heatmapData.map(d => d.totalCases), 1);
+
+      const polygonFeatures = [];
+      const pointFeatures = [];
+
+      heatmapData.forEach((location, index) => {
+        if (!location.geometry) return;
+
+        try {
+          const riskValue = location.totalCases / maxValue;
+          const riskLabel =
+            riskValue >= 0.66 ? "High" : riskValue >= 0.33 ? "Medium" : "Low";
+
+          const properties = {
+            uid: location.uid,
+            shapeName: location.districtName,
+            cases: location.totalCases,
+            riskValue,
+            riskLabel,
+            diseaseTypes: location.diseaseTypes,
+            facilitiesReporting: location.facilitiesReporting,
+            dominantDisease: location.dominantDisease,
+          };
+
+          const feature = {
+            type: "Feature",
+            properties,
+            geometry: location.geometry,
+          };
+
+          // Separate by geometry type
+          const geometryType = location.geometry.type;
+          if (geometryType === 'Point') {
+            pointFeatures.push(feature);
+          } else if (geometryType === 'Polygon' || geometryType === 'MultiPolygon') {
+            polygonFeatures.push(feature);
+          }
+        } catch (err) {
+          console.error(`Error processing location ${index}:`, err, location);
         }
       });
 
-    return () => {
-      isMounted = false;
-    };
-  }, [toast]);
+      console.log(`Processed ${polygonFeatures.length} polygons, ${pointFeatures.length} points for admin level ${adminLevel}`);
 
-  const normalizeRegionName = React.useCallback((name = "") => {
-    return name.toLowerCase().replace(/province|area|region/gi, "").replace(/\s+/g, "").trim();
-  }, []);
-
-  const decoratedGeojson = React.useMemo(() => {
-    if (!geojson) return null;
-
-    // Get alerts and filter by disease if a specific disease is selected
-    const alerts = overview?.alerts || [];
-    const filteredAlerts = selectedDisease === "all"
-      ? alerts
-      : alerts.filter(alert => alert.disease?.toLowerCase() === selectedDisease.toLowerCase());
-
-    // Aggregate cases by region from filtered alerts
-    const regionStats = filteredAlerts.reduce((acc, alert) => {
-      const region = alert.region || "";
-      acc[region] = (acc[region] || 0) + (alert.cases || 0);
-      return acc;
-    }, {});
-
-    // If no filtered alerts, fall back to byRegion (for "all" diseases)
-    const stats = Object.keys(regionStats).length > 0
-      ? regionStats
-      : overview?.alertStats?.byRegion || {};
-
-    const maxValue =
-      Object.values(stats).reduce((max, value) => Math.max(max, value), 0) || 1;
-
-    return {
-      ...geojson,
-      features: geojson.features.map((feature) => {
-        const shapeName = feature?.properties?.shapeName || "";
-        const normalized = normalizeRegionName(shapeName);
-        const matchedEntry = Object.entries(stats).find(
-          ([regionName]) => normalizeRegionName(regionName) === normalized
-        );
-        const cases = matchedEntry ? matchedEntry[1] : 0;
-        const riskValue = cases / maxValue;
-        const riskLabel =
-          riskValue >= 0.66 ? "High" : riskValue >= 0.33 ? "Medium" : "Low";
-
-        return {
-          ...feature,
-          properties: {
-            ...feature.properties,
-            cases,
-            riskValue,
-            riskLabel
-          }
-        };
-      })
-    };
-  }, [geojson, overview, normalizeRegionName, selectedDisease]);
+      return {
+        polygonGeojson: polygonFeatures.length > 0 ? {
+          type: "FeatureCollection",
+          features: polygonFeatures,
+        } : null,
+        pointGeojson: pointFeatures.length > 0 ? {
+          type: "FeatureCollection",
+          features: pointFeatures,
+        } : null,
+      };
+    } catch (err) {
+      console.error('Error building GeoJSON:', err);
+      setMapError(err.message);
+      return { polygonGeojson: null, pointGeojson: null };
+    }
+  }, [heatmapData, adminLevel]);
 
   const fillLayer = React.useMemo(
     () => ({
-      id: "sle-adm1-fill",
+      id: `sle-adm${adminLevel}-fill`,
       type: "fill",
       paint: {
         "fill-color": [
@@ -130,56 +128,96 @@ const DiseaseMap = ({ selectedDisease = "all", timeRange = "7d" }) => {
           ["linear"],
           ["get", "riskValue"],
           0,
-          "#bfdbfe",
+          "#d1fae5",  // Pastel green (low risk)
           0.5,
-          "#60a5fa",
+          "#fef3c7",  // Pastel yellow (medium risk)
           1,
-          "#1d4ed8"
+          "#fecaca"   // Pastel red (high risk)
         ],
-        "fill-opacity": 0.6
+        "fill-opacity": 0.7
       }
     }),
-    []
+    [adminLevel]
   );
 
   const outlineLayer = React.useMemo(
     () => ({
-      id: "sle-adm1-outline",
+      id: `sle-adm${adminLevel}-outline`,
       type: "line",
       paint: {
-        "line-color": "#1d4ed8",
+        "line-color": "#94a3b8",  // Muted gray outline
         "line-width": 1.5
       }
     }),
-    []
+    [adminLevel]
   );
 
-  const mapTitle = React.useMemo(() => {
-    const baseTitle = translate("diseaseMap");
-    if (selectedDisease === "all") {
-      return `${baseTitle} - All Diseases`;
-    }
-    return `${baseTitle} - ${selectedDisease}`;
-  }, [translate, selectedDisease]);
+  // Circle layer for point geometries (facilities and locations with point data)
+  const circleLayer = React.useMemo(
+    () => ({
+      id: `sle-adm${adminLevel}-circle`,
+      type: "circle",
+      paint: {
+        "circle-radius": [
+          "interpolate",
+          ["linear"],
+          ["get", "cases"],
+          0,
+          3,      // Min size: 3px for 0-1 cases (very small)
+          25,
+          10,     // 10px for 25 cases
+          50,
+          15,     // 15px for 50 cases
+          100,
+          22,     // 22px for 100 cases
+          150,
+          28,     // 28px for 150 cases
+          200,
+          35,     // 35px for 200 cases
+          300,
+          45      // Max size: 45px for 300+ cases (very large)
+        ],
+        "circle-color": [
+          "interpolate",
+          ["linear"],
+          ["get", "riskValue"],
+          0,
+          "#d1fae5",  // Pastel green (low risk)
+          0.5,
+          "#fef3c7",  // Pastel yellow (medium risk)
+          1,
+          "#fecaca"   // Pastel red (high risk)
+        ],
+        "circle-opacity": 0.75,
+        "circle-stroke-width": 2,
+        "circle-stroke-color": "#94a3b8"  // Muted gray stroke
+      }
+    }),
+    [adminLevel]
+  );
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">{mapTitle}</h2>
-        <div className="flex gap-2">
-          <Button variant="outline" className="flex items-center space-x-2">
-            <Filter className="h-4 w-4" />
-            <span>{translate("filter")}</span>
-          </Button>
-        </div>
-      </div>
+    <div className="relative w-full h-full bg-muted rounded-lg overflow-hidden">
+        {mapError && (
+          <div className="absolute top-4 left-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded z-50">
+            <strong className="font-bold">Map Error: </strong>
+            <span className="block sm:inline">{mapError}</span>
+          </div>
+        )}
 
-      <div className="relative h-[500px] bg-muted rounded-lg overflow-hidden">
         {MAPBOX_TOKEN ? (
           <Map
+            key={`map-adm${adminLevel}`}
             {...viewState}
-            interactiveLayerIds={["sle-adm1-fill"]}
+            interactiveLayerIds={[
+              `sle-adm${adminLevel}-fill`,
+              `sle-adm${adminLevel}-circle`
+            ]}
             onMove={(evt) => setViewState(evt.viewState)}
+            onError={(evt) => {
+              console.error('Mapbox error:', evt.error);
+              setMapError(evt.error?.message || 'Map rendering error');
+            }}
             onMouseMove={(event) => {
               const feature = event.features && event.features[0];
               if (feature) {
@@ -188,7 +226,9 @@ const DiseaseMap = ({ selectedDisease = "all", timeRange = "7d" }) => {
                   latitude: event.lngLat.lat,
                   name: feature.properties?.shapeName,
                   risk: feature.properties?.riskLabel,
-                  cases: feature.properties?.cases ?? 0
+                  cases: feature.properties?.cases ?? 0,
+                  dominantDisease: feature.properties?.dominantDisease,
+                  facilitiesReporting: feature.properties?.facilitiesReporting
                 });
               } else {
                 setHoverInfo(null);
@@ -197,10 +237,18 @@ const DiseaseMap = ({ selectedDisease = "all", timeRange = "7d" }) => {
             mapStyle="mapbox://styles/mapbox/light-v11"
             mapboxAccessToken={MAPBOX_TOKEN}
           >
-            {decoratedGeojson && (
-              <Source id="sle-adm1" type="geojson" data={decoratedGeojson}>
+            {/* Render polygon/multipolygon features */}
+            {polygonGeojson && (
+              <Source id={`sle-adm${adminLevel}-polygon`} type="geojson" data={polygonGeojson}>
                 <Layer {...fillLayer} />
                 <Layer {...outlineLayer} />
+              </Source>
+            )}
+
+            {/* Render point features */}
+            {pointGeojson && (
+              <Source id={`sle-adm${adminLevel}-point`} type="geojson" data={pointGeojson}>
+                <Layer {...circleLayer} />
               </Source>
             )}
           </Map>
@@ -216,39 +264,64 @@ const DiseaseMap = ({ selectedDisease = "all", timeRange = "7d" }) => {
             <p className="font-semibold">{hoverInfo.name}</p>
             <p>Risk: {hoverInfo.risk}</p>
             <p>Cases: {hoverInfo.cases}</p>
+            {hoverInfo.dominantDisease && (
+              <p>Dominant: {hoverInfo.dominantDisease}</p>
+            )}
+            {hoverInfo.facilitiesReporting > 0 && (
+              <p>Facilities: {hoverInfo.facilitiesReporting}</p>
+            )}
           </div>
         )}
 
-        {isLoadingBoundary && (
-          <div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground">
-            Loading Sierra Leone boundaries...
+        {(!heatmapData || heatmapData.length === 0) && !isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground bg-muted/50">
+            No data available for selected filters
           </div>
         )}
 
-        {/* Map Legend */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          className="absolute bottom-4 right-4 bg-background/90 backdrop-blur-sm p-4 rounded-lg shadow-lg"
-        >
-          <h3 className="font-semibold mb-2">{translate("legend")}</h3>
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 rounded-full bg-[#1d4ed8]"></div>
-              <span className="text-sm">{translate("highRisk")}</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 rounded-full bg-[#60a5fa]"></div>
-              <span className="text-sm">{translate("mediumRisk")}</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 rounded-full bg-[#bfdbfe]"></div>
-              <span className="text-sm">{translate("lowRisk")}</span>
-            </div>
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground bg-muted/50">
+            Loading map data...
           </div>
-        </motion.div>
-      </div>
+        )}
+
+      {/* Map Legend */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="absolute bottom-4 right-4 bg-background/90 backdrop-blur-sm p-4 rounded-lg shadow-lg"
+      >
+        <h3 className="font-semibold mb-2 text-sm">
+          Legend {adminLevel === 4 && <span className="text-xs font-normal">(Size = Cases)</span>}
+        </h3>
+        <div className="space-y-2">
+          <div className="flex items-center space-x-2">
+            {adminLevel === 4 ? (
+              <div className="w-8 h-8 rounded-full bg-[#fecaca] border-2 border-[#94a3b8]"></div>
+            ) : (
+              <div className="w-4 h-4 bg-[#fecaca] border border-[#94a3b8]"></div>
+            )}
+            <span className="text-sm">High Risk</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            {adminLevel === 4 ? (
+              <div className="w-5 h-5 rounded-full bg-[#fef3c7] border-2 border-[#94a3b8]"></div>
+            ) : (
+              <div className="w-4 h-4 bg-[#fef3c7] border border-[#94a3b8]"></div>
+            )}
+            <span className="text-sm">Medium Risk</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            {adminLevel === 4 ? (
+              <div className="w-2 h-2 rounded-full bg-[#d1fae5] border-2 border-[#94a3b8]"></div>
+            ) : (
+              <div className="w-4 h-4 bg-[#d1fae5] border border-[#94a3b8]"></div>
+            )}
+            <span className="text-sm">Low Risk</span>
+          </div>
+        </div>
+      </motion.div>
     </div>
   );
 };

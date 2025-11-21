@@ -11,7 +11,8 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import DiseaseBarChart from './dashboard/DiseaseBarChart';
-import TimeSeriesChart from './dashboard/TimeSeriesChart';
+import DiseaseBreakdown from './dashboard/DiseaseBreakdown';
+import DiseaseTrend from './dashboard/DiseaseTrend';
 import DiseaseMap from './DiseaseMap';
 import { useDashboardAnalytics } from '@/hooks/useDashboardAnalytics';
 import { useCurrentWeather } from '@/hooks/useCurrentWeather';
@@ -22,7 +23,8 @@ import { useCurrentWeather } from '@/hooks/useCurrentWeather';
 const NewOverview = () => {
   const [selectedLocation, setSelectedLocation] = React.useState('all');
   const [selectedDays, setSelectedDays] = React.useState(30);
-  const [selectedDisease, setSelectedDisease] = React.useState('all');
+  const [selectedDisease, setSelectedDisease] = React.useState(null);
+  const [selectedAdminLevel, setSelectedAdminLevel] = React.useState(2);
 
   const {
     overview,
@@ -38,7 +40,22 @@ const NewOverview = () => {
     locationUid: selectedLocation,
     days: selectedDays,
     diseaseId: selectedDisease,
+    adminLevel: selectedAdminLevel,
   });
+
+  // Set default disease when diseases are loaded
+  React.useEffect(() => {
+    if (diseases.length > 0 && !selectedDisease) {
+      // Find IDSR Malaria or fall back to first disease alphabetically
+      const defaultDisease = diseases.find(d => d.name === 'IDSR Malaria');
+      if (defaultDisease) {
+        setSelectedDisease(defaultDisease.id);
+      } else {
+        const sortedDiseases = [...diseases].sort((a, b) => a.name.localeCompare(b.name));
+        setSelectedDisease(sortedDiseases[0].id);
+      }
+    }
+  }, [diseases, selectedDisease]);
 
   // Fetch current weather data (default location: Bo)
   const { data: currentWeather, loading: weatherLoading } = useCurrentWeather('Bo');
@@ -92,13 +109,12 @@ const NewOverview = () => {
 
           {/* Disease Filter */}
           <select
-            value={selectedDisease}
+            value={selectedDisease || ''}
             onChange={(e) => setSelectedDisease(e.target.value)}
             className="flex-1 rounded-md border border-input bg-background px-4 py-2 min-w-[180px]"
             disabled={isLoading}
           >
-            <option value="all">All Diseases</option>
-            {diseases.map((disease) => (
+            {[...diseases].sort((a, b) => a.name.localeCompare(b.name)).map((disease) => (
               <option key={disease.id} value={disease.id}>
                 {disease.name}
               </option>
@@ -106,13 +122,14 @@ const NewOverview = () => {
           </select>
         </div>
 
-        <Button onClick={refresh} variant="outline" size="sm" disabled={isLoading}>
-          {isLoading ? 'Loading...' : 'Refresh'}
-        </Button>
+        <div className="flex items-center gap-2 px-4 py-2 bg-muted rounded-md">
+          <span className="text-sm font-medium">{diseases.length}</span>
+          <span className="text-sm text-muted-foreground">Diseases</span>
+        </div>
       </div>
 
-      {/* Combined KPI and Weather Cards Row - All 7 Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3">
+      {/* Combined KPI and Weather Cards Row - All 8 Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-8 gap-3">
         {/* KPI Card 1 - Total Cases */}
         <motion.div
           initial={{ scale: 0.95, opacity: 0 }}
@@ -154,11 +171,52 @@ const NewOverview = () => {
           <span className="text-xs text-muted-foreground mt-1">Districts</span>
         </motion.div>
 
-        {/* KPI Card 4 - Affected Facilities */}
+        {/* KPI Card 4 - National Risk Level */}
+        {(() => {
+          const highRiskDistricts = overview?.highRiskDistricts || 0;
+          const totalDistricts = overview?.totalDistricts || 1;
+          const riskPercentage = (highRiskDistricts / totalDistricts) * 100;
+
+          let riskLevel = 'LOW';
+          let riskColor = 'green';
+          let borderColor = 'border-green-500';
+          let textColor = 'text-green-600';
+          let iconColor = 'text-green-400';
+
+          if (riskPercentage >= 60) {
+            riskLevel = 'HIGH';
+            riskColor = 'red';
+            borderColor = 'border-red-500';
+            textColor = 'text-red-600';
+            iconColor = 'text-red-400';
+          } else if (riskPercentage >= 30) {
+            riskLevel = 'MEDIUM';
+            riskColor = 'yellow';
+            borderColor = 'border-yellow-500';
+            textColor = 'text-yellow-600';
+            iconColor = 'text-yellow-400';
+          }
+
+          return (
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className={`bg-card p-3 rounded-lg border-2 ${borderColor} flex flex-col items-center justify-center min-h-[160px]`}
+            >
+              <Activity className={`h-8 w-8 ${iconColor} mb-2 flex-shrink-0`} />
+              <h3 className="text-xs font-medium text-muted-foreground text-center mb-1">National Risk</h3>
+              <p className={`text-xl font-bold ${textColor}`}>{riskLevel}</p>
+              <span className="text-xs text-muted-foreground mt-1">{riskPercentage.toFixed(0)}% at risk</span>
+            </motion.div>
+          );
+        })()}
+
+        {/* KPI Card 5 - Affected Facilities */}
         <motion.div
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.3 }}
+          transition={{ delay: 0.4 }}
           className="bg-card p-3 rounded-lg border-2 border-green-300 flex flex-col items-center justify-center min-h-[160px]"
         >
           <Building2 className="h-8 w-8 text-green-400 mb-2 flex-shrink-0" />
@@ -171,7 +229,7 @@ const NewOverview = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
+          transition={{ duration: 0.5, delay: 0.5 }}
           className="relative rounded-lg overflow-hidden min-h-[160px] cursor-pointer bg-rose-100"
         >
           <div className="flex flex-col items-center justify-center h-full p-3 text-rose-900">
@@ -196,7 +254,7 @@ const NewOverview = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.5 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
           className="relative rounded-lg overflow-hidden min-h-[160px] cursor-pointer bg-sky-100"
         >
           <div className="flex flex-col items-center justify-center h-full p-3 text-sky-900">
@@ -221,7 +279,7 @@ const NewOverview = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.6 }}
+          transition={{ duration: 0.5, delay: 0.7 }}
           className="relative rounded-lg overflow-hidden min-h-[160px] cursor-pointer bg-amber-100"
         >
           <div className="flex flex-col items-center justify-center h-full p-3 text-amber-900">
@@ -243,22 +301,19 @@ const NewOverview = () => {
         </motion.div>
       </div>
 
-      {/* Disease Breakdown and Trends Row */}
+      {/* Disease Breakdown by Category and Trends Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Disease Breakdown Chart */}
-        <DiseaseBarChart data={breakdown} showFacilities={true} />
+        {/* Disease Breakdown by Category - 7 Groups */}
+        <DiseaseBreakdown
+          locationUid={selectedLocation}
+          timeRange={`${selectedDays}d`}
+        />
 
         {/* Disease Trends Chart */}
-        <div className="bg-card rounded-lg border p-6">
-          <h3 className="text-lg font-semibold mb-4">
-            Disease Trends (Last {Math.ceil(selectedDays / 7)} Weeks)
-          </h3>
-          <TimeSeriesChart
-            data={trends}
-            height={450}
-            showTitle={false}
-          />
-        </div>
+        <DiseaseTrend
+          locationUid={selectedLocation}
+          diseaseId={selectedDisease}
+        />
       </div>
 
       {/* Geographic Map */}
@@ -270,19 +325,42 @@ const NewOverview = () => {
       >
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">Geographic Distribution</h3>
-          {heatmap && heatmap.length > 0 && (
+          <div className="flex items-center gap-4">
+            {/* Admin Level Selector */}
+            <select
+              value={selectedAdminLevel}
+              onChange={(e) => setSelectedAdminLevel(Number(e.target.value))}
+              className="rounded-md border border-input bg-background px-3 py-1.5 text-sm"
+              disabled={isLoading}
+            >
+              <option value={2}>District (ADM2)</option>
+              <option value={3}>Chiefdom (ADM3)</option>
+              <option value={4}>Facility (ADM4)</option>
+            </select>
             <div className="text-sm text-muted-foreground">
-              {heatmap.length} districts with data
+              {isLoading ? (
+                <span>Loading...</span>
+              ) : heatmap && heatmap.length > 0 ? (
+                <span>{heatmap.length} locations</span>
+              ) : (
+                <span>No data</span>
+              )}
             </div>
-          )}
+          </div>
         </div>
         <div className="w-full h-[600px]">
-          <DiseaseMap heatmapData={heatmap} />
+          <DiseaseMap
+            heatmapData={heatmap}
+            selectedDisease={selectedDisease}
+            timeRange={selectedDays}
+            adminLevel={selectedAdminLevel}
+            isLoading={isLoading}
+          />
         </div>
       </motion.div>
 
-      {/* Loading Overlay */}
-      {isLoading && (
+      {/* Loading Overlay - Only show on initial load */}
+      {isLoading && !overview && (
         <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 shadow-lg">
             <div className="flex items-center gap-3">

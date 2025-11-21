@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 
 /**
- * DiseaseBarChart - Horizontal bar chart showing disease breakdown
+ * DiseaseBarChart - Horizontal bar chart showing Disease Breakdown by Category
  * Using pure CSS for bars (no external charting library needed)
  *
  * @param {Object} props
@@ -27,7 +27,7 @@ const DiseaseBarChart = ({ data = [], showFacilities = false }) => {
   if (!data || data.length === 0) {
     return (
       <div className="bg-card rounded-lg border p-6">
-        <h3 className="text-lg font-semibold mb-4">Disease Breakdown</h3>
+        <h3 className="text-lg font-semibold mb-4">Disease Breakdown by Category</h3>
         <p className="text-muted-foreground text-center py-8">No disease data available</p>
       </div>
     );
@@ -35,7 +35,7 @@ const DiseaseBarChart = ({ data = [], showFacilities = false }) => {
 
   return (
     <div className="bg-card rounded-lg border p-6">
-      <h3 className="text-lg font-semibold mb-6">Disease Breakdown</h3>
+      <h3 className="text-lg font-semibold mb-6">Disease Breakdown by Category</h3>
       <div className="space-y-4">
         {data.map((item, index) => {
           // Percentage of total cases

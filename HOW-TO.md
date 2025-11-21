@@ -26,7 +26,7 @@ So I want a full revamp of the dashboard UI with added elements. Lets go page by
 Order of Pages --> Overview, ML Forecasting, Climate Impact, Location Analysis, Disease Analysis, Training, Data Gen, Simulation
 
 - Overview Page
-  - Disease Breakdown Card
+  - Disease Breakdown by Category Card
     - In the database there are multiple diseases not just 6 so I want to include all. These diseases can be grouped like vector borne disease, Air-borne Diseases etc.
     - I want to show the main groups of diseases and their percentage (in the current UI)
     - Then add a accordian which further opens up a dialog box and show the more diseases and their percentage share and numbers.
@@ -51,7 +51,7 @@ Order of Pages --> Overview, ML Forecasting, Climate Impact, Location Analysis, 
   - General Notes
     - Keep the asthetic of the page same as current
     - Dont add negative space
-    - While opening the accordian in the Disease Breakdown page, it should not interfere with the other card sizes and overlap
+    - While opening the accordian in the Disease Breakdown by Category page, it should not interfere with the other card sizes and overlap
   
 - ML Forecasting
   - Rename the tab to Prediction Risk

@@ -210,7 +210,7 @@ WHERE dv.deleted = false
   AND p.enddate >= NOW() - INTERVAL '30 days';
 ```
 
-#### B. Disease Breakdown by Type
+#### B. Disease Breakdown by Category by Type
 
 **Interactive Bar Chart** (Horizontal)
 ```
@@ -1193,7 +1193,7 @@ server/src/routes/
    - Deaths
    - High-risk districts
    - Affected facilities
-3. ✅ Create disease breakdown endpoint (already in Phase 1: `/api/diseases/breakdown/all`)
+3. ✅ Create Disease Breakdown by Category endpoint (already in Phase 1: `/api/diseases/breakdown/all`)
 4. ✅ Build time series data endpoint (already in Phase 1: `/api/analytics/trends`)
 5. ✅ Implement outbreak detection algorithm (already in Phase 1: `/api/analytics/outbreak-detection`)
 6. ✅ Create frontend components:
@@ -1224,7 +1224,7 @@ src/components/
 
 **Features Implemented:**
 - ✅ 4 KPI cards showing: Total Cases, Active Alerts, High Risk Districts, Affected Facilities
-- ✅ Disease breakdown chart with animated horizontal bars
+- ✅ Disease Breakdown by Category chart with animated horizontal bars
 - ✅ Multi-line time series chart showing 12-week trends for all diseases
 - ✅ Alert panel with CRITICAL/WARNING filtering and expandable details
 - ✅ Disease selector dropdown to filter by specific disease

@@ -105,7 +105,7 @@ diseaseRouter.get("/:diseaseId/locations", async (req, res, next) => {
 });
 /**
  * GET /api/diseases/breakdown
- * Get disease breakdown for all diseases
+ * Get Disease Breakdown by Category for all diseases
  * Query params: locationUid, days, diseaseId
  */
 diseaseRouter.get("/breakdown/all", async (req, res, next) => {

@@ -1,5 +1,6 @@
 import { postgresService } from "./postgresService.js";
 import logger from "./logger.js";
+import { DISEASE_DATA_ELEMENTS } from "./diseaseService.js";
 class AnalyticsService {
     /**
      * Get overview metrics (KPIs)
@@ -8,12 +9,18 @@ class AnalyticsService {
         try {
             logger.debug({ locationUid, days, diseaseId }, "Fetching overview metrics");
             // Build case UIDs array based on disease filter
+            // Use ALL diseases for accurate overview metrics
+            const allCaseUIDs = Object.values(DISEASE_DATA_ELEMENTS).map((d) => d.cases);
+            const allDeathUIDs = Object.values(DISEASE_DATA_ELEMENTS)
+                .filter((d) => 'deaths' in d && d.deaths)
+                .map((d) => 'deaths' in d ? d.deaths : '')
+                .filter(Boolean);
             const caseUIDs = diseaseId && diseaseId !== 'all'
                 ? this.getDiseaseUIDsByName(diseaseId, 'cases')
-                : ['vq2qO3eTrNi', 'YazgqXbizv1', 'Cj5rTc9nEvl', 'XWU1Huh0Luy', 'UsSUX0cpKsH', 'NCteyX2xpMf'];
+                : allCaseUIDs;
             const deathUIDs = diseaseId && diseaseId !== 'all'
                 ? this.getDiseaseUIDsByName(diseaseId, 'deaths')
-                : ['r6nrJANOqMw', 'f7n9E0hX8qk', 'Yy9NtNfwYZJ', 'USBq0VHSkZq', 'eY5ehpbEsB7'];
+                : allDeathUIDs;
             // Get total cases
             let casesQuery = `
         SELECT
@@ -35,8 +42,8 @@ class AnalyticsService {
         WHERE dv.deleted = false
           AND de.uid = ANY($${paramIndex}::text[])
           AND dv.value IS NOT NULL
+          AND p.startdate >= NOW() - INTERVAL '${days} days'
           AND p.startdate <= NOW()
-          AND p.enddate >= NOW() - INTERVAL '${days} days'
       `;
             casesParams.push(caseUIDs);
             paramIndex++;
@@ -65,8 +72,8 @@ class AnalyticsService {
         WHERE dv.deleted = false
           AND de.uid = ANY($${paramIndex}::text[])
           AND dv.value IS NOT NULL
+          AND p.startdate >= NOW() - INTERVAL '${days} days'
           AND p.startdate <= NOW()
-          AND p.enddate >= NOW() - INTERVAL '${days} days'
       `;
             deathsParams.push(deathUIDs);
             paramIndex++;
@@ -79,39 +86,132 @@ class AnalyticsService {
             // Get active alerts
             const alerts = await this.detectOutbreaks(locationUid, diseaseId);
             const activeAlerts = alerts.filter((a) => a.alertLevel !== "NORMAL").length;
-            // Get high risk districts (those with critical or warning alerts)
+            // Get high risk districts using seasonal baseline calculation
+            // Uses same week of year from past 2 years, matching DiseaseTrend component's approach
+            // Districts are flagged if they exceed ANY of the three baseline methods:
+            // 1. 95th Percentile, 2. Mean + 2SD, 3. Median + 2*IQR (Endemic Channel)
             let highRiskDistrictsQuery = `
-        SELECT COUNT(DISTINCT ou.uid) as high_risk_count
-        FROM (
-          SELECT DISTINCT dv.sourceid
+        WITH district_extraction AS (
+          -- Extract district UIDs from all organization units
+          SELECT
+            ou.organisationunitid,
+            CASE
+              WHEN ou.hierarchylevel = 2 THEN ou.uid
+              WHEN ou.hierarchylevel > 2 THEN split_part(ou.path, '/', 3)
+              ELSE NULL
+            END as district_uid
+          FROM organisationunit ou
+          WHERE ou.hierarchylevel >= 2
+        ),
+        current_week AS (
+          -- Get current week of year for seasonal matching
+          SELECT EXTRACT(WEEK FROM NOW()) as week_of_year
+        ),
+        recent_cases_by_district AS (
+          -- Get recent cases (last 7 days) aggregated by district
+          SELECT
+            de.district_uid,
+            dv.dataelementid,
+            SUM(CASE WHEN dv.value ~ '^[0-9]+$' THEN CAST(dv.value AS INTEGER) ELSE 0 END) as recent_cases
           FROM datavalue dv
-          JOIN dataelement de ON dv.dataelementid = de.dataelementid
+          JOIN dataelement de_elem ON dv.dataelementid = de_elem.dataelementid
           JOIN period p ON dv.periodid = p.periodid
+          JOIN district_extraction de ON dv.sourceid = de.organisationunitid
           WHERE dv.deleted = false
-            AND p.enddate >= NOW() - INTERVAL '7 days'
-            AND dv.value ~ '^[0-9]+$'
-            AND de.uid = ANY($1::text[])
-          GROUP BY dv.sourceid, de.dataelementid
-          HAVING SUM(CAST(dv.value AS INTEGER)) > 100
-        ) as high_facilities
-        JOIN organisationunit ou ON high_facilities.sourceid = ou.organisationunitid
+            AND p.startdate >= NOW() - INTERVAL '7 days'
+            AND p.startdate <= NOW()
+            AND dv.value IS NOT NULL
+            AND de_elem.uid = ANY($1::text[])
+            AND de.district_uid IS NOT NULL
+          GROUP BY de.district_uid, dv.dataelementid
+        ),
+        historical_seasonal_data AS (
+          -- Get historical data from same week ±1 week over past 2 years (excluding last 7 days)
+          SELECT
+            de.district_uid,
+            dv.dataelementid,
+            CASE WHEN dv.value ~ '^[0-9]+$' THEN CAST(dv.value AS INTEGER) ELSE 0 END as cases
+          FROM datavalue dv
+          JOIN dataelement de_elem ON dv.dataelementid = de_elem.dataelementid
+          JOIN period p ON dv.periodid = p.periodid
+          JOIN district_extraction de ON dv.sourceid = de.organisationunitid
+          CROSS JOIN current_week cw
+          WHERE dv.deleted = false
+            AND p.enddate < NOW() - INTERVAL '7 days'
+            AND p.startdate >= NOW() - INTERVAL '2 years'
+            AND dv.value IS NOT NULL
+            AND de_elem.uid = ANY($1::text[])
+            AND de.district_uid IS NOT NULL
+            -- Match same week ±1 week from previous years
+            AND ABS(EXTRACT(WEEK FROM p.startdate) - cw.week_of_year) <= 1
+        ),
+        baseline_calculations AS (
+          -- Calculate all three baseline methods for each district-disease combination
+          SELECT
+            district_uid,
+            dataelementid,
+            -- Method 1: Mean + 2*SD
+            AVG(cases) + (2 * STDDEV(cases)) as baseline_mean_2sd,
+            -- Method 2: 95th Percentile
+            PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY cases) as baseline_95percentile,
+            -- Method 3: Median + 2*IQR (Endemic Channel)
+            PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY cases) +
+              (2 * (PERCENTILE_CONT(0.75) WITHIN GROUP (ORDER BY cases) -
+                    PERCENTILE_CONT(0.25) WITHIN GROUP (ORDER BY cases))) as baseline_endemic_channel
+          FROM historical_seasonal_data
+          GROUP BY district_uid, dataelementid
+          HAVING COUNT(*) >= 4  -- Need at least 4 historical data points for meaningful baseline
+        ),
+        high_risk_comparison AS (
+          -- Compare recent cases against all three baselines
+          -- District is high-risk if it exceeds ANY of the three baseline methods
+          SELECT DISTINCT
+            rc.district_uid
+          FROM recent_cases_by_district rc
+          LEFT JOIN baseline_calculations bc
+            ON rc.district_uid = bc.district_uid
+            AND rc.dataelementid = bc.dataelementid
+          WHERE
+            -- Exceeds 95th Percentile baseline
+            rc.recent_cases > COALESCE(bc.baseline_95percentile, 0)
+            -- OR exceeds Mean + 2SD baseline
+            OR rc.recent_cases > COALESCE(bc.baseline_mean_2sd, 0)
+            -- OR exceeds Endemic Channel baseline
+            OR rc.recent_cases > COALESCE(bc.baseline_endemic_channel, 0)
+            -- OR no historical data but recent cases are significant (>50)
+            OR (bc.baseline_mean_2sd IS NULL AND rc.recent_cases > 50)
+        )
+        SELECT COUNT(DISTINCT hrc.district_uid) as high_risk_count
+        FROM high_risk_comparison hrc
+        JOIN organisationunit ou ON hrc.district_uid = ou.uid
+        WHERE ou.hierarchylevel = 2
       `;
             const highRiskParams = [caseUIDs];
             paramIndex = 2;
             if (locationUid && locationUid !== 'all') {
-                highRiskDistrictsQuery += ` WHERE ou.path LIKE '%' || $${paramIndex} || '%' AND ou.hierarchylevel = 2`;
+                highRiskDistrictsQuery += ` AND ou.path LIKE '%' || $${paramIndex} || '%'`;
                 highRiskParams.push(locationUid);
                 paramIndex++;
             }
-            else {
-                highRiskDistrictsQuery += ` WHERE ou.hierarchylevel = 2`;
-            }
             const highRiskResult = await postgresService.query(highRiskDistrictsQuery, highRiskParams);
+            // Get total districts count for national risk calculation
+            let totalDistrictsQuery = `
+        SELECT COUNT(DISTINCT ou.uid) as total_districts
+        FROM organisationunit ou
+        WHERE ou.hierarchylevel = 2
+      `;
+            const totalDistrictsParams = [];
+            if (locationUid && locationUid !== 'all') {
+                totalDistrictsQuery += ` AND ou.path LIKE '%' || $1 || '%'`;
+                totalDistrictsParams.push(locationUid);
+            }
+            const totalDistrictsResult = await postgresService.query(totalDistrictsQuery, totalDistrictsParams);
             return {
                 totalCases: parseInt(casesResult.rows[0]?.total_cases) || 0,
                 totalDeaths: parseInt(deathsResult.rows[0]?.total_deaths) || 0,
                 activeAlerts,
                 highRiskDistricts: parseInt(highRiskResult.rows[0]?.high_risk_count) || 0,
+                totalDistricts: parseInt(totalDistrictsResult.rows[0]?.total_districts) || 0,
                 affectedFacilities: parseInt(casesResult.rows[0]?.affected_facilities) || 0,
                 reportingPeriods: parseInt(casesResult.rows[0]?.reporting_periods) || 0,
             };
@@ -122,10 +222,11 @@ class AnalyticsService {
         }
     }
     /**
-     * Helper to get disease UIDs by name
+     * Helper to get disease UIDs by name or ID
      */
     getDiseaseUIDsByName(diseaseId, type) {
         const diseaseMap = {
+            // Standard names
             malaria: { cases: 'vq2qO3eTrNi', deaths: 'r6nrJANOqMw' },
             measles: { cases: 'YazgqXbizv1', deaths: 'f7n9E0hX8qk' },
             typhoid: { cases: 'Cj5rTc9nEvl', deaths: 'Yy9NtNfwYZJ' },
@@ -135,10 +236,19 @@ class AnalyticsService {
             cholera: { cases: 'UsSUX0cpKsH', deaths: 'eY5ehpbEsB7' },
             'lassa fever': { cases: 'NCteyX2xpMf' },
             lassafever: { cases: 'NCteyX2xpMf' },
+            // IDSR disease IDs
+            malariaidsr: { cases: 'vq2qO3eTrNi', deaths: 'r6nrJANOqMw' },
+            measlesidsr: { cases: 'YazgqXbizv1', deaths: 'f7n9E0hX8qk' },
+            typhoidfeveridsr: { cases: 'Cj5rTc9nEvl', deaths: 'Yy9NtNfwYZJ' },
+            yellowfeveridsr: { cases: 'XWU1Huh0Luy', deaths: 'USBq0VHSkZq' },
+            choleraidsr: { cases: 'UsSUX0cpKsH', deaths: 'eY5ehpbEsB7' },
         };
         const disease = diseaseMap[diseaseId.toLowerCase()];
-        if (!disease)
+        if (!disease) {
+            // If not found, return empty array - will show all diseases
+            logger.warn({ diseaseId }, 'Disease ID not found in mapping, showing all diseases');
             return [];
+        }
         if (type === 'deaths' && disease.deaths) {
             return [disease.deaths];
         }
@@ -170,7 +280,8 @@ class AnalyticsService {
           JOIN period p ON dv.periodid = p.periodid
           JOIN organisationunit ou ON dv.sourceid = ou.organisationunitid
           WHERE dv.deleted = false
-            AND p.enddate >= NOW() - INTERVAL '7 days'
+            AND p.startdate >= NOW() - INTERVAL '7 days'
+            AND p.startdate <= NOW()
             AND dv.value IS NOT NULL
             AND ou.hierarchylevel = 2
             AND de.uid = ANY($1::text[])
@@ -291,11 +402,11 @@ class AnalyticsService {
     }
     /**
      * Get geographic heat map data
-     * Simplified for performance - only aggregates district-level data and immediate child facilities
+     * Supports different administrative levels: 2 (District/ADM2), 3 (Chiefdom/ADM3), 4 (Facility/ADM4)
      */
-    async getGeographicHeatMap(days = 90, startDate, endDate, diseaseFilter, locationFilter) {
+    async getGeographicHeatMap(days = 90, startDate, endDate, diseaseFilter, locationFilter, adminLevel = 2) {
         try {
-            logger.debug({ days, startDate, endDate, diseaseFilter, locationFilter }, "Fetching geographic heat map data");
+            logger.debug({ days, startDate, endDate, diseaseFilter, locationFilter, adminLevel }, "Fetching geographic heat map data");
             // Disease case data element UIDs - filter by specific disease if provided
             let diseaseUIDs = ['vq2qO3eTrNi', 'YazgqXbizv1', 'Cj5rTc9nEvl', 'XWU1Huh0Luy', 'UsSUX0cpKsH', 'NCteyX2xpMf'];
             if (diseaseFilter && diseaseFilter !== 'all') {
@@ -311,8 +422,21 @@ class AnalyticsService {
                 params.push(startDate, endDate);
             }
             else {
-                timeFilter = `AND p.startdate <= NOW() AND p.enddate >= NOW() - INTERVAL '${days} days'`;
+                timeFilter = `AND p.startdate >= NOW() - INTERVAL '${days} days' AND p.startdate <= NOW()`;
             }
+            // Determine which path part to extract based on target admin level
+            const getLocationUidExpression = (targetLevel) => {
+                // Path format: /country_uid/district_uid/chiefdom_uid/facility_uid
+                // Level 2 (district) = part 3, Level 3 (chiefdom) = part 4, Level 4 (facility) = part 5
+                const pathPart = targetLevel + 1;
+                return `
+          CASE
+            WHEN ou.hierarchylevel = ${targetLevel} THEN ou.uid
+            WHEN ou.hierarchylevel > ${targetLevel} THEN split_part(ou.path, '/', ${pathPart})
+            ELSE NULL
+          END
+        `;
+            };
             let query = `
         WITH time_filtered_cases AS (
           -- First filter by time and disease data elements to reduce dataset
@@ -329,51 +453,49 @@ class AnalyticsService {
             AND de.uid = ANY($1::text[])
             ${timeFilter}
         ),
-        facility_district_mapping AS (
-          -- Map facilities to districts using path extraction
+        location_mapping AS (
+          -- Map all facilities to target administrative level
           SELECT DISTINCT
             tfc.sourceid,
-            CASE
-              WHEN ou.hierarchylevel = 4 THEN split_part(ou.path, '/', 3)
-              WHEN ou.hierarchylevel = 3 THEN split_part(ou.path, '/', 3)
-              WHEN ou.hierarchylevel = 2 THEN ou.uid
-            END as district_uid
+            ${getLocationUidExpression(adminLevel)} as location_uid
           FROM time_filtered_cases tfc
           JOIN organisationunit ou ON tfc.sourceid = ou.organisationunitid
-          WHERE ou.hierarchylevel IN (2, 3, 4)
+          WHERE ou.hierarchylevel >= ${adminLevel}
+            AND ${getLocationUidExpression(adminLevel)} IS NOT NULL
         ),
-        district_cases AS (
-          -- Aggregate cases by district and disease
+        location_cases AS (
+          -- Aggregate cases by location and disease
           SELECT
-            fdm.district_uid,
+            lm.location_uid,
             de.name as disease,
             SUM(CAST(tfc.value AS INTEGER)) as cases,
-            COUNT(DISTINCT fdm.sourceid) as facilities_count
+            COUNT(DISTINCT lm.sourceid) as facilities_count
           FROM time_filtered_cases tfc
-          JOIN facility_district_mapping fdm ON tfc.sourceid = fdm.sourceid
+          JOIN location_mapping lm ON tfc.sourceid = lm.sourceid
           JOIN dataelement de ON tfc.dataelementid = de.dataelementid
-          GROUP BY fdm.district_uid, de.name
+          GROUP BY lm.location_uid, de.name
         )
         SELECT
           ou.uid,
-          ou.name as district_name,
+          ou.name as location_name,
+          ou.hierarchylevel,
           ST_AsGeoJSON(ou.geometry) as geometry,
-          COALESCE(SUM(dc.cases), 0) as total_cases,
-          COUNT(DISTINCT dc.disease) as disease_types,
-          COALESCE(MAX(dc.facilities_count), 0) as facilities_reporting,
-          COALESCE(json_object_agg(dc.disease, dc.cases) FILTER (WHERE dc.disease IS NOT NULL), '{}'::json) as cases_by_disease
+          COALESCE(SUM(lc.cases), 0) as total_cases,
+          COUNT(DISTINCT lc.disease) as disease_types,
+          COALESCE(MAX(lc.facilities_count), 0) as facilities_reporting,
+          COALESCE(json_object_agg(lc.disease, lc.cases) FILTER (WHERE lc.disease IS NOT NULL), '{}'::json) as cases_by_disease
         FROM organisationunit ou
-        LEFT JOIN district_cases dc ON ou.uid = dc.district_uid
-        WHERE ou.hierarchylevel = 2
+        LEFT JOIN location_cases lc ON ou.uid = lc.location_uid
+        WHERE ou.hierarchylevel = ${adminLevel}
       `;
-            // Add location filter if specified
+            // Add location filter if specified (filter to parent location or specific location)
             if (locationFilter && locationFilter !== 'all') {
-                query += ` AND ou.uid = $${params.length + 1}`;
+                query += ` AND (ou.uid = $${params.length + 1} OR ou.path LIKE '%' || $${params.length + 1} || '%')`;
                 params.push(locationFilter);
             }
             query += `
-        GROUP BY ou.uid, ou.name, ou.geometry
-        HAVING SUM(dc.cases) > 0
+        GROUP BY ou.uid, ou.name, ou.hierarchylevel, ou.geometry
+        HAVING SUM(lc.cases) > 0
         ORDER BY total_cases DESC
       `;
             const result = await postgresService.query(query, params);
@@ -390,15 +512,18 @@ class AnalyticsService {
                         dominantDisease = disease;
                     }
                 });
-                // Determine risk level based on total cases
+                // Determine risk level based on total cases (adjust thresholds by admin level)
                 let riskLevel = "LOW";
-                if (totalCases > 10000)
+                const highThreshold = adminLevel === 2 ? 10000 : adminLevel === 3 ? 5000 : 1000;
+                const mediumThreshold = adminLevel === 2 ? 5000 : adminLevel === 3 ? 2500 : 500;
+                if (totalCases > highThreshold)
                     riskLevel = "HIGH";
-                else if (totalCases > 5000)
+                else if (totalCases > mediumThreshold)
                     riskLevel = "MEDIUM";
                 return {
                     uid: row.uid,
-                    districtName: row.district_name,
+                    districtName: row.location_name,
+                    hierarchyLevel: row.hierarchylevel,
                     geometry: row.geometry ? JSON.parse(row.geometry) : null,
                     totalCases,
                     diseaseTypes: parseInt(row.disease_types) || 0,

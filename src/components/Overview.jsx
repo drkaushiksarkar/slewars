@@ -257,9 +257,9 @@ const Overview = () => {
         </div>
       </div>
 
-      {/* Disease Breakdown and Trend Cards Row */}
+      {/* Disease Breakdown by Category and Trend Cards Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Disease Breakdown Card */}
+        {/* Disease Breakdown by Category Card */}
         <DiseaseBreakdown locationUid={selectedLocation} timeRange={timeRange} />
 
         {/* Disease Trend Card */}
