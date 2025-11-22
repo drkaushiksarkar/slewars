@@ -44,6 +44,40 @@ router.post('/generate', async (req: Request, res: Response) => {
 });
 
 /**
+ * GET /api/forecast/anomaly-detection/:disease
+ * Detect anomalies using Isolation Forest
+ * IMPORTANT: This must come BEFORE /:disease/:locationUid to avoid route collision
+ */
+router.get('/anomaly-detection/:disease', async (req: Request, res: Response) => {
+  try {
+    const { disease } = req.params;
+    const { level = '2', start_date, end_date, location_uid } = req.query;
+
+    logger.info(`Anomaly detection request for ${disease} at level ${level}${location_uid ? ` for location ${location_uid}` : ''}`);
+
+    const result = await forecastService.detectAnomalies(
+      disease,
+      parseInt(level as string),
+      start_date as string,
+      end_date as string,
+      location_uid as string | undefined
+    );
+
+    res.json({
+      success: true,
+      data: result
+    });
+  } catch (error) {
+    logger.error({ error }, 'Error in GET /api/forecast/anomaly-detection');
+    res.status(500).json({
+      success: false,
+      error: 'Failed to detect anomalies',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+/**
  * GET /api/forecast/:disease/:locationUid
  * Get latest forecast for disease and location
  */

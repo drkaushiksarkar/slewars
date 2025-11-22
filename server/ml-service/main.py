@@ -8,6 +8,7 @@ from loguru import logger
 import sys
 
 from forecast_service import ForecastService
+from anomaly_detection import AnomalyDetector
 import config
 
 # Configure logging
@@ -34,8 +35,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize forecast service
+# Initialize forecast service and anomaly detector
 forecast_service = ForecastService()
+anomaly_detector = AnomalyDetector(contamination=0.1, random_state=42)
 
 # Request/Response models
 class TrainRequest(BaseModel):
@@ -61,6 +63,12 @@ class HealthResponse(BaseModel):
     service: str
     version: str
     timestamp: str
+
+class AnomalyRequest(BaseModel):
+    disease: str = Field(..., description="Disease name (e.g., 'Malaria', 'Measles')")
+    start_date: Optional[str] = Field(None, description="Start date for analysis (YYYY-MM-DD)")
+    end_date: Optional[str] = Field(None, description="End date for analysis (YYYY-MM-DD)")
+    level: int = Field(2, description="Administrative level (2=District, 3=Chiefdom, 4=Facility)", ge=2, le=4)
 
 # API Endpoints
 
@@ -301,6 +309,78 @@ async def get_config():
             "supported_diseases": list(config.DISEASE_UIDS.keys())
         }
     }
+
+@app.post("/anomaly-detection")
+async def detect_anomalies(request: AnomalyRequest):
+    """
+    Detect anomalies using Isolation Forest algorithm
+
+    Uses Isolation Forest to detect unusual patterns in disease case counts
+    across locations at a specified administrative level.
+
+    The algorithm works by:
+    1. Building isolation trees that randomly partition the data
+    2. Identifying observations that are easier to isolate (anomalies)
+    3. Scoring each location based on how anomalous it is
+
+    Returns detected anomalies with severity levels and visualization data.
+    """
+    try:
+        logger.info(f"Received anomaly detection request for {request.disease} at level {request.level}")
+
+        result = anomaly_detector.detect_anomalies(
+            disease=request.disease,
+            start_date=request.start_date,
+            end_date=request.end_date,
+            level=request.level
+        )
+
+        if result['success']:
+            return {
+                "success": True,
+                "data": result
+            }
+        else:
+            raise HTTPException(status_code=400, detail=result.get('error', 'Anomaly detection failed'))
+
+    except Exception as e:
+        logger.error(f"Error in anomaly detection endpoint: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/anomaly-detection/{disease}")
+async def get_anomalies(
+    disease: str,
+    level: int = 2,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    location_uid: Optional[str] = None
+):
+    """
+    Get anomaly detection results (GET method)
+
+    Alternative endpoint using GET method for easier integration.
+    Optionally filter by location_uid to show anomalies for a specific location.
+    """
+    try:
+        result = anomaly_detector.detect_anomalies(
+            disease=disease,
+            start_date=start_date,
+            end_date=end_date,
+            level=level,
+            location_uid=location_uid
+        )
+
+        if result['success']:
+            return {
+                "success": True,
+                "data": result
+            }
+        else:
+            raise HTTPException(status_code=400, detail=result.get('error', 'Anomaly detection failed'))
+
+    except Exception as e:
+        logger.error(f"Error in get anomaly detection endpoint: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn

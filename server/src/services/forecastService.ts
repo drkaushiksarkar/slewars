@@ -394,6 +394,42 @@ class ForecastService {
       throw error;
     }
   }
+
+  /**
+   * Detect anomalies using Isolation Forest
+   */
+  async detectAnomalies(
+    disease: string,
+    level: number = 2,
+    startDate?: string,
+    endDate?: string,
+    locationUid?: string
+  ): Promise<any> {
+    try {
+      logger.info(`Detecting anomalies for ${disease} at level ${level}${locationUid ? ` for location ${locationUid}` : ''}`);
+
+      const response = await axios.get(
+        `${this.mlServiceUrl}/anomaly-detection/${encodeURIComponent(disease)}`,
+        {
+          params: {
+            level,
+            start_date: startDate,
+            end_date: endDate,
+            location_uid: locationUid
+          },
+          timeout: 30000 // 30 second timeout
+        }
+      );
+
+      return response.data.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        logger.error({ error: error.message, response: error.response?.data }, 'Anomaly detection error');
+        throw new Error(error.response?.data?.detail || 'Anomaly detection failed');
+      }
+      throw error;
+    }
+  }
 }
 
 export default new ForecastService();

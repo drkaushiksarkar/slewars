@@ -1,19 +1,21 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Thermometer, CloudRain, Droplet, TrendingDown, TrendingUp } from 'lucide-react';
 import { useClimateData, useClimateStatistics } from '../../hooks/useClimateData';
 import { useCurrentWeather } from '../../hooks/useCurrentWeather';
 import UnifiedTrendChart from './UnifiedTrendChart';
+import ClimateSankeyDiagram from './ClimateSankeyDiagram';
+import { apiClient } from '@/lib/api';
 
 /**
  * WeatherCard - Reusable card component for weather metrics
  */
 const WeatherCard = ({ icon: Icon, label, value, unit, trend, trendValue, bgColor, textColor, minMax }) => (
-  <div className={`${bgColor} rounded-lg overflow-hidden h-full min-h-[180px] cursor-pointer`}>
-    <div className={`flex flex-col items-center justify-center h-full p-4 ${textColor}`}>
-      <Icon className="h-12 w-12 mb-3" />
-      <span className="text-sm font-semibold mb-1">{label}</span>
-      <span className="text-2xl font-bold">{value}{unit}</span>
+  <div className={`${bgColor} rounded-lg overflow-hidden h-full min-h-[120px] cursor-pointer`}>
+    <div className={`flex flex-col items-center justify-center h-full p-3 ${textColor}`}>
+      <Icon className="h-8 w-8 mb-2" />
+      <span className="text-xs font-semibold mb-1">{label}</span>
+      <span className="text-xl font-bold">{value}{unit}</span>
       {trend && (
         <div className="mt-2 flex items-center gap-1 text-xs opacity-80">
           {trend === 'up' ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
@@ -42,6 +44,12 @@ const ClimateDashboard = ({
   period = '365',
   aggregation = 'week'
 }) => {
+  // State for diseases and selected disease
+  const [diseases, setDiseases] = useState([]);
+  const [selectedDisease, setSelectedDisease] = useState(null);
+  const [diseaseData, setDiseaseData] = useState([]);
+  const [loadingDiseases, setLoadingDiseases] = useState(true);
+  const [loadingDiseaseData, setLoadingDiseaseData] = useState(false);
 
   // Calculate date range based on period
   const dateRange = useMemo(() => {
@@ -68,6 +76,72 @@ const ClimateDashboard = ({
 
   const { stats, loading: statsLoading } = useClimateStatistics(locationUid);
 
+  // Fetch diseases list
+  useEffect(() => {
+    const fetchDiseases = async () => {
+      try {
+        setLoadingDiseases(true);
+        const response = await apiClient.get('/diseases');
+        const diseasesList = response.data || [];
+        setDiseases(diseasesList);
+
+        // Set default disease (IDSR Malaria or first disease)
+        if (diseasesList.length > 0 && !selectedDisease) {
+          const defaultDisease = diseasesList.find(d => d.name === 'IDSR Malaria');
+          if (defaultDisease) {
+            setSelectedDisease(defaultDisease.id);
+          } else {
+            const sortedDiseases = [...diseasesList].sort((a, b) => a.name.localeCompare(b.name));
+            setSelectedDisease(sortedDiseases[0].id);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching diseases:', error);
+      } finally {
+        setLoadingDiseases(false);
+      }
+    };
+
+    fetchDiseases();
+  }, []);
+
+  // Fetch disease timeseries data when disease or location changes
+  useEffect(() => {
+    if (!selectedDisease) {
+      setDiseaseData([]);
+      return;
+    }
+
+    const fetchDiseaseData = async () => {
+      try {
+        setLoadingDiseaseData(true);
+
+        // Build params for disease data with same date range as climate data
+        const params = new URLSearchParams();
+        params.append('startDate', dateRange.startDate);
+        params.append('endDate', dateRange.endDate);
+        if (locationUid && locationUid !== 'all') {
+          params.append('locationUid', locationUid);
+        }
+
+        const response = await apiClient.get(`/diseases/${selectedDisease}/timeseries?${params}`);
+
+        if (response.data) {
+          setDiseaseData(response.data);
+        } else {
+          setDiseaseData([]);
+        }
+      } catch (error) {
+        console.error('Error fetching disease data:', error);
+        setDiseaseData([]);
+      } finally {
+        setLoadingDiseaseData(false);
+      }
+    };
+
+    fetchDiseaseData();
+  }, [selectedDisease, locationUid, dateRange.startDate, dateRange.endDate]);
+
   // Calculate historical averages for comparison
   const historicalMetrics = useMemo(() => {
     if (!climateData || climateData.length === 0) {
@@ -92,11 +166,20 @@ const ClimateDashboard = ({
       return typeof val === 'string' ? parseFloat(val) : val;
     }).filter(h => h != null && !isNaN(h));
 
+    // Calculate standard deviations
+    const avgPrecip = precips.length > 0 ? (precips.reduce((a, b) => a + b, 0) / precips.length) : 0;
+    const precipVariance = precips.length > 0
+      ? precips.reduce((sum, val) => sum + Math.pow(val - avgPrecip, 2), 0) / precips.length
+      : 0;
+    const precipStdDev = Math.sqrt(precipVariance);
+
     return {
       avgTemp: temps.length > 0 ? (temps.reduce((a, b) => a + b, 0) / temps.length) : 0,
       maxTemp: temps.length > 0 ? Math.max(...temps) : 0,
       minTemp: temps.length > 0 ? Math.min(...temps) : 0,
       totalPrecip: precips.length > 0 ? precips.reduce((a, b) => a + b, 0) : 0,
+      avgPrecip: avgPrecip,
+      precipStdDev: precipStdDev,
       maxPrecip: precips.length > 0 ? Math.max(...precips) : 0,
       minPrecip: precips.length > 0 ? Math.min(...precips) : 0,
       avgHumidity: humidities.length > 0 ? (humidities.reduce((a, b) => a + b, 0) / humidities.length) : 0,
@@ -150,13 +233,37 @@ const ClimateDashboard = ({
 
   return (
     <div className="space-y-6">
+      {/* Disease Dropdown */}
+      <div className="flex items-center gap-4">
+        <label htmlFor="disease-select" className="text-sm font-medium text-foreground">
+          Select Disease:
+        </label>
+        <select
+          id="disease-select"
+          value={selectedDisease || ''}
+          onChange={(e) => setSelectedDisease(e.target.value)}
+          disabled={loadingDiseases}
+          className="flex-1 max-w-md rounded-md border border-input bg-background px-4 py-2 text-sm"
+        >
+          {loadingDiseases ? (
+            <option>Loading diseases...</option>
+          ) : (
+            [...diseases].sort((a, b) => a.name.localeCompare(b.name)).map((disease) => (
+              <option key={disease.id} value={disease.id}>
+                {disease.name}
+              </option>
+            ))
+          )}
+        </select>
+      </div>
+
       {/* Weather Cards in Two Separate Boxes */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Current Weather Box */}
         <div className="border rounded-lg p-6 bg-card">
           <h3 className="text-lg font-semibold text-foreground mb-4">Current Weather</h3>
           {currentWeatherLoading ? (
-            <div className="flex items-center justify-center h-48">
+            <div className="flex items-center justify-center h-32">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
             </div>
           ) : currentWeather ? (
@@ -216,7 +323,7 @@ const ClimateDashboard = ({
               </motion.div>
             </div>
           ) : (
-            <div className="flex items-center justify-center h-48 text-gray-500">
+            <div className="flex items-center justify-center h-32 text-gray-500">
               <p>Current weather data unavailable</p>
             </div>
           )}
@@ -226,7 +333,7 @@ const ClimateDashboard = ({
         <div className="border rounded-lg p-6 bg-card">
           <h3 className="text-lg font-semibold text-foreground mb-4">Historical Weather</h3>
           {loading ? (
-            <div className="flex items-center justify-center h-48">
+            <div className="flex items-center justify-center h-32">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
             </div>
           ) : historicalMetrics ? (
@@ -256,12 +363,12 @@ const ClimateDashboard = ({
               >
                 <WeatherCard
                   icon={CloudRain}
-                  label="Total Rainfall"
-                  value={historicalMetrics.totalPrecip.toFixed(1)}
+                  label="Avg Rainfall"
+                  value={historicalMetrics.avgPrecip.toFixed(1)}
                   unit=" mm"
                   bgColor="bg-blue-100"
                   textColor="text-blue-900"
-                  minMax={`min: ${historicalMetrics.minPrecip.toFixed(1)} mm | max: ${historicalMetrics.maxPrecip.toFixed(1)} mm`}
+                  minMax={`σ: ${historicalMetrics.precipStdDev.toFixed(1)} mm | CV: ${((historicalMetrics.precipStdDev / historicalMetrics.avgPrecip) * 100).toFixed(0)}%`}
                 />
               </motion.div>
 
@@ -283,7 +390,7 @@ const ClimateDashboard = ({
               </motion.div>
             </div>
           ) : (
-            <div className="flex items-center justify-center h-48 text-gray-500">
+            <div className="flex items-center justify-center h-32 text-gray-500">
               <p>No historical data available</p>
             </div>
           )}
@@ -297,7 +404,27 @@ const ClimateDashboard = ({
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <UnifiedTrendChart data={climateData} />
+          <UnifiedTrendChart
+            data={climateData}
+            diseaseData={diseaseData}
+            selectedDisease={diseases.find(d => d.id === selectedDisease)}
+            loadingDiseaseData={loadingDiseaseData}
+          />
+        </motion.div>
+      )}
+
+      {/* Climate Impact Sankey Diagram */}
+      {climateData && climateData.length > 0 && diseaseData && diseaseData.length > 0 && selectedDisease && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+        >
+          <ClimateSankeyDiagram
+            climateData={climateData}
+            diseaseData={diseaseData}
+            selectedDisease={diseases.find(d => d.id === selectedDisease)}
+          />
         </motion.div>
       )}
     </div>

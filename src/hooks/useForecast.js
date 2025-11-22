@@ -160,3 +160,53 @@ export function useModelPerformance(disease, locationUid, autoFetch = true) {
     fetchPerformance
   };
 }
+
+export function useAnomalyDetection(disease, level = 2, locationUid = null, autoFetch = true) {
+  const [anomalyData, setAnomalyData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const fetchAnomalyDetection = useCallback(async (startDate = null, endDate = null) => {
+    if (!disease) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const params = new URLSearchParams({ level: level.toString() });
+      if (startDate) params.append('start_date', startDate);
+      if (endDate) params.append('end_date', endDate);
+      if (locationUid) params.append('location_uid', locationUid);
+
+      const response = await axios.get(
+        `${API_BASE}/forecast/anomaly-detection/${encodeURIComponent(disease)}?${params.toString()}`
+      );
+
+      if (response.data.success) {
+        setAnomalyData(response.data.data);
+      } else {
+        setError(response.data.error || 'Failed to fetch anomaly detection');
+        setAnomalyData(null);
+      }
+    } catch (err) {
+      console.error('Error fetching anomaly detection:', err);
+      setError(err.response?.data?.message || err.message || 'Failed to fetch anomaly detection');
+      setAnomalyData(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [disease, level, locationUid]);
+
+  useEffect(() => {
+    if (autoFetch) {
+      fetchAnomalyDetection();
+    }
+  }, [disease, level, locationUid, autoFetch, fetchAnomalyDetection]);
+
+  return {
+    anomalyData,
+    loading,
+    error,
+    fetchAnomalyDetection
+  };
+}

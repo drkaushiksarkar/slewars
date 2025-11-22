@@ -162,7 +162,6 @@ const DistrictComparison = ({ filters, onDistrictSelect }) => {
                     <td className="p-3 text-sm font-medium">{index + 1}</td>
                     <td className="p-3">
                       <div className="font-medium text-sm">{district.districtName}</div>
-                      <div className="text-xs text-muted-foreground">{district.uid}</div>
                     </td>
                     <td className="p-3 text-right">
                       <div className="font-semibold text-sm">
