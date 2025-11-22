@@ -24,6 +24,9 @@ const Overview = () => {
   const [selectedLocation, setSelectedLocation] = React.useState("all");
   const [timeRange, setTimeRange] = React.useState("30d");
   const [weatherData, setWeatherData] = React.useState(null);
+  const [adminLevel, setAdminLevel] = React.useState(2); // 2=District, 3=Chiefdom, 4=Facility
+  const [heatmapData, setHeatmapData] = React.useState([]);
+  const [heatmapLoading, setHeatmapLoading] = React.useState(false);
   const { overview, isLoading, refresh } = useDashboardData();
 
   const alertStats = overview?.alertStats ?? {
@@ -84,6 +87,40 @@ const Overview = () => {
     const interval = setInterval(loadWeatherData, 30 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Fetch heatmap data based on filters
+  React.useEffect(() => {
+    const loadHeatmapData = async () => {
+      try {
+        setHeatmapLoading(true);
+
+        // Convert timeRange to dates
+        const endDate = new Date();
+        const startDate = new Date();
+        const days = parseInt(timeRange) || 30;
+        startDate.setDate(startDate.getDate() - days);
+
+        const response = await fetch(
+          `http://localhost:4000/api/analytics/heatmap?` +
+          `startDate=${startDate.toISOString().split('T')[0]}` +
+          `&endDate=${endDate.toISOString().split('T')[0]}` +
+          `${selectedDisease !== 'all' ? `&disease=${selectedDisease}` : ''}` +
+          `${selectedLocation !== 'all' ? `&location=${selectedLocation}` : ''}` +
+          `&adminLevel=${adminLevel}`
+        );
+
+        const data = await response.json();
+        setHeatmapData(data.data || []);
+      } catch (error) {
+        console.error('Error loading heatmap data:', error);
+        setHeatmapData([]);
+      } finally {
+        setHeatmapLoading(false);
+      }
+    };
+
+    loadHeatmapData();
+  }, [adminLevel, selectedDisease, selectedLocation, timeRange]);
 
   return (
     <div className="space-y-6">
@@ -266,11 +303,41 @@ const Overview = () => {
         <DiseaseTrend locationUid={selectedLocation} />
       </div>
 
-      {/* Bottom - Full Width Disease Map */}
+      {/* Bottom - Full Width Geographic Distribution Card */}
       <div className="border rounded-lg p-6">
-        {/* <h3 className="text-lg font-semibold mb-4 text-center">Disease Map</h3> */}
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-semibold">Geographic Distribution</h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Interactive disease heatmap by administrative level
+            </p>
+          </div>
+
+          {/* Admin Level Dropdown */}
+          <div className="w-48">
+            <label className="text-xs font-medium text-muted-foreground mb-1 block">
+              Admin Level
+            </label>
+            <select
+              value={adminLevel}
+              onChange={(e) => setAdminLevel(parseInt(e.target.value))}
+              className="w-full px-3 py-2 text-sm border rounded-md bg-background"
+            >
+              <option value={2}>ADM2 - Districts</option>
+              <option value={3}>ADM3 - Chiefdoms</option>
+              <option value={4}>ADM4 - Facilities</option>
+            </select>
+          </div>
+        </div>
+
         <div className="w-full h-[600px]">
-          <DiseaseMap selectedDisease={selectedDisease} timeRange={timeRange} />
+          <DiseaseMap
+            heatmapData={heatmapData}
+            selectedDisease={selectedDisease}
+            timeRange={timeRange}
+            adminLevel={adminLevel}
+            isLoading={heatmapLoading}
+          />
         </div>
       </div>
 

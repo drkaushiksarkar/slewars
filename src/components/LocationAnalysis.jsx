@@ -4,13 +4,13 @@ import { MapPin, Filter, Calendar, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DistrictComparison from "./location/DistrictComparison";
 import ChiefdomDrillDown from "./location/ChiefdomDrillDown";
-import FacilityTable from "./location/FacilityTable";
 import LocationHeatmap from "./location/LocationHeatmap";
 import axios from "axios";
 
 const LocationAnalysis = () => {
-  const [view, setView] = useState("districts"); // map, districts, chiefdoms, facilities
+  const [view, setView] = useState("districts"); // map, districts, chiefdoms
   const [selectedDistrict, setSelectedDistrict] = useState(null);
+  const [adminLevel, setAdminLevel] = useState(2); // For heatmap only: 2=District, 3=Chiefdom, 4=Facility
   const [filters, setFilters] = useState({
     disease: "all",
     startDate: "",
@@ -121,14 +121,7 @@ const LocationAnalysis = () => {
             size="sm"
             onClick={() => setView("districts")}
           >
-            Districts
-          </Button>
-          <Button
-            variant={view === "facilities" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setView("facilities")}
-          >
-            Facilities
+            Locations
           </Button>
         </div>
       </div>
@@ -144,7 +137,24 @@ const LocationAnalysis = () => {
           <h3 className="font-semibold text-sm">Filters</h3>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className={`grid grid-cols-1 ${view === "map" ? "md:grid-cols-5" : "md:grid-cols-4"} gap-4`}>
+          {/* Admin Level Filter - Only show for heatmap view */}
+          {view === "map" && (
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                Admin Level
+              </label>
+              <select
+                value={adminLevel}
+                onChange={(e) => setAdminLevel(parseInt(e.target.value))}
+                className="w-full px-3 py-2 text-sm border rounded-md bg-background"
+              >
+                <option value={2}>ADM2 - Districts</option>
+                <option value={3}>ADM3 - Chiefdoms</option>
+                <option value={4}>ADM4 - Facilities</option>
+              </select>
+            </div>
+          )}
           {/* Location Filter */}
           <div>
             <label className="text-xs font-medium text-muted-foreground mb-1 block">
@@ -239,7 +249,7 @@ const LocationAnalysis = () => {
       <div className="min-h-[600px]">
         {view === "map" && (
           <React.Suspense fallback={<div className="flex items-center justify-center h-[600px]"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>}>
-            <LocationHeatmap filters={filters} />
+            <LocationHeatmap filters={filters} adminLevel={adminLevel} />
           </React.Suspense>
         )}
 
@@ -256,10 +266,6 @@ const LocationAnalysis = () => {
             filters={filters}
             onBack={handleBackToDistricts}
           />
-        )}
-
-        {view === "facilities" && (
-          <FacilityTable filters={filters} />
         )}
       </div>
     </div>
