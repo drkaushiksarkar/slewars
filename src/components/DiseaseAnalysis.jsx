@@ -2,14 +2,12 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Calendar, MapPin, Activity, Filter } from "lucide-react";
 import DiseaseSummaryCard from "./disease/DiseaseSummaryCard";
-import SpeciesDistribution from "./disease/SpeciesDistribution";
-import TreatmentTimeline from "./disease/TreatmentTimeline";
 import FacilityPerformanceTable from "./disease/FacilityPerformanceTable";
 
 const DiseaseAnalysis = () => {
-  const [diseases, setDiseases] = useState([]);
+  const [diseasesByCategory, setDiseasesByCategory] = useState({});
   const [locations, setLocations] = useState([]);
-  const [selectedDisease, setSelectedDisease] = useState("malaria");
+  const [selectedDisease, setSelectedDisease] = useState("malariaIDSR");
   const [selectedLocation, setSelectedLocation] = useState("all");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -22,11 +20,11 @@ const DiseaseAnalysis = () => {
       try {
         setLoading(true);
 
-        // Fetch diseases
-        const diseasesRes = await fetch("http://localhost:4000/api/diseases");
+        // Fetch diseases grouped by category
+        const diseasesRes = await fetch("http://localhost:4000/api/diseases/categories");
         const diseasesData = await diseasesRes.json();
         if (diseasesData.success) {
-          setDiseases(diseasesData.data);
+          setDiseasesByCategory(diseasesData.data);
         }
 
         // Fetch locations (districts)
@@ -55,7 +53,7 @@ const DiseaseAnalysis = () => {
   }, []);
 
   const handleResetFilters = () => {
-    setSelectedDisease("malaria");
+    setSelectedDisease("malariaIDSR");
     setSelectedLocation("all");
     const today = new Date();
     const sixMonthsAgo = new Date(today);
@@ -123,10 +121,14 @@ const DiseaseAnalysis = () => {
               onChange={(e) => setSelectedDisease(e.target.value)}
               className="w-full px-3 py-2 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary"
             >
-              {diseases.map((disease) => (
-                <option key={disease.id} value={disease.id}>
-                  {disease.name}
-                </option>
+              {Object.entries(diseasesByCategory).map(([category, diseases]) => (
+                <optgroup key={category} label={category}>
+                  {diseases.map((disease) => (
+                    <option key={disease.id} value={disease.id}>
+                      {disease.name}
+                    </option>
+                  ))}
+                </optgroup>
               ))}
             </select>
           </div>
@@ -188,19 +190,6 @@ const DiseaseAnalysis = () => {
         startDate={startDate}
         endDate={endDate}
       />
-
-      {/* Species Distribution and Treatment Timeline (Side by Side) */}
-      {selectedDisease === "malaria" && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <SpeciesDistribution
-            locationUid={selectedLocation === "all" ? undefined : selectedLocation}
-          />
-          <TreatmentTimeline
-            diseaseId={selectedDisease}
-            locationUid={selectedLocation === "all" ? undefined : selectedLocation}
-          />
-        </div>
-      )}
 
       {/* Facility Performance Table */}
       <FacilityPerformanceTable

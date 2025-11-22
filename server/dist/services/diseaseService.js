@@ -549,10 +549,11 @@ class DiseaseService {
             parent_ou.name as district,
             de.uid as data_element_uid,
             SUM(CASE WHEN dv.value ~ '^[0-9]+$' THEN CAST(dv.value AS INTEGER) ELSE 0 END) as total_value,
-            MAX(dv.lastupdated) as last_report_date
+            MAX(p.enddate) as last_report_date
           FROM datavalue dv
           JOIN dataelement de ON dv.dataelementid = de.dataelementid
           JOIN organisationunit ou ON dv.sourceid = ou.organisationunitid
+          JOIN period p ON dv.periodid = p.periodid
           LEFT JOIN organisationunit parent_ou ON ou.parentid = parent_ou.organisationunitid
           WHERE dv.deleted = false
             AND ou.hierarchylevel = 4

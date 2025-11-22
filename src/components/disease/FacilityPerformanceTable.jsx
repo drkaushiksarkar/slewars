@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Building2, AlertCircle, ArrowUpDown, CheckCircle, XCircle, Clock, Search } from "lucide-react";
+import { Building2, AlertCircle, ArrowUpDown, CheckCircle, XCircle, Clock, Search, Info } from "lucide-react";
 
 const FacilityPerformanceTable = ({ diseaseId, locationUid }) => {
   const [facilities, setFacilities] = useState([]);
   const [filteredFacilities, setFilteredFacilities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [sortField, setSortField] = useState("cases");
+  const [sortField, setSortField] = useState("deaths");
   const [sortDirection, setSortDirection] = useState("desc");
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [showCFRInfo, setShowCFRInfo] = useState(false);
 
   useEffect(() => {
     const fetchFacilityData = async () => {
@@ -116,9 +117,23 @@ const FacilityPerformanceTable = ({ diseaseId, locationUid }) => {
   };
 
   const getCFRColor = (cfr) => {
+    if (cfr > 100) return "text-purple-600 font-semibold"; // Data quality issue
     if (cfr > 5) return "text-red-600 font-semibold";
     if (cfr > 2) return "text-yellow-600 font-semibold";
     return "text-green-600 font-semibold";
+  };
+
+  const formatCFR = (facility) => {
+    const cfr = facility.cfr;
+    if (cfr > 100) {
+      return (
+        <span className="flex items-center justify-end space-x-1" title="Data quality issue: Deaths exceed cases">
+          <span>{cfr.toFixed(2)}%</span>
+          <AlertCircle className="h-3 w-3 text-purple-600" />
+        </span>
+      );
+    }
+    return `${cfr.toFixed(2)}%`;
   };
 
   if (loading) {
@@ -247,13 +262,48 @@ const FacilityPerformanceTable = ({ diseaseId, locationUid }) => {
                     <ArrowUpDown className="h-3 w-3" />
                   </div>
                 </th>
-                <th
-                  className="px-4 py-3 text-right font-semibold cursor-pointer hover:bg-muted"
-                  onClick={() => handleSort("cfr")}
-                >
+                <th className="px-4 py-3 text-right font-semibold">
                   <div className="flex items-center justify-end space-x-1">
-                    <span>CFR (%)</span>
-                    <ArrowUpDown className="h-3 w-3" />
+                    <span
+                      className="cursor-pointer hover:bg-muted px-2 py-1 rounded"
+                      onClick={() => handleSort("cfr")}
+                    >
+                      CFR (%)
+                    </span>
+                    <ArrowUpDown
+                      className="h-3 w-3 cursor-pointer"
+                      onClick={() => handleSort("cfr")}
+                    />
+                    <div className="relative">
+                      <Info
+                        className="h-4 w-4 text-primary cursor-help"
+                        onMouseEnter={() => setShowCFRInfo(true)}
+                        onMouseLeave={() => setShowCFRInfo(false)}
+                      />
+                      {showCFRInfo && (
+                        <div className="absolute right-0 top-6 z-50 w-80 p-4 bg-popover text-popover-foreground rounded-lg border shadow-lg text-xs">
+                          <div className="space-y-2">
+                            <p className="font-semibold text-sm">Case Fatality Rate (CFR)</p>
+                            <p className="text-muted-foreground">
+                              <strong>Formula:</strong> CFR = (Deaths / Cases) × 100
+                            </p>
+                            <p className="text-muted-foreground">
+                              CFR measures the proportion of diagnosed cases that result in death,
+                              indicating disease severity and healthcare effectiveness.
+                            </p>
+                            <div className="pt-2 border-t space-y-1">
+                              <p className="text-green-600">• CFR ≤ 2%: Low severity</p>
+                              <p className="text-yellow-600">• CFR 2-5%: Moderate severity</p>
+                              <p className="text-red-600">• CFR > 5%: High severity</p>
+                            </div>
+                            <p className="pt-2 border-t text-muted-foreground italic">
+                              Note: Death data may be aggregated at district level. Facilities showing
+                              0 deaths may not report deaths individually.
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </th>
                 <th className="px-4 py-3 text-center font-semibold">Status</th>
@@ -274,7 +324,7 @@ const FacilityPerformanceTable = ({ diseaseId, locationUid }) => {
                   <td className="px-4 py-3 text-right">{facility.cases.toLocaleString()}</td>
                   <td className="px-4 py-3 text-right">{facility.deaths.toLocaleString()}</td>
                   <td className={`px-4 py-3 text-right ${getCFRColor(facility.cfr)}`}>
-                    {facility.cfr.toFixed(2)}%
+                    {formatCFR(facility)}
                   </td>
                   <td className="px-4 py-3 text-center">{getStatusBadge(facility.status)}</td>
                   <td className="px-4 py-3 text-xs text-muted-foreground">
@@ -314,6 +364,19 @@ const FacilityPerformanceTable = ({ diseaseId, locationUid }) => {
             </p>
           </div>
         </div>
+
+        {filteredFacilities.filter(f => f.deaths > 0).length === 0 && filteredFacilities.length > 0 && (
+          <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-900">
+            <div className="flex items-start space-x-2">
+              <Info className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+              <p className="text-xs text-blue-800 dark:text-blue-300">
+                <strong>Note:</strong> All facilities show 0 deaths. Death data for this disease may be
+                aggregated at district or national level rather than reported by individual facilities.
+                Check the Disease Summary card for total deaths across all reporting levels.
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </motion.div>
   );
