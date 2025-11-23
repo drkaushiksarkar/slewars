@@ -15,6 +15,7 @@ export const useDashboardAnalytics = (filters = {}) => {
   const [data, setData] = useState({
     overview: null,
     diseases: [],
+    diseasesByCategory: {},
     breakdown: [],
     trends: [],
     heatmap: [],
@@ -71,6 +72,7 @@ export const useDashboardAnalytics = (filters = {}) => {
       const [
         overviewRes,
         diseasesRes,
+        diseasesCategoriesRes,
         breakdownRes,
         trendsRes,
         heatmapRes,
@@ -79,6 +81,7 @@ export const useDashboardAnalytics = (filters = {}) => {
       ] = await Promise.allSettled([
         apiClient.get(`/analytics/overview?${buildOverviewParams()}`),
         apiClient.get('/diseases'),
+        apiClient.get('/diseases/categories'),
         apiClient.get(`/diseases/breakdown/all?${buildParams()}`),
         apiClient.get(`/analytics/trends?${buildTrendsParams()}`),
         apiClient.get(`/analytics/heatmap?${buildHeatmapParams()}`),
@@ -89,6 +92,7 @@ export const useDashboardAnalytics = (filters = {}) => {
       setData({
         overview: overviewRes.status === 'fulfilled' ? overviewRes.value?.data : null,
         diseases: diseasesRes.status === 'fulfilled' ? diseasesRes.value?.data : [],
+        diseasesByCategory: diseasesCategoriesRes.status === 'fulfilled' ? diseasesCategoriesRes.value?.data : {},
         breakdown: breakdownRes.status === 'fulfilled' ? breakdownRes.value?.data : [],
         trends: trendsRes.status === 'fulfilled' ? trendsRes.value?.data : [],
         heatmap: heatmapRes.status === 'fulfilled' ? heatmapRes.value?.data : [],

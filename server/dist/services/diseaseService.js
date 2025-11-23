@@ -309,6 +309,7 @@ class DiseaseService {
         WHERE dv.deleted = false
           AND de.uid = ANY($1::text[])
           AND dv.value IS NOT NULL
+          AND p.startdate <= NOW()
         GROUP BY de.uid, de.name
       `;
             const result = await postgresService.query(query, [dataElementUIDs]);
@@ -371,6 +372,7 @@ class DiseaseService {
         WHERE dv.deleted = false
           AND de.uid = $1
           AND dv.value IS NOT NULL
+          AND p.startdate <= NOW()
       `;
             if (startDate) {
                 query += ` AND p.startdate >= $${paramIndex}`;
@@ -559,6 +561,7 @@ class DiseaseService {
             AND ou.hierarchylevel = 4
             AND de.uid = ANY($1::text[])
             AND dv.value IS NOT NULL
+            AND p.startdate <= NOW()
       `;
             const params = [dataElementUIDs];
             let paramIndex = 2;

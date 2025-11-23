@@ -29,6 +29,7 @@ const NewOverview = () => {
   const {
     overview,
     diseases,
+    diseasesByCategory,
     breakdown,
     trends,
     heatmap,
@@ -114,11 +115,23 @@ const NewOverview = () => {
             className="flex-1 rounded-md border border-input bg-background px-4 py-2 min-w-[180px]"
             disabled={isLoading}
           >
-            {[...diseases].sort((a, b) => a.name.localeCompare(b.name)).map((disease) => (
-              <option key={disease.id} value={disease.id}>
-                {disease.name}
-              </option>
-            ))}
+            {Object.keys(diseasesByCategory).length > 0 ? (
+              Object.entries(diseasesByCategory).map(([category, categoryDiseases]) => (
+                <optgroup key={category} label={category}>
+                  {categoryDiseases.map((disease) => (
+                    <option key={disease.id} value={disease.id}>
+                      {disease.name}
+                    </option>
+                  ))}
+                </optgroup>
+              ))
+            ) : (
+              diseases.map((disease) => (
+                <option key={disease.id} value={disease.id}>
+                  {disease.name}
+                </option>
+              ))
+            )}
           </select>
         </div>
 

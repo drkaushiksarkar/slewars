@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import { MapPin } from "lucide-react";
 import axios from "axios";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -73,12 +74,12 @@ const LocationHeatmap = ({ filters, adminLevel = 2 }) => {
     if (map.current || !mapboxToken || !mapContainer.current) return; // Initialize map only once
 
     try {
-      // Set initial zoom based on admin level
-      const initialZoom = adminLevel === 2 ? 7 : adminLevel === 3 ? 8 : 9;
+      // Consistent zoom level across all admin levels
+      const initialZoom = 7;
 
       map.current = new mapboxgl.Map({
         container: mapContainer.current,
-        style: "mapbox://styles/mapbox/light-v11",
+        style: "mapbox://styles/mapbox/satellite-streets-v12",
         center: [-11.7799, 8.4606], // Sierra Leone center
         zoom: initialZoom,
       });
@@ -104,13 +105,8 @@ const LocationHeatmap = ({ filters, adminLevel = 2 }) => {
     }
   }, [mapboxToken, adminLevel]);
 
-  // Update zoom when admin level changes
-  useEffect(() => {
-    if (!map.current) return;
-
-    const newZoom = adminLevel === 2 ? 7 : adminLevel === 3 ? 8 : 9;
-    map.current.flyTo({ zoom: newZoom, duration: 1000 });
-  }, [adminLevel]);
+  // Maintain consistent zoom level across all admin levels
+  // (Removed zoom adjustment on admin level change)
 
   // Update map with heatmap data
   useEffect(() => {
@@ -192,13 +188,13 @@ const LocationHeatmap = ({ filters, adminLevel = 2 }) => {
               ["linear"],
               ["get", "riskValue"],
               0,
-              "#d1fae5", // Pastel green (low)
+              "#10b981", // Vibrant emerald green (low risk)
               0.5,
-              "#fef3c7", // Pastel yellow (medium)
+              "#f59e0b", // Vibrant amber/orange (medium risk)
               1,
-              "#fecaca", // Pastel red (high)
+              "#ef4444", // Vibrant red (high risk)
             ],
-            "fill-opacity": 0.7,
+            "fill-opacity": 0.85,
           },
         });
 
@@ -208,8 +204,9 @@ const LocationHeatmap = ({ filters, adminLevel = 2 }) => {
           type: "line",
           source: "locations-polygons",
           paint: {
-            "line-color": "#94a3b8",
-            "line-width": 1.5,
+            "line-color": "#1e293b", // Dark charcoal/slate outline
+            "line-width": 2,
+            "line-opacity": 0.8,
           },
         });
       }
@@ -249,15 +246,16 @@ const LocationHeatmap = ({ filters, adminLevel = 2 }) => {
               ["linear"],
               ["get", "riskValue"],
               0,
-              "#d1fae5",
+              "#10b981", // Vibrant emerald green (low risk)
               0.5,
-              "#fef3c7",
+              "#f59e0b", // Vibrant amber/orange (medium risk)
               1,
-              "#fecaca",
+              "#ef4444", // Vibrant red (high risk)
             ],
-            "circle-opacity": 0.75,
-            "circle-stroke-width": 2,
-            "circle-stroke-color": "#94a3b8",
+            "circle-opacity": 0.85,
+            "circle-stroke-width": 2.5,
+            "circle-stroke-color": "#1e293b", // Dark charcoal/slate stroke
+            "circle-stroke-opacity": 0.8,
           },
         });
       }
@@ -345,46 +343,58 @@ const LocationHeatmap = ({ filters, adminLevel = 2 }) => {
       animate={{ opacity: 1 }}
       className="space-y-4"
     >
-      {/* Legend */}
-      <div className="bg-card rounded-lg border p-4">
-        <h3 className="font-semibold text-sm mb-3">
-          Case Distribution by {levelLabel.singular}
-          {adminLevel === 4 && <span className="text-xs font-normal ml-2">(Bubble Size = Cases)</span>}
-        </h3>
-
-        {adminLevel === 4 ? (
-          // Bubble chart legend for facilities
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 rounded-full bg-[#fecaca] border-2 border-[#94a3b8]"></div>
-              <span className="text-sm">High Risk</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-5 h-5 rounded-full bg-[#fef3c7] border-2 border-[#94a3b8]"></div>
-              <span className="text-sm">Medium Risk</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 rounded-full bg-[#d1fae5] border-2 border-[#94a3b8]"></div>
-              <span className="text-sm">Low Risk</span>
-            </div>
+      {/* Premium Header Card */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 border-2 border-slate-200 dark:border-slate-700 shadow-lg"
+      >
+        <div className="relative bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 p-4">
+          <div className="absolute inset-0 bg-black/10"></div>
+          <div className="relative">
+            <h3 className="font-bold text-white text-base flex items-center gap-2">
+              <MapPin className="h-5 w-5" />
+              Case Distribution by {levelLabel.singular}
+              {adminLevel === 4 && <span className="text-xs font-normal ml-2">(Bubble Size = Cases)</span>}
+            </h3>
           </div>
-        ) : (
-          // Standard polygon legend
-          <>
-            <div className="flex items-center gap-4">
-              <span className="text-xs text-muted-foreground">Low</span>
-              <div className="flex-1 h-4 rounded-md bg-gradient-to-r from-[#d1fae5] via-[#fef3c7] to-[#fecaca]"></div>
-              <span className="text-xs text-muted-foreground">High</span>
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              Click on a {levelLabel.singular.toLowerCase()} to view detailed information
-            </p>
-          </>
-        )}
-      </div>
+        </div>
 
-      {/* Map Container */}
-      <div className="relative bg-card rounded-lg border overflow-hidden">
+        <div className="p-4">
+          {adminLevel === 4 ? (
+            // Bubble chart legend for facilities
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 rounded-full bg-[#ef4444] border-2 border-white shadow-lg"></div>
+                <span className="text-sm font-medium">High Risk</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-5 h-5 rounded-full bg-[#f59e0b] border-2 border-white shadow-lg"></div>
+                <span className="text-sm font-medium">Medium Risk</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 rounded-full bg-[#10b981] border-2 border-white shadow-lg"></div>
+                <span className="text-sm font-medium">Low Risk</span>
+              </div>
+            </div>
+          ) : (
+            // Standard polygon legend
+            <>
+              <div className="flex items-center gap-4">
+                <span className="text-xs font-semibold text-muted-foreground">Low</span>
+                <div className="flex-1 h-5 rounded-md bg-gradient-to-r from-[#10b981] via-[#f59e0b] to-[#ef4444] shadow-inner"></div>
+                <span className="text-xs font-semibold text-muted-foreground">High</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-3">
+                Click on a {levelLabel.singular.toLowerCase()} to view detailed information
+              </p>
+            </>
+          )}
+        </div>
+      </motion.div>
+
+      {/* Premium Map Container */}
+      <div className="relative rounded-xl overflow-hidden shadow-inner ring-1 ring-slate-900/10">
         {loading && (
           <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-10">
             <div className="text-center">
@@ -395,66 +405,81 @@ const LocationHeatmap = ({ filters, adminLevel = 2 }) => {
         )}
         <div ref={mapContainer} className="h-[600px] w-full" />
 
-        {/* Map Legend Overlay */}
+        {/* Premium Map Legend Overlay */}
         {!loading && heatmapData && heatmapData.length > 0 && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
-            className="absolute bottom-4 right-4 bg-background/90 backdrop-blur-sm p-4 rounded-lg shadow-lg"
+            className="absolute bottom-4 right-4 bg-gradient-to-br from-slate-900/95 to-slate-800/95 backdrop-blur-md p-5 rounded-xl shadow-2xl border border-slate-700/50"
           >
-            <h3 className="font-semibold mb-2 text-sm">
-              Legend {adminLevel === 4 && <span className="text-xs font-normal">(Size = Cases)</span>}
+            <h3 className="font-bold mb-3 text-sm text-white">
+              Risk Legend {adminLevel === 4 && <span className="text-xs font-normal text-slate-400">(Size = Cases)</span>}
             </h3>
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
+            <div className="space-y-2.5">
+              <div className="flex items-center space-x-3">
                 {adminLevel === 4 ? (
-                  <div className="w-8 h-8 rounded-full bg-[#fecaca] border-2 border-[#94a3b8]"></div>
+                  <div className="w-8 h-8 rounded-full bg-[#ef4444] border-2 border-white shadow-lg"></div>
                 ) : (
-                  <div className="w-4 h-4 bg-[#fecaca] border border-[#94a3b8]"></div>
+                  <div className="w-5 h-5 bg-[#ef4444] border-2 border-white rounded shadow-lg"></div>
                 )}
-                <span className="text-sm">High Risk</span>
+                <span className="text-sm font-medium text-slate-200">High Risk</span>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3">
                 {adminLevel === 4 ? (
-                  <div className="w-5 h-5 rounded-full bg-[#fef3c7] border-2 border-[#94a3b8]"></div>
+                  <div className="w-5 h-5 rounded-full bg-[#f59e0b] border-2 border-white shadow-lg"></div>
                 ) : (
-                  <div className="w-4 h-4 bg-[#fef3c7] border border-[#94a3b8]"></div>
+                  <div className="w-5 h-5 bg-[#f59e0b] border-2 border-white rounded shadow-lg"></div>
                 )}
-                <span className="text-sm">Medium Risk</span>
+                <span className="text-sm font-medium text-slate-200">Medium Risk</span>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3">
                 {adminLevel === 4 ? (
-                  <div className="w-2 h-2 rounded-full bg-[#d1fae5] border-2 border-[#94a3b8]"></div>
+                  <div className="w-2 h-2 rounded-full bg-[#10b981] border-2 border-white shadow-lg"></div>
                 ) : (
-                  <div className="w-4 h-4 bg-[#d1fae5] border border-[#94a3b8]"></div>
+                  <div className="w-5 h-5 bg-[#10b981] border-2 border-white rounded shadow-lg"></div>
                 )}
-                <span className="text-sm">Low Risk</span>
+                <span className="text-sm font-medium text-slate-200">Low Risk</span>
               </div>
             </div>
           </motion.div>
         )}
       </div>
 
-      {/* Summary Stats */}
+      {/* Premium Summary Stats */}
       {heatmapData && heatmapData.length > 0 && (
         <div className="grid grid-cols-3 gap-4">
-          <div className="bg-card rounded-lg border p-4">
-            <p className="text-xs text-muted-foreground mb-1">Total {levelLabel.plural}</p>
-            <p className="text-2xl font-bold">{heatmapData.length}</p>
-          </div>
-          <div className="bg-card rounded-lg border p-4">
-            <p className="text-xs text-muted-foreground mb-1">Total Cases</p>
-            <p className="text-2xl font-bold">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 rounded-lg border-2 border-blue-200 dark:border-blue-800 p-4 shadow-lg"
+          >
+            <p className="text-xs font-semibold text-blue-700 dark:text-blue-300 mb-1 uppercase tracking-wider">Total {levelLabel.plural}</p>
+            <p className="text-3xl font-bold text-blue-900 dark:text-blue-100">{heatmapData.length}</p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 rounded-lg border-2 border-purple-200 dark:border-purple-800 p-4 shadow-lg"
+          >
+            <p className="text-xs font-semibold text-purple-700 dark:text-purple-300 mb-1 uppercase tracking-wider">Total Cases</p>
+            <p className="text-3xl font-bold text-purple-900 dark:text-purple-100">
               {heatmapData.reduce((sum, d) => sum + (d.totalCases || 0), 0).toLocaleString()}
             </p>
-          </div>
-          <div className="bg-card rounded-lg border p-4">
-            <p className="text-xs text-muted-foreground mb-1">{adminLevel === 4 ? "Reporting" : "Active"} {adminLevel === 4 ? levelLabel.plural : "Facilities"}</p>
-            <p className="text-2xl font-bold">
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-950 dark:to-pink-900 rounded-lg border-2 border-pink-200 dark:border-pink-800 p-4 shadow-lg"
+          >
+            <p className="text-xs font-semibold text-pink-700 dark:text-pink-300 mb-1 uppercase tracking-wider">{adminLevel === 4 ? "Reporting" : "Active"} {adminLevel === 4 ? levelLabel.plural : "Facilities"}</p>
+            <p className="text-3xl font-bold text-pink-900 dark:text-pink-100">
               {heatmapData.reduce((sum, d) => sum + (d.facilitiesReporting || 0), 0)}
             </p>
-          </div>
+          </motion.div>
         </div>
       )}
     </motion.div>

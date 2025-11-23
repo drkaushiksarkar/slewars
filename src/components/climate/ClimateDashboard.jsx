@@ -45,7 +45,7 @@ const ClimateDashboard = ({
   aggregation = 'week'
 }) => {
   // State for diseases and selected disease
-  const [diseases, setDiseases] = useState([]);
+  const [diseasesByCategory, setDiseasesByCategory] = useState({});
   const [selectedDisease, setSelectedDisease] = useState(null);
   const [diseaseData, setDiseaseData] = useState([]);
   const [loadingDiseases, setLoadingDiseases] = useState(true);
@@ -76,23 +76,24 @@ const ClimateDashboard = ({
 
   const { stats, loading: statsLoading } = useClimateStatistics(locationUid);
 
-  // Fetch diseases list
+  // Fetch diseases list grouped by category
   useEffect(() => {
     const fetchDiseases = async () => {
       try {
         setLoadingDiseases(true);
-        const response = await apiClient.get('/diseases');
-        const diseasesList = response.data || [];
-        setDiseases(diseasesList);
+        const response = await apiClient.get('/diseases/categories');
+        const categorizedDiseases = response.data || {};
+        setDiseasesByCategory(categorizedDiseases);
 
-        // Set default disease (IDSR Malaria or first disease)
-        if (diseasesList.length > 0 && !selectedDisease) {
-          const defaultDisease = diseasesList.find(d => d.name === 'IDSR Malaria');
+        // Set default disease (malariaIDSR or first disease)
+        if (Object.keys(categorizedDiseases).length > 0 && !selectedDisease) {
+          // Flatten all diseases to find default
+          const allDiseases = Object.values(categorizedDiseases).flat();
+          const defaultDisease = allDiseases.find(d => d.id === 'malariaIDSR' || d.name === 'IDSR Malaria');
           if (defaultDisease) {
             setSelectedDisease(defaultDisease.id);
-          } else {
-            const sortedDiseases = [...diseasesList].sort((a, b) => a.name.localeCompare(b.name));
-            setSelectedDisease(sortedDiseases[0].id);
+          } else if (allDiseases.length > 0) {
+            setSelectedDisease(allDiseases[0].id);
           }
         }
       } catch (error) {
@@ -248,10 +249,14 @@ const ClimateDashboard = ({
           {loadingDiseases ? (
             <option>Loading diseases...</option>
           ) : (
-            [...diseases].sort((a, b) => a.name.localeCompare(b.name)).map((disease) => (
-              <option key={disease.id} value={disease.id}>
-                {disease.name}
-              </option>
+            Object.entries(diseasesByCategory).map(([category, diseases]) => (
+              <optgroup key={category} label={category}>
+                {diseases.map((disease) => (
+                  <option key={disease.id} value={disease.id}>
+                    {disease.name}
+                  </option>
+                ))}
+              </optgroup>
             ))
           )}
         </select>
@@ -407,7 +412,7 @@ const ClimateDashboard = ({
           <UnifiedTrendChart
             data={climateData}
             diseaseData={diseaseData}
-            selectedDisease={diseases.find(d => d.id === selectedDisease)}
+            selectedDisease={Object.values(diseasesByCategory).flat().find(d => d.id === selectedDisease)}
             loadingDiseaseData={loadingDiseaseData}
           />
         </motion.div>
@@ -423,7 +428,7 @@ const ClimateDashboard = ({
           <ClimateSankeyDiagram
             climateData={climateData}
             diseaseData={diseaseData}
-            selectedDisease={diseases.find(d => d.id === selectedDisease)}
+            selectedDisease={Object.values(diseasesByCategory).flat().find(d => d.id === selectedDisease)}
           />
         </motion.div>
       )}

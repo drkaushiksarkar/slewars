@@ -39,10 +39,10 @@ class ErrorBoundary extends React.Component {
 function ForecastDashboardContent() {
   console.log('ForecastDashboard rendering...');
 
-  const [selectedDisease, setSelectedDisease] = useState('Malaria');
+  const [selectedDisease, setSelectedDisease] = useState('malariaIDSR');
   const [selectedLocation, setSelectedLocation] = useState('O6uvpzGd5pu'); // Bo District
   const [locations, setLocations] = useState([]);
-  const [diseases] = useState(['Malaria', 'Measles', 'Typhoid', 'Yellow Fever', 'Cholera', 'Lassa Fever']);
+  const [diseasesByCategory, setDiseasesByCategory] = useState({});
   const [showRetrainModal, setShowRetrainModal] = useState(false);
   const [showForecastInfo, setShowForecastInfo] = useState(false);
   const [showDataLagWarning, setShowDataLagWarning] = useState(false);
@@ -75,6 +75,18 @@ function ForecastDashboardContent() {
         }
       })
       .catch(err => console.error('Error fetching locations:', err));
+  }, []);
+
+  // Fetch diseases grouped by category
+  useEffect(() => {
+    fetch('http://localhost:4000/api/diseases/categories')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setDiseasesByCategory(data.data);
+        }
+      })
+      .catch(err => console.error('Error fetching diseases:', err));
   }, []);
 
   const handleRetrainClick = () => {
@@ -161,8 +173,14 @@ function ForecastDashboardContent() {
                 onChange={(e) => setSelectedDisease(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                {diseases.map(disease => (
-                  <option key={disease} value={disease}>{disease}</option>
+                {Object.entries(diseasesByCategory).map(([category, diseases]) => (
+                  <optgroup key={category} label={category}>
+                    {diseases.map((disease) => (
+                      <option key={disease.id} value={disease.id}>
+                        {disease.name}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
             </div>

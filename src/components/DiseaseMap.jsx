@@ -26,7 +26,7 @@ const DiseaseMap = ({
   const [viewState, setViewState] = React.useState({
     longitude: -11.7799,
     latitude: 8.4606,
-    zoom: adminLevel === 2 ? 7 : adminLevel === 3 ? 8 : 9
+    zoom: 7
   });
   const [hoverInfo, setHoverInfo] = React.useState(null);
   const [mapError, setMapError] = React.useState(null);
@@ -40,13 +40,8 @@ const DiseaseMap = ({
     });
   }, [countryConfig]);
 
-  // Update zoom level when admin level changes
-  React.useEffect(() => {
-    setViewState(prev => ({
-      ...prev,
-      zoom: adminLevel === 2 ? 7 : adminLevel === 3 ? 8 : 9
-    }));
-  }, [adminLevel]);
+  // Maintain consistent zoom level across all admin levels
+  // (Removed zoom adjustment on admin level change)
 
   // Build GeoJSON from heatmap data - separate polygons and points
   const { polygonGeojson, pointGeojson } = React.useMemo(() => {
@@ -128,13 +123,13 @@ const DiseaseMap = ({
           ["linear"],
           ["get", "riskValue"],
           0,
-          "#d1fae5",  // Pastel green (low risk)
+          "#10b981",  // Vibrant emerald green (low risk)
           0.5,
-          "#fef3c7",  // Pastel yellow (medium risk)
+          "#f59e0b",  // Vibrant amber/orange (medium risk)
           1,
-          "#fecaca"   // Pastel red (high risk)
+          "#ef4444"   // Vibrant red (high risk)
         ],
-        "fill-opacity": 0.7
+        "fill-opacity": 0.85
       }
     }),
     [adminLevel]
@@ -145,8 +140,9 @@ const DiseaseMap = ({
       id: `sle-adm${adminLevel}-outline`,
       type: "line",
       paint: {
-        "line-color": "#94a3b8",  // Muted gray outline
-        "line-width": 1.5
+        "line-color": "#1e293b",  // Dark charcoal/slate outline
+        "line-width": 2,
+        "line-opacity": 0.8
       }
     }),
     [adminLevel]
@@ -182,15 +178,16 @@ const DiseaseMap = ({
           ["linear"],
           ["get", "riskValue"],
           0,
-          "#d1fae5",  // Pastel green (low risk)
+          "#10b981",  // Vibrant emerald green (low risk)
           0.5,
-          "#fef3c7",  // Pastel yellow (medium risk)
+          "#f59e0b",  // Vibrant amber/orange (medium risk)
           1,
-          "#fecaca"   // Pastel red (high risk)
+          "#ef4444"   // Vibrant red (high risk)
         ],
-        "circle-opacity": 0.75,
-        "circle-stroke-width": 2,
-        "circle-stroke-color": "#94a3b8"  // Muted gray stroke
+        "circle-opacity": 0.85,
+        "circle-stroke-width": 2.5,
+        "circle-stroke-color": "#1e293b",  // Dark charcoal/slate stroke
+        "circle-stroke-opacity": 0.8
       }
     }),
     [adminLevel]
@@ -234,7 +231,7 @@ const DiseaseMap = ({
                 setHoverInfo(null);
               }
             }}
-            mapStyle="mapbox://styles/mapbox/light-v11"
+            mapStyle="mapbox://styles/mapbox/satellite-streets-v12"
             mapboxAccessToken={MAPBOX_TOKEN}
           >
             {/* Render polygon/multipolygon features */}
@@ -260,17 +257,39 @@ const DiseaseMap = ({
         )}
 
         {hoverInfo && (
-          <div className="absolute top-4 left-4 rounded-lg bg-background/90 p-3 shadow-lg text-sm">
-            <p className="font-semibold">{hoverInfo.name}</p>
-            <p>Risk: {hoverInfo.risk}</p>
-            <p>Cases: {hoverInfo.cases}</p>
-            {hoverInfo.dominantDisease && (
-              <p>Dominant: {hoverInfo.dominantDisease}</p>
-            )}
-            {hoverInfo.facilitiesReporting > 0 && (
-              <p>Facilities: {hoverInfo.facilitiesReporting}</p>
-            )}
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="absolute top-4 left-4 rounded-xl bg-gradient-to-br from-slate-900/95 to-slate-800/95 backdrop-blur-md p-4 shadow-2xl border border-slate-700/50 text-sm"
+          >
+            <p className="font-bold text-white text-base mb-2">{hoverInfo.name}</p>
+            <div className="space-y-1.5 text-slate-200">
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-slate-400">Risk Level:</span>
+                <span className={`font-semibold ${
+                  hoverInfo.risk === 'High' ? 'text-red-400' :
+                  hoverInfo.risk === 'Medium' ? 'text-yellow-400' :
+                  'text-green-400'
+                }`}>{hoverInfo.risk}</span>
+              </div>
+              <div className="flex items-center justify-between gap-4">
+                <span className="text-slate-400">Cases:</span>
+                <span className="font-semibold">{hoverInfo.cases}</span>
+              </div>
+              {hoverInfo.dominantDisease && (
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-slate-400">Dominant:</span>
+                  <span className="font-semibold text-purple-400">{hoverInfo.dominantDisease}</span>
+                </div>
+              )}
+              {hoverInfo.facilitiesReporting > 0 && (
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-slate-400">Facilities:</span>
+                  <span className="font-semibold">{hoverInfo.facilitiesReporting}</span>
+                </div>
+              )}
+            </div>
+          </motion.div>
         )}
 
         {(!heatmapData || heatmapData.length === 0) && !isLoading && (
@@ -287,38 +306,38 @@ const DiseaseMap = ({
 
       {/* Map Legend */}
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5 }}
-        className="absolute bottom-4 right-4 bg-background/90 backdrop-blur-sm p-4 rounded-lg shadow-lg"
+        className="absolute bottom-4 right-4 bg-gradient-to-br from-slate-900/95 to-slate-800/95 backdrop-blur-md p-5 rounded-xl shadow-2xl border border-slate-700/50"
       >
-        <h3 className="font-semibold mb-2 text-sm">
-          Legend {adminLevel === 4 && <span className="text-xs font-normal">(Size = Cases)</span>}
+        <h3 className="font-bold mb-3 text-sm text-white">
+          Risk Legend {adminLevel === 4 && <span className="text-xs font-normal text-slate-400">(Size = Cases)</span>}
         </h3>
-        <div className="space-y-2">
-          <div className="flex items-center space-x-2">
+        <div className="space-y-2.5">
+          <div className="flex items-center space-x-3">
             {adminLevel === 4 ? (
-              <div className="w-8 h-8 rounded-full bg-[#fecaca] border-2 border-[#94a3b8]"></div>
+              <div className="w-8 h-8 rounded-full bg-[#ef4444] border-2 border-white shadow-lg"></div>
             ) : (
-              <div className="w-4 h-4 bg-[#fecaca] border border-[#94a3b8]"></div>
+              <div className="w-5 h-5 bg-[#ef4444] border-2 border-white rounded shadow-lg"></div>
             )}
-            <span className="text-sm">High Risk</span>
+            <span className="text-sm font-medium text-slate-200">High Risk</span>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-3">
             {adminLevel === 4 ? (
-              <div className="w-5 h-5 rounded-full bg-[#fef3c7] border-2 border-[#94a3b8]"></div>
+              <div className="w-5 h-5 rounded-full bg-[#f59e0b] border-2 border-white shadow-lg"></div>
             ) : (
-              <div className="w-4 h-4 bg-[#fef3c7] border border-[#94a3b8]"></div>
+              <div className="w-5 h-5 bg-[#f59e0b] border-2 border-white rounded shadow-lg"></div>
             )}
-            <span className="text-sm">Medium Risk</span>
+            <span className="text-sm font-medium text-slate-200">Medium Risk</span>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-3">
             {adminLevel === 4 ? (
-              <div className="w-2 h-2 rounded-full bg-[#d1fae5] border-2 border-[#94a3b8]"></div>
+              <div className="w-2 h-2 rounded-full bg-[#10b981] border-2 border-white shadow-lg"></div>
             ) : (
-              <div className="w-4 h-4 bg-[#d1fae5] border border-[#94a3b8]"></div>
+              <div className="w-5 h-5 bg-[#10b981] border-2 border-white rounded shadow-lg"></div>
             )}
-            <span className="text-sm">Low Risk</span>
+            <span className="text-sm font-medium text-slate-200">Low Risk</span>
           </div>
         </div>
       </motion.div>

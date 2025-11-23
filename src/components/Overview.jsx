@@ -9,7 +9,10 @@ import {
   AlertTriangle,
   MapPin,
   Target,
-  TrendingUp
+  TrendingUp,
+  Activity,
+  Calendar,
+  Filter
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useDashboardData } from "@/contexts/DashboardDataContext";
@@ -27,6 +30,7 @@ const Overview = () => {
   const [adminLevel, setAdminLevel] = React.useState(2); // 2=District, 3=Chiefdom, 4=Facility
   const [heatmapData, setHeatmapData] = React.useState([]);
   const [heatmapLoading, setHeatmapLoading] = React.useState(false);
+  const [diseasesByCategory, setDiseasesByCategory] = React.useState({});
   const { overview, isLoading, refresh } = useDashboardData();
 
   const alertStats = overview?.alertStats ?? {
@@ -50,13 +54,6 @@ const Overview = () => {
   };
 
   const alerts = overview?.alerts ?? [];
-  const diseaseOptions = overview?.country?.diseases ?? [
-    "Malaria",
-    "Lassa Fever",
-    "Yellow Fever",
-    "Ebola",
-    "Typhoid"
-  ];
   const filteredAlerts = React.useMemo(() => {
     if (selectedDisease === "all") return alerts;
     return alerts.filter(
@@ -69,6 +66,22 @@ const Overview = () => {
       setSelectedAlert(null);
     }
   }, [alerts, selectedAlert]);
+
+  // Fetch diseases grouped by category
+  React.useEffect(() => {
+    const fetchDiseases = async () => {
+      try {
+        const response = await fetch("http://localhost:4000/api/diseases/categories");
+        const data = await response.json();
+        if (data.success) {
+          setDiseasesByCategory(data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching diseases:", error);
+      }
+    };
+    fetchDiseases();
+  }, []);
 
   // Fetch weather data on mount
   React.useEffect(() => {
@@ -124,40 +137,77 @@ const Overview = () => {
 
   return (
     <div className="space-y-6">
-      {/* Dropdowns Row */}
-      <div className="flex items-center space-x-3">
-        <select
-          value={selectedLocation}
-          onChange={(e) => setSelectedLocation(e.target.value)}
-          className="flex-1 rounded-md border border-input bg-background px-4 py-2"
-        >
-          <option value="all">All Locations</option>
-          {/* Additional locations will be loaded dynamically */}
-        </select>
+      {/* Filter Panel */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="bg-card rounded-lg border p-6 shadow-sm"
+      >
+        <div className="flex items-center space-x-2 mb-4">
+          <Filter className="h-5 w-5 text-primary" />
+          <h2 className="text-lg font-semibold">Filters</h2>
+        </div>
 
-        <select
-          value={timeRange}
-          onChange={(e) => setTimeRange(e.target.value)}
-          className="flex-1 rounded-md border border-input bg-background px-4 py-2"
-        >
-          <option value="7d">Last 7 days</option>
-          <option value="30d">Last 30 days</option>
-          <option value="90d">Last 90 days</option>
-        </select>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Disease Filter */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium flex items-center space-x-2">
+              <Activity className="h-4 w-4 text-muted-foreground" />
+              <span>Disease</span>
+            </label>
+            <select
+              value={selectedDisease}
+              onChange={(e) => setSelectedDisease(e.target.value)}
+              className="w-full px-3 py-2 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              <option value="all">All Diseases</option>
+              {Object.entries(diseasesByCategory).map(([category, diseases]) => (
+                <optgroup key={category} label={category}>
+                  {diseases.map((disease) => (
+                    <option key={disease.id} value={disease.id}>
+                      {disease.name}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </div>
 
-        <select
-          value={selectedDisease}
-          onChange={(e) => setSelectedDisease(e.target.value)}
-          className="flex-1 rounded-md border border-input bg-background px-4 py-2"
-        >
-          <option value="all">All Diseases</option>
-          {diseaseOptions.map((disease) => (
-            <option key={disease} value={disease}>
-              {disease}
-            </option>
-          ))}
-        </select>
-      </div>
+          {/* Location Filter */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium flex items-center space-x-2">
+              <MapPin className="h-4 w-4 text-muted-foreground" />
+              <span>Location</span>
+            </label>
+            <select
+              value={selectedLocation}
+              onChange={(e) => setSelectedLocation(e.target.value)}
+              className="w-full px-3 py-2 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              <option value="all">All Locations</option>
+              {/* Additional locations will be loaded dynamically */}
+            </select>
+          </div>
+
+          {/* Time Range Filter */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium flex items-center space-x-2">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <span>Time Range</span>
+            </label>
+            <select
+              value={timeRange}
+              onChange={(e) => setTimeRange(e.target.value)}
+              className="w-full px-3 py-2 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              <option value="7d">Last 7 days</option>
+              <option value="30d">Last 30 days</option>
+              <option value="90d">Last 90 days</option>
+            </select>
+          </div>
+        </div>
+      </motion.div>
 
       {/* Weather Cards and Alert Statistics Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -304,42 +354,59 @@ const Overview = () => {
       </div>
 
       {/* Bottom - Full Width Geographic Distribution Card */}
-      <div className="border rounded-lg p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h3 className="text-lg font-semibold">Geographic Distribution</h3>
-            <p className="text-sm text-muted-foreground mt-1">
-              Interactive disease heatmap by administrative level
-            </p>
-          </div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 border-2 border-slate-200 dark:border-slate-700 shadow-2xl"
+      >
+        {/* Header with gradient background */}
+        <div className="relative bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 p-6">
+          <div className="absolute inset-0 bg-black/10"></div>
+          <div className="relative flex items-center justify-between">
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/20 backdrop-blur-sm rounded-lg">
+                  <MapPin className="h-6 w-6 text-white" />
+                </div>
+                <h3 className="text-2xl font-bold text-white tracking-tight">Geographic Distribution</h3>
+              </div>
+              <p className="text-sm text-white/90 font-medium ml-14">
+                Real-time disease surveillance with satellite imagery
+              </p>
+            </div>
 
-          {/* Admin Level Dropdown */}
-          <div className="w-48">
-            <label className="text-xs font-medium text-muted-foreground mb-1 block">
-              Admin Level
-            </label>
-            <select
-              value={adminLevel}
-              onChange={(e) => setAdminLevel(parseInt(e.target.value))}
-              className="w-full px-3 py-2 text-sm border rounded-md bg-background"
-            >
-              <option value={2}>ADM2 - Districts</option>
-              <option value={3}>ADM3 - Chiefdoms</option>
-              <option value={4}>ADM4 - Facilities</option>
-            </select>
+            {/* Admin Level Dropdown with premium styling */}
+            <div className="w-56">
+              <label className="text-xs font-semibold text-white/80 mb-2 block uppercase tracking-wider">
+                Administrative Level
+              </label>
+              <select
+                value={adminLevel}
+                onChange={(e) => setAdminLevel(parseInt(e.target.value))}
+                className="w-full px-4 py-2.5 text-sm font-medium border-2 border-white/30 rounded-lg bg-white/10 backdrop-blur-md text-white focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 transition-all cursor-pointer hover:bg-white/20"
+              >
+                <option value={2} className="text-slate-900 bg-white">ADM2 - Districts</option>
+                <option value={3} className="text-slate-900 bg-white">ADM3 - Chiefdoms</option>
+                <option value={4} className="text-slate-900 bg-white">ADM4 - Facilities</option>
+              </select>
+            </div>
           </div>
         </div>
 
-        <div className="w-full h-[600px]">
-          <DiseaseMap
-            heatmapData={heatmapData}
-            selectedDisease={selectedDisease}
-            timeRange={timeRange}
-            adminLevel={adminLevel}
-            isLoading={heatmapLoading}
-          />
+        {/* Map container with inner shadow */}
+        <div className="p-6">
+          <div className="w-full h-[600px] rounded-xl overflow-hidden shadow-inner ring-1 ring-slate-900/10">
+            <DiseaseMap
+              heatmapData={heatmapData}
+              selectedDisease={selectedDisease}
+              timeRange={timeRange}
+              adminLevel={adminLevel}
+              isLoading={heatmapLoading}
+            />
+          </div>
         </div>
-      </div>
+      </motion.div>
 
       {!overview && (
         <div className="rounded-md border border-dashed p-4 text-sm text-muted-foreground flex items-center justify-between">

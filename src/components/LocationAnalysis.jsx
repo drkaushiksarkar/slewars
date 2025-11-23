@@ -19,7 +19,7 @@ const LocationAnalysis = () => {
   });
 
   const [districts, setDistricts] = useState([]);
-  const [diseases, setDiseases] = useState([]);
+  const [diseasesByCategory, setDiseasesByCategory] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -31,10 +31,10 @@ const LocationAnalysis = () => {
         setError(null);
         const [districtsRes, diseasesRes] = await Promise.all([
           axios.get("http://localhost:4000/api/locations?level=2"),
-          axios.get("http://localhost:4000/api/diseases"),
+          axios.get("http://localhost:4000/api/diseases/categories"),
         ]);
         setDistricts(districtsRes.data.data || []);
-        setDiseases(diseasesRes.data.data || []);
+        setDiseasesByCategory(diseasesRes.data.data || {});
       } catch (error) {
         console.error("Error fetching filter data:", error);
         setError("Failed to load filter data. Please check your connection.");
@@ -45,11 +45,11 @@ const LocationAnalysis = () => {
     fetchData();
   }, []);
 
-  // Set default date range (last 3 months)
+  // Set default date range (last 30 days - matching Overview page)
   useEffect(() => {
     const endDate = new Date();
     const startDate = new Date();
-    startDate.setMonth(startDate.getMonth() - 3);
+    startDate.setDate(startDate.getDate() - 30);
 
     setFilters(prev => ({
       ...prev,
@@ -185,10 +185,14 @@ const LocationAnalysis = () => {
               className="w-full px-3 py-2 text-sm border rounded-md bg-background"
             >
               <option value="all">All Diseases</option>
-              {diseases.map((disease) => (
-                <option key={disease.uid} value={disease.id}>
-                  {disease.name}
-                </option>
+              {Object.entries(diseasesByCategory).map(([category, diseases]) => (
+                <optgroup key={category} label={category}>
+                  {diseases.map((disease) => (
+                    <option key={disease.uid || disease.id} value={disease.id}>
+                      {disease.name}
+                    </option>
+                  ))}
+                </optgroup>
               ))}
             </select>
           </div>
