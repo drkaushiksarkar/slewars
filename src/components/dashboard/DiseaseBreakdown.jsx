@@ -119,20 +119,23 @@ const DiseaseBreakdown = ({ locationUid = "all", timeRange = "30d" }) => {
                   name: groupName,
                   variants: [],
                   totalCases: 0,
-                  totalFacilities: new Set(),
+                  maxFacilities: 0,
                 };
               }
               diseaseGroups[groupName].variants.push(disease);
               diseaseGroups[groupName].totalCases += disease.totalCases;
-              if (disease.facilitiesAffected > 0) {
-                diseaseGroups[groupName].totalFacilities.add(disease.uid);
-              }
+              // Take the maximum facilities among variants (since variants of the same disease
+              // likely affect overlapping facilities)
+              diseaseGroups[groupName].maxFacilities = Math.max(
+                diseaseGroups[groupName].maxFacilities,
+                disease.facilitiesAffected || 0
+              );
             });
 
             // Convert to array and sort variants within each group
             const diseaseGroupsArray = Object.values(diseaseGroups).map((group) => ({
               ...group,
-              facilitiesAffected: group.totalFacilities.size,
+              facilitiesAffected: group.maxFacilities,
               variants: group.variants.sort((a, b) => b.totalCases - a.totalCases),
               hasVariants: group.variants.length > 1,
             }));

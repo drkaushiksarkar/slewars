@@ -343,13 +343,19 @@ class UnifiedForecastService:
             # Prepare historical features first to get lag values
             X_hist, _, _ = self.model.prepare_training_data(disease_data, climate_df)
 
-            # Now prepare forecast features for next N weeks
+            # Iterative forecasting: predict one week at a time, updating lag features
             forecast_features = []
+            predictions_median = []
+            predictions_lower = []
+            predictions_upper = []
+
+            # Get recent historical cases for lag calculation
+            recent_cases = historical_df['cases'].tail(10).tolist()
 
             for week_ahead in range(1, horizon + 1):
                 forecast_week = historical_df['week'].max() + timedelta(weeks=week_ahead)
 
-                # Get last row features
+                # Get last row features as base
                 if len(X_hist) > 0:
                     last_features = X_hist.iloc[-1].to_dict()
                 else:
@@ -375,30 +381,82 @@ class UnifiedForecastService:
                 row['is_rainy_season'] = 1 if 5 <= forecast_week.month <= 10 else 0
                 row['is_dry_season'] = 1 if forecast_week.month <= 4 or forecast_week.month >= 11 else 0
 
+                # Update lag features with previous predictions
+                all_cases = recent_cases + predictions_median
+
+                # Lag 1: most recent value
+                if len(all_cases) >= 1:
+                    row['cases_lag_1'] = all_cases[-1]
+
+                # Lag 2: 2 weeks ago
+                if len(all_cases) >= 2:
+                    row['cases_lag_2'] = all_cases[-2]
+
+                # Lag 4: 4 weeks ago
+                if len(all_cases) >= 4:
+                    row['cases_lag_4'] = all_cases[-4]
+
+                # Update rolling statistics with recent predictions
+                if len(all_cases) >= 4:
+                    recent_4 = all_cases[-4:]
+                    row['cases_rolling_mean_4'] = np.mean(recent_4)
+                    row['cases_rolling_std_4'] = np.std(recent_4) if len(recent_4) > 1 else 0
+                    row['cases_rolling_max_4'] = np.max(recent_4)
+
+                # Update EMA (exponential moving average with span=4)
+                if len(all_cases) >= 1:
+                    # Simplified EMA calculation
+                    alpha = 2 / (4 + 1)  # span=4
+                    if len(all_cases) == 1:
+                        row['cases_ema_4'] = all_cases[0]
+                    else:
+                        # Use previous EMA or calculate from recent data
+                        if 'cases_ema_4' in row and week_ahead > 1:
+                            row['cases_ema_4'] = alpha * all_cases[-1] + (1 - alpha) * row['cases_ema_4']
+                        else:
+                            row['cases_ema_4'] = np.mean(all_cases[-min(4, len(all_cases)):])
+
+                # Update rate of change features
+                if len(all_cases) >= 2:
+                    row['cases_change_1w'] = all_cases[-1] - all_cases[-2]
+                    row['cases_pct_change_1w'] = (all_cases[-1] - all_cases[-2]) / (all_cases[-2] + 1) if all_cases[-2] > 0 else 0
+
                 forecast_features.append(row)
 
-            X_forecast = pd.DataFrame(forecast_features)
+                # Make prediction for this week
+                X_single = pd.DataFrame([row])
 
-            # Ensure all required features are present
-            for feature in self.model.feature_names:
-                if feature not in X_forecast.columns:
-                    X_forecast[feature] = 0
+                # Ensure all required features are present
+                for feature in self.model.feature_names:
+                    if feature not in X_single.columns:
+                        X_single[feature] = 0
 
-            # Reorder columns to match training
-            X_forecast = X_forecast[self.model.feature_names]
+                # Reorder columns to match training
+                X_single = X_single[self.model.feature_names]
 
-            # Make predictions
-            # Check if model is improved (requires disease parameter) or base model
-            if self.use_improved:
-                pred_result = self.model.predict(X_forecast, disease=disease, return_quantiles=True)
-                # Convert improved model format to standard format
-                predictions = {
-                    'prediction': pred_result['median'],
-                    'lower_bound': pred_result['lower'],
-                    'upper_bound': pred_result['upper']
-                }
-            else:
-                predictions = self.model.predict(X_forecast, return_intervals=True)
+                # Predict using appropriate model
+                if self.use_improved:
+                    pred_result = self.model.predict(X_single, disease=disease, return_quantiles=True)
+                    predicted_median = float(pred_result['median'][0])
+                    predicted_lower = float(pred_result['lower'][0])
+                    predicted_upper = float(pred_result['upper'][0])
+                else:
+                    pred = self.model.predict(X_single, return_intervals=True)
+                    predicted_median = float(pred['prediction'][0])
+                    predicted_lower = float(pred['lower_bound'][0])
+                    predicted_upper = float(pred['upper_bound'][0])
+
+                # Store predictions for next iteration (use median for lag features)
+                predictions_median.append(predicted_median)
+                predictions_lower.append(predicted_lower)
+                predictions_upper.append(predicted_upper)
+
+            # Construct predictions dictionary from stored values
+            predictions = {
+                'prediction': np.array(predictions_median),
+                'lower_bound': np.array(predictions_lower),
+                'upper_bound': np.array(predictions_upper)
+            }
 
             # Get feature importance for contributing factors
             if self.use_improved:
