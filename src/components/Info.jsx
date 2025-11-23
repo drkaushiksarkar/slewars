@@ -36,7 +36,7 @@ const Info = () => {
       borderColor: "border-blue-500/20",
       description: "Your command center for real-time disease surveillance",
       details: [
-        "8 Key Performance Indicators",
+        "35 Diseases monitoring support",
         "Disease breakdown by category",
         "90-day trend analysis",
         "Interactive geographic map"
@@ -73,7 +73,7 @@ const Info = () => {
         "Temperature trends",
         "Rainfall patterns",
         "Humidity levels",
-        "Climate-disease correlation"
+        "Climate-disease modelling"
       ],
       useCase: "Understand environmental factors driving disease spread",
       flow: 3
@@ -229,9 +229,9 @@ const Info = () => {
             transition={{ delay: 0.3 }}
             className="text-4xl md:text-5xl font-bold mb-4"
           >
-            Sierra Leone Early Warning,
+            Sierra Leone Climate Informed,
             <br />
-            Alert, and Response System
+            Early Warning Surveillance System
           </motion.h1>
 
           <motion.p
@@ -241,8 +241,19 @@ const Info = () => {
             className="text-lg md:text-xl text-white/90 max-w-3xl mb-6"
           >
             A comprehensive DHIS2-integrated health surveillance platform empowering
-            health officers with real-time data, AI-powered predictions, and actionable
+            public health officials with real-time data, AI-powered predictions, and actionable
             insights to protect Sierra Leone from disease outbreaks.
+          </motion.p>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.45 }}
+            className="text-sm text-white/50 max-w-3xl mb-6 italic"
+          >
+            The system has been developed by the IMACS (Institute of Health Modelling and Climate Solutions)
+            with funding from COVID-19 Response Mechanism by the Global Fund. C19RM is implemented by
+            the Task Force for Global Health.
           </motion.p>
 
           <motion.div

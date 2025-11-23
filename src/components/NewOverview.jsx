@@ -326,6 +326,11 @@ const NewOverview = () => {
         <DiseaseTrend
           locationUid={selectedLocation}
           diseaseId={selectedDisease}
+          diseaseName={
+            selectedDisease && diseases.length > 0
+              ? diseases.find(d => d.id === selectedDisease)?.name || "Disease"
+              : "Disease"
+          }
         />
       </div>
 

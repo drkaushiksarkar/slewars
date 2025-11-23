@@ -42,7 +42,7 @@ const CountryHeader = () => {
         <div className="flex items-center space-x-4">
           <span className="text-2xl">{countryConfig.flag}</span>
           <div>
-            <h2 className="font-semibold">{countryConfig.name} EWARS</h2>
+            <h2 className="font-semibold">{countryConfig.name} CI-EWS</h2>
             <p className="text-sm text-muted-foreground">
               Health System Levels: {countryConfig.healthSystemLevels.join(" → ")}
             </p>

@@ -19,7 +19,7 @@ const BASELINE_METHODS = {
   ENDEMIC_CHANNEL: "Endemic Channel (Median + 2*IQR)",
 };
 
-const DiseaseTrend = ({ locationUid = "all", diseaseId = "all" }) => {
+const DiseaseTrend = ({ locationUid = "all", diseaseId = "all", diseaseName = "Disease" }) => {
   const [rawTrendData, setRawTrendData] = useState([]); // Raw trend data without baseline
   const [trendData, setTrendData] = useState([]); // Trend data with baseline
   const [historicalData, setHistoricalData] = useState([]);
@@ -218,7 +218,7 @@ const DiseaseTrend = ({ locationUid = "all", diseaseId = "all" }) => {
   return (
     <div className="bg-card rounded-lg border p-6">
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Disease Trend (Last 90 Days)</h3>
+        <h3 className="text-lg font-semibold">{diseaseName} Trend (Last 90 Days)</h3>
 
         {/* Baseline Method Dropdown */}
         {diseaseId !== "all" && trendData.length > 0 && (

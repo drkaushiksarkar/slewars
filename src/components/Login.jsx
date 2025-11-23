@@ -37,7 +37,7 @@ const Login = ({ onLogin }) => {
           <div className="flex items-center justify-center mb-4">
             <Globe2 className="h-12 w-12 text-primary" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground mb-2">EWARS Dashboard</h1>
+          <h1 className="text-2xl font-bold text-foreground mb-2">CI-EWS Dashboard</h1>
           <p className="text-muted-foreground">Climate-Informed Multi-Disease Early Warning System</p>
         </div>
 

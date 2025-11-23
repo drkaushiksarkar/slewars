@@ -414,6 +414,7 @@ const ClimateDashboard = ({
             diseaseData={diseaseData}
             selectedDisease={Object.values(diseasesByCategory).flat().find(d => d.id === selectedDisease)}
             loadingDiseaseData={loadingDiseaseData}
+            locationUid={locationUid}
           />
         </motion.div>
       )}

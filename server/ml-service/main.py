@@ -9,6 +9,7 @@ import sys
 
 from forecast_service import ForecastService
 from anomaly_detection import AnomalyDetector
+from correlation_analysis import correlation_analyzer
 import config
 
 # Configure logging
@@ -69,6 +70,13 @@ class AnomalyRequest(BaseModel):
     start_date: Optional[str] = Field(None, description="Start date for analysis (YYYY-MM-DD)")
     end_date: Optional[str] = Field(None, description="End date for analysis (YYYY-MM-DD)")
     level: int = Field(2, description="Administrative level (2=District, 3=Chiefdom, 4=Facility)", ge=2, le=4)
+
+class CorrelationRequest(BaseModel):
+    disease: str = Field(..., description="Disease name (e.g., 'Malaria', 'Measles')")
+    location_uid: str = Field(..., description="DHIS2 organization unit UID")
+    lag_weeks: int = Field(0, description="Lag period in weeks (positive = disease after climate, negative = disease before)", ge=-12, le=12)
+    start_date: Optional[str] = Field(None, description="Start date for analysis (YYYY-MM-DD)")
+    end_date: Optional[str] = Field(None, description="End date for analysis (YYYY-MM-DD)")
 
 # API Endpoints
 
@@ -380,6 +388,77 @@ async def get_anomalies(
 
     except Exception as e:
         logger.error(f"Error in get anomaly detection endpoint: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/correlation")
+async def calculate_correlation(request: CorrelationRequest):
+    """
+    Calculate weather-disease correlation with lag analysis
+
+    Analyzes the relationship between climate variables (temperature, rainfall, humidity)
+    and disease cases with a specified time lag.
+
+    Returns correlation metrics including:
+    - Composite correlation score (0-100)
+    - Individual correlations for each climate variable
+    - Statistical significance
+    - Relationship strength interpretation
+    """
+    try:
+        logger.info(f"Received correlation request for {request.disease} at {request.location_uid} with lag={request.lag_weeks}w")
+
+        result = correlation_analyzer.calculate_lagged_correlation(
+            disease=request.disease,
+            location_uid=request.location_uid,
+            lag_weeks=request.lag_weeks,
+            start_date=request.start_date,
+            end_date=request.end_date
+        )
+
+        if result['success']:
+            return {
+                "success": True,
+                "data": result
+            }
+        else:
+            raise HTTPException(status_code=400, detail=result.get('error', 'Correlation analysis failed'))
+
+    except Exception as e:
+        logger.error(f"Error in correlation endpoint: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/correlation/{disease}/{location_uid}")
+async def get_correlation(
+    disease: str,
+    location_uid: str,
+    lag_weeks: int = 0,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None
+):
+    """
+    Get weather-disease correlation (GET method)
+
+    Alternative endpoint using GET method for easier integration.
+    """
+    try:
+        result = correlation_analyzer.calculate_lagged_correlation(
+            disease=disease,
+            location_uid=location_uid,
+            lag_weeks=lag_weeks,
+            start_date=start_date,
+            end_date=end_date
+        )
+
+        if result['success']:
+            return {
+                "success": True,
+                "data": result
+            }
+        else:
+            raise HTTPException(status_code=400, detail=result.get('error', 'Correlation analysis failed'))
+
+    except Exception as e:
+        logger.error(f"Error in get correlation endpoint: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":

@@ -46,7 +46,7 @@ const Dashboard = () => {
     }
   }, []);
 
-  // Update current time every second
+  // Update current time every second (Sierra Leone time)
   React.useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -78,7 +78,7 @@ const Dashboard = () => {
             <Globe2 className="h-10 w-10 text-primary" />
             <div>
               <h1 className="text-3xl font-bold text-foreground">
-                {countryConfig ? `${countryConfig.name} EWARS Dashboard` : "Loading..."}
+                {countryConfig ? `${countryConfig.name} CI-EWS Dashboard` : "Loading..."}
               </h1>
               {countryConfig?.healthSystemLevels && (
                 <p className="text-sm text-muted-foreground mt-1">
@@ -104,9 +104,13 @@ const Dashboard = () => {
               <div className="flex items-center space-x-2">
                 <Clock className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm font-medium">
-                  {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  {currentTime.toLocaleTimeString('en-US', {
+                    timeZone: countryConfig?.timeZone || 'Africa/Freetown',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                  })} GMT
                 </span>
-                <span className="text-sm text-muted-foreground"></span>
               </div>
               <div className="flex items-center space-x-2">
                 <Phone className="h-4 w-4 text-muted-foreground" />

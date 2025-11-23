@@ -25,15 +25,61 @@ class ForecastService {
   }
 
   /**
+   * Map disease IDs to the names used in the forecasts database
+   * The forecasts table stores simple disease names like "Malaria", "Measles", etc.
+   * but the frontend uses IDs like "malariaIDSR", "measlesIDSR", etc.
+   */
+  private mapDiseaseIdToForecastName(diseaseId: string): string {
+    const diseaseMap: Record<string, string> = {
+      // Malaria variants
+      'malaria': 'Malaria',
+      'malariaIDSR': 'Malaria',
+      'malariaidsr': 'Malaria',
+
+      // Measles variants
+      'measles': 'Measles',
+      'measlesIDSR': 'Measles',
+      'measlesidsr': 'Measles',
+
+      // Yellow Fever variants
+      'yellowfever': 'Yellow Fever',
+      'yellowFever': 'Yellow Fever',
+      'yellowFeverIDSR': 'Yellow Fever',
+      'yellowfeveridsr': 'Yellow Fever',
+
+      // Typhoid variants
+      'typhoid': 'Typhoid',
+      'typhoidfever': 'Typhoid',
+      'typhoidFever': 'Typhoid',
+
+      // Cholera variants
+      'cholera': 'Cholera',
+      'choleraIDSR': 'Cholera',
+      'choleraidsr': 'Cholera',
+
+      // Lassa Fever variants
+      'lassa': 'Lassa',
+      'lassafever': 'Lassa',
+      'lassaFever': 'Lassa',
+    };
+
+    // Return mapped name or original ID if not found
+    return diseaseMap[diseaseId] || diseaseId;
+  }
+
+  /**
    * Generate forecast for a disease and location
    */
   async generateForecast(params: ForecastRequest): Promise<any> {
     try {
       const forceRetrain = params.force_retrain === true;
-      logger.info(`Generating forecast for ${params.disease} in ${params.location_uid} (force_retrain: ${forceRetrain})`);
+      // Map disease ID to forecast database name
+      const mappedDisease = this.mapDiseaseIdToForecastName(params.disease);
+
+      logger.info(`Generating forecast for ${params.disease} (mapped: ${mappedDisease}) in ${params.location_uid} (force_retrain: ${forceRetrain})`);
 
       const response = await axios.post(`${this.mlServiceUrl}/forecast`, {
-        disease: params.disease,
+        disease: mappedDisease,
         location_uid: params.location_uid,
         horizon: params.horizon || 4,
         auto_train: params.auto_train !== false,
@@ -57,9 +103,15 @@ class ForecastService {
    */
   async trainModel(params: TrainRequest): Promise<any> {
     try {
-      logger.info(`Training model for ${params.disease} in ${params.location_uid}`);
+      // Map disease ID to forecast database name
+      const mappedDisease = this.mapDiseaseIdToForecastName(params.disease);
 
-      const response = await axios.post(`${this.mlServiceUrl}/train`, params, {
+      logger.info(`Training model for ${params.disease} (mapped: ${mappedDisease}) in ${params.location_uid}`);
+
+      const response = await axios.post(`${this.mlServiceUrl}/train`, {
+        ...params,
+        disease: mappedDisease
+      }, {
         timeout: 300000 // 5 minute timeout for training
       });
 
@@ -82,6 +134,9 @@ class ForecastService {
     forecastDate?: string
   ): Promise<any[]> {
     try {
+      // Map disease ID to forecast database name
+      const mappedDisease = this.mapDiseaseIdToForecastName(disease);
+
       const query = `
         SELECT
           id,
@@ -106,8 +161,8 @@ class ForecastService {
       `;
 
       const params = forecastDate
-        ? [disease, locationUid, forecastDate]
-        : [disease, locationUid];
+        ? [mappedDisease, locationUid, forecastDate]
+        : [mappedDisease, locationUid];
 
       const result = await postgresService.query(query, params);
 
@@ -123,6 +178,9 @@ class ForecastService {
    */
   async getLatestForecast(disease: string, locationUid: string): Promise<any> {
     try {
+      // Map disease ID to forecast database name
+      const mappedDisease = this.mapDiseaseIdToForecastName(disease);
+
       const query = `
         SELECT DISTINCT ON (target_date)
           id,
@@ -150,7 +208,7 @@ class ForecastService {
         ORDER BY target_date, forecast_date DESC
       `;
 
-      const result = await postgresService.query(query, [disease, locationUid]);
+      const result = await postgresService.query(query, [mappedDisease, locationUid]);
 
       if (result.rows.length === 0) {
         return null;
@@ -206,6 +264,9 @@ class ForecastService {
    */
   async getModelPerformance(disease: string, locationUid: string): Promise<any> {
     try {
+      // Map disease ID to forecast database name
+      const mappedDisease = this.mapDiseaseIdToForecastName(disease);
+
       // Fallback to database directly (ML service has nested response)
       const query = `
         SELECT
@@ -230,7 +291,7 @@ class ForecastService {
         LIMIT 1
       `;
 
-      const result = await postgresService.query(query, [disease, locationUid]);
+      const result = await postgresService.query(query, [mappedDisease, locationUid]);
 
       if (result.rows.length === 0) {
         return null;
@@ -248,6 +309,9 @@ class ForecastService {
    */
   async getDistrictsWithForecasts(disease?: string): Promise<any[]> {
     try {
+      // Map disease ID to forecast database name if provided
+      const mappedDisease = disease ? this.mapDiseaseIdToForecastName(disease) : undefined;
+
       const query = `
         SELECT DISTINCT
           f.location_uid,
@@ -258,12 +322,12 @@ class ForecastService {
         FROM forecasts f
         JOIN organisationunit ou ON f.location_uid = ou.uid
         WHERE ou.hierarchylevel = 2
-          ${disease ? 'AND f.disease = $1' : ''}
+          ${mappedDisease ? 'AND f.disease = $1' : ''}
         GROUP BY f.location_uid, ou.name, f.disease
         ORDER BY ou.name, f.disease
       `;
 
-      const params = disease ? [disease] : [];
+      const params = mappedDisease ? [mappedDisease] : [];
       const result = await postgresService.query(query, params);
 
       return result.rows;
@@ -278,6 +342,9 @@ class ForecastService {
    */
   async batchForecastAllDistricts(disease: string, horizon: number = 4): Promise<any> {
     try {
+      // Map disease ID to forecast database name
+      const mappedDisease = this.mapDiseaseIdToForecastName(disease);
+
       // Get all districts
       const districtsQuery = `
         SELECT uid, name
@@ -288,11 +355,11 @@ class ForecastService {
 
       const districts = await postgresService.query(districtsQuery);
 
-      logger.info(`Generating forecasts for ${disease} across ${districts.rows.length} districts`);
+      logger.info(`Generating forecasts for ${disease} (mapped: ${mappedDisease}) across ${districts.rows.length} districts`);
 
       // Call ML service batch forecast
       const response = await axios.post(`${this.mlServiceUrl}/forecast/batch`, {
-        diseases: [disease],
+        diseases: [mappedDisease],
         location_uids: districts.rows.map((d: any) => d.uid),
         horizon
       }, {
@@ -329,6 +396,9 @@ class ForecastService {
    */
   async getRiskAnalysis(disease: string): Promise<any[]> {
     try {
+      // Map disease ID to forecast database name
+      const mappedDisease = this.mapDiseaseIdToForecastName(disease);
+
       const query = `
         WITH latest_forecasts AS (
           SELECT DISTINCT ON (f.location_uid, f.target_date)
@@ -361,7 +431,7 @@ class ForecastService {
         ORDER BY max_risk_score DESC NULLS LAST, ou.name
       `;
 
-      const result = await postgresService.query(query, [disease]);
+      const result = await postgresService.query(query, [mappedDisease]);
 
       // Group by location
       const locationMap = new Map();
@@ -406,10 +476,13 @@ class ForecastService {
     locationUid?: string
   ): Promise<any> {
     try {
-      logger.info(`Detecting anomalies for ${disease} at level ${level}${locationUid ? ` for location ${locationUid}` : ''}`);
+      // Map disease ID to forecast database name
+      const mappedDisease = this.mapDiseaseIdToForecastName(disease);
+
+      logger.info(`Detecting anomalies for ${disease} (mapped: ${mappedDisease}) at level ${level}${locationUid ? ` for location ${locationUid}` : ''}`);
 
       const response = await axios.get(
-        `${this.mlServiceUrl}/anomaly-detection/${encodeURIComponent(disease)}`,
+        `${this.mlServiceUrl}/anomaly-detection/${encodeURIComponent(mappedDisease)}`,
         {
           params: {
             level,

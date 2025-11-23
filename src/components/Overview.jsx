@@ -350,7 +350,17 @@ const Overview = () => {
         <DiseaseBreakdown locationUid={selectedLocation} timeRange={timeRange} />
 
         {/* Disease Trend Card */}
-        <DiseaseTrend locationUid={selectedLocation} />
+        <DiseaseTrend
+          locationUid={selectedLocation}
+          diseaseId={selectedDisease}
+          diseaseName={
+            selectedDisease === "all"
+              ? "Disease"
+              : Object.values(diseasesByCategory)
+                  .flat()
+                  .find(d => d.id === selectedDisease)?.name || "Disease"
+          }
+        />
       </div>
 
       {/* Bottom - Full Width Geographic Distribution Card */}

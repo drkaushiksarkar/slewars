@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
 /**
@@ -7,8 +7,9 @@ import { motion } from 'framer-motion';
  * @param {Array} diseaseData - Disease timeseries data
  * @param {Object} selectedDisease - Selected disease object
  * @param {boolean} loadingDiseaseData - Loading state for disease data
+ * @param {string} locationUid - Location UID for correlation analysis
  */
-const UnifiedTrendChart = ({ data, diseaseData = [], selectedDisease = null, loadingDiseaseData = false }) => {
+const UnifiedTrendChart = ({ data, diseaseData = [], selectedDisease = null, loadingDiseaseData = false, locationUid = 'O6uvpzGd5pu' }) => {
   const [activeMetrics, setActiveMetrics] = useState({
     rain: true,
     temp: true,
@@ -17,6 +18,8 @@ const UnifiedTrendChart = ({ data, diseaseData = [], selectedDisease = null, loa
   });
   const [climateLagEnabled, setClimateLagEnabled] = useState(false);
   const [lagWeeks, setLagWeeks] = useState(2); // Default 2 weeks lag (positive = disease after climate, negative = disease before climate)
+  const [mlImpactData, setMlImpactData] = useState(null);
+  const [loadingMlImpact, setLoadingMlImpact] = useState(false);
 
   const dateRange = useMemo(() => {
     if (!data || data.length === 0) return '';
@@ -76,6 +79,47 @@ const UnifiedTrendChart = ({ data, diseaseData = [], selectedDisease = null, loa
 
     return merged;
   }, [data, diseaseData, climateLagEnabled, lagWeeks]);
+
+  // Fetch ML impact analysis when lag changes
+  useEffect(() => {
+    const fetchMlImpact = async () => {
+      // Only fetch if lag model is enabled, disease is selected, and we have data
+      if (!climateLagEnabled || !selectedDisease || !diseaseData || diseaseData.length === 0) {
+        setMlImpactData(null);
+        return;
+      }
+
+      setLoadingMlImpact(true);
+      try {
+        // Get disease name from selectedDisease
+        const diseaseName = selectedDisease.name || selectedDisease.id;
+
+        const response = await fetch(
+          `http://localhost:8000/correlation/${encodeURIComponent(diseaseName)}/${locationUid}?lag_weeks=${lagWeeks}`
+        );
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch ML impact analysis');
+        }
+
+        const result = await response.json();
+
+        if (result.success && result.data) {
+          setMlImpactData(result.data);
+        } else {
+          console.error('ML Impact API returned error:', result.error);
+          setMlImpactData(null);
+        }
+      } catch (error) {
+        console.error('Error fetching ML impact analysis:', error);
+        setMlImpactData(null);
+      } finally {
+        setLoadingMlImpact(false);
+      }
+    };
+
+    fetchMlImpact();
+  }, [climateLagEnabled, lagWeeks, selectedDisease, locationUid, diseaseData]);
 
   const chartConfig = useMemo(() => {
     if (!mergedData || mergedData.length === 0) {
@@ -305,51 +349,124 @@ const UnifiedTrendChart = ({ data, diseaseData = [], selectedDisease = null, loa
 
         {/* Climate Lag Model Controls */}
         {selectedDisease && activeMetrics.disease && diseaseData.length > 0 && (
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 bg-muted/30 rounded-lg border border-muted">
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setClimateLagEnabled(!climateLagEnabled)}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                  climateLagEnabled
-                    ? 'bg-green-500 text-white'
-                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                }`}
-              >
-                {climateLagEnabled ? 'Lag Model: ON' : 'Lag Model: OFF'}
-              </button>
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 bg-muted/30 rounded-lg border border-muted">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setClimateLagEnabled(!climateLagEnabled)}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${
+                    climateLagEnabled
+                      ? 'bg-green-500 text-white'
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                  }`}
+                >
+                  {climateLagEnabled ? 'Lag Model: ON' : 'Lag Model: OFF'}
+                </button>
+              </div>
+
+              {climateLagEnabled && (
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                  <label className="text-sm font-medium text-muted-foreground">
+                    Lag Period:
+                  </label>
+                  <select
+                    value={lagWeeks}
+                    onChange={(e) => setLagWeeks(Number(e.target.value))}
+                    className="rounded-md border border-input bg-background px-3 py-1.5 text-sm"
+                  >
+                    <optgroup label="Disease leads Climate (Backward)">
+                      <option value={-4}>-4 weeks</option>
+                      <option value={-3}>-3 weeks</option>
+                      <option value={-2}>-2 weeks</option>
+                      <option value={-1}>-1 week</option>
+                    </optgroup>
+                    <optgroup label="Climate leads Disease (Forward)">
+                      <option value={1}>+1 week</option>
+                      <option value={2}>+2 weeks</option>
+                      <option value={3}>+3 weeks</option>
+                      <option value={4}>+4 weeks</option>
+                      <option value={5}>+5 weeks</option>
+                      <option value={6}>+6 weeks</option>
+                    </optgroup>
+                  </select>
+                  <span className="text-xs text-muted-foreground italic">
+                    {lagWeeks > 0
+                      ? `(Disease cases appear ${lagWeeks} week${lagWeeks > 1 ? 's' : ''} AFTER climate conditions)`
+                      : `(Disease cases appear ${Math.abs(lagWeeks)} week${Math.abs(lagWeeks) > 1 ? 's' : ''} BEFORE climate conditions)`
+                    }
+                  </span>
+                </div>
+              )}
             </div>
 
+            {/* ML Impact Intelligence Display */}
             {climateLagEnabled && (
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                <label className="text-sm font-medium text-muted-foreground">
-                  Lag Period:
-                </label>
-                <select
-                  value={lagWeeks}
-                  onChange={(e) => setLagWeeks(Number(e.target.value))}
-                  className="rounded-md border border-input bg-background px-3 py-1.5 text-sm"
-                >
-                  <optgroup label="Disease leads Climate (Backward)">
-                    <option value={-4}>-4 weeks</option>
-                    <option value={-3}>-3 weeks</option>
-                    <option value={-2}>-2 weeks</option>
-                    <option value={-1}>-1 week</option>
-                  </optgroup>
-                  <optgroup label="Climate leads Disease (Forward)">
-                    <option value={1}>+1 week</option>
-                    <option value={2}>+2 weeks</option>
-                    <option value={3}>+3 weeks</option>
-                    <option value={4}>+4 weeks</option>
-                    <option value={5}>+5 weeks</option>
-                    <option value={6}>+6 weeks</option>
-                  </optgroup>
-                </select>
-                <span className="text-xs text-muted-foreground italic">
-                  {lagWeeks > 0
-                    ? `(Disease cases appear ${lagWeeks} week${lagWeeks > 1 ? 's' : ''} AFTER climate conditions)`
-                    : `(Disease cases appear ${Math.abs(lagWeeks)} week${Math.abs(lagWeeks) > 1 ? 's' : ''} BEFORE climate conditions)`
-                  }
-                </span>
+              <div className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+                {loadingMlImpact ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                    <span>Running ML analysis...</span>
+                  </div>
+                ) : mlImpactData ? (
+                  <div className="space-y-3">
+                    {/* Composite Score */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="text-sm font-semibold text-foreground mb-1">Climate-Disease Relationship Intelligence</h4>
+                        <p className="text-xs text-muted-foreground">{mlImpactData.interpretation}</p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="text-right">
+                          <div className={`text-3xl font-bold ${
+                            mlImpactData.strength === 'Strong' ? 'text-green-600 dark:text-green-400' :
+                            mlImpactData.strength === 'Moderate' ? 'text-yellow-600 dark:text-yellow-400' :
+                            mlImpactData.strength === 'Weak' ? 'text-orange-600 dark:text-orange-400' :
+                            'text-red-600 dark:text-red-400'
+                          }`}>
+                            {mlImpactData.composite_score}
+                          </div>
+                          <div className="text-xs text-muted-foreground">/ 100</div>
+                        </div>
+                        <div className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                          mlImpactData.strength === 'Strong' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
+                          mlImpactData.strength === 'Moderate' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' :
+                          mlImpactData.strength === 'Weak' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300' :
+                          'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                        }`}>
+                          {mlImpactData.strength}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Individual Climate Factor Impacts */}
+                    {mlImpactData.correlations && Object.keys(mlImpactData.correlations).length > 0 && (
+                      <div className="grid grid-cols-3 gap-2 pt-2 border-t border-border/50">
+                        {Object.entries(mlImpactData.correlations).map(([varName, metrics]) => {
+                          const impactScore = ((Math.abs(metrics.pearson) + Math.abs(metrics.spearman)) / 2 * 100).toFixed(1);
+                          return (
+                            <div key={varName} className="bg-background/50 rounded-md p-2">
+                              <div className="text-xs font-medium text-muted-foreground capitalize mb-1">{varName}</div>
+                              <div className="text-lg font-bold text-foreground">{impactScore}</div>
+                              <div className="text-xs text-muted-foreground">
+                                {mlImpactData.significant ? '✓ High confidence' : '○ Low confidence'}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Data Info */}
+                    <div className="text-xs text-muted-foreground pt-2 border-t border-border/50">
+                      ML model trained on {mlImpactData.data_points} temporal patterns
+                      {mlImpactData.significant && ` (statistically validated)`}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-sm text-muted-foreground">
+                    Enable lag model to see ML-powered impact analysis
+                  </div>
+                )}
               </div>
             )}
           </div>
