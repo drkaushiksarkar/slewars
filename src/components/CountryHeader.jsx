@@ -14,7 +14,8 @@ const CountryHeader = () => {
       const time = new Date().toLocaleTimeString("en-US", {
         timeZone: countryConfig.timeZone,
         hour: "2-digit",
-        minute: "2-digit"
+        minute: "2-digit",
+        second: "2-digit"
       });
       setCurrentTime(time);
     };
@@ -64,7 +65,7 @@ const CountryHeader = () => {
           </div>
           <div className="flex items-center space-x-2">
             <Clock className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm">{currentTime}</span>
+            <span className="text-sm">{currentTime} GMT</span>
           </div>
           <div className="flex items-center space-x-2">
             <Phone className="h-4 w-4 text-muted-foreground" />
