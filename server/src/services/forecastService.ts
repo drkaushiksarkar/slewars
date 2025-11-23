@@ -25,42 +25,74 @@ class ForecastService {
   }
 
   /**
-   * Map disease IDs to the names used in the forecasts database
-   * The forecasts table stores simple disease names like "Malaria", "Measles", etc.
-   * but the frontend uses IDs like "malariaIDSR", "measlesIDSR", etc.
+   * Map disease IDs to the names used by the unified ML model
+   * The unified model expects exact disease names as stored in DHIS2
    */
   private mapDiseaseIdToForecastName(diseaseId: string): string {
     const diseaseMap: Record<string, string> = {
       // Malaria variants
-      'malaria': 'Malaria',
-      'malariaIDSR': 'Malaria',
-      'malariaidsr': 'Malaria',
+      'malaria': 'IDSR Malaria',
+      'malariaIDSR': 'IDSR Malaria',
+      'malariaidsr': 'IDSR Malaria',
 
       // Measles variants
-      'measles': 'Measles',
-      'measlesIDSR': 'Measles',
-      'measlesidsr': 'Measles',
+      'measles': 'IDSR Measles',
+      'measlesIDSR': 'IDSR Measles',
+      'measlesidsr': 'IDSR Measles',
 
       // Yellow Fever variants
-      'yellowfever': 'Yellow Fever',
-      'yellowFever': 'Yellow Fever',
-      'yellowFeverIDSR': 'Yellow Fever',
-      'yellowfeveridsr': 'Yellow Fever',
+      'yellowfever': 'IDSR Yellow Fever',
+      'yellowFever': 'IDSR Yellow Fever',
+      'yellowFeverIDSR': 'IDSR Yellow Fever',
+      'yellowfeveridsr': 'IDSR Yellow Fever',
 
       // Typhoid variants
-      'typhoid': 'Typhoid',
-      'typhoidfever': 'Typhoid',
-      'typhoidFever': 'Typhoid',
+      'typhoid': 'Typhoid Fever',
+      'typhoidfever': 'Typhoid Fever',
+      'typhoidFever': 'Typhoid Fever',
 
       // Cholera variants
-      'cholera': 'Cholera',
-      'choleraIDSR': 'Cholera',
-      'choleraidsr': 'Cholera',
+      'cholera': 'IDSR Cholera',
+      'choleraIDSR': 'IDSR Cholera',
+      'choleraidsr': 'IDSR Cholera',
 
       // Lassa Fever variants
-      'lassa': 'Lassa',
-      'lassafever': 'Lassa',
-      'lassaFever': 'Lassa',
+      'lassa': 'Lassa Fever',
+      'lassafever': 'Lassa Fever',
+      'lassaFever': 'Lassa Fever',
+
+      // Plague variants
+      'plague': 'IDSR Plague',
+      'plagueIDSR': 'IDSR Plague',
+      'plagueidsr': 'IDSR Plague',
+
+      // Diarrhoea variants
+      'diarrhoea': 'Diarrhoea without Severe Dehydration',
+      'dysentery': 'Diarrhoea with Blood (Dysentery)',
+      'severediarrhoea': 'Diarrhoea with Severe Dehydration',
+
+      // Respiratory variants
+      'pneumonia': 'ARI Treated with Antibiotics (Pneumonia)',
+      'cough': 'ARI Treated without Antibiotics (Cough)',
+      'tuberculosis': 'Tuberculosis',
+      'meningitis': 'Meningitis/Severe Bacterial Infection',
+
+      // NTDs
+      'worms': 'Worm Infestation',
+      'schistosomiasis': 'Schistosomiasis',
+      'onchocerciasis': 'Onchocerciasis',
+      'yaws': 'Yaws',
+
+      // Vaccine-preventable
+      'tetanus': 'Tetanus (not incl. 0-28 days)',
+      'neonataltetanus': 'Neonatal Tetanus',
+      'afp': 'Acute Flaccid Paralysis (AFP)',
+
+      // Other
+      'skin': 'Skin Infection',
+      'malnutrition': 'Clinical Malnutrition',
+      'eye': 'Eye Infection',
+      'otitis': 'Otitis Media',
     };
 
     // Return mapped name or original ID if not found
@@ -261,46 +293,79 @@ class ForecastService {
 
   /**
    * Get model performance metrics
+   * The unified model returns global performance, not per disease/location
    */
   async getModelPerformance(disease: string, locationUid: string): Promise<any> {
     try {
-      // Map disease ID to forecast database name
-      const mappedDisease = this.mapDiseaseIdToForecastName(disease);
+      // For unified model, get global performance
+      // The model doesn't have per-disease-location metrics anymore
+      const response = await axios.get(`${this.mlServiceUrl}/performance`, {
+        timeout: 5000
+      });
 
-      // Fallback to database directly (ML service has nested response)
-      const query = `
-        SELECT
-          id,
-          disease,
-          location_uid,
-          model_type,
-          model_version,
-          evaluation_date,
-          mae,
-          rmse,
-          mape,
-          r_squared,
-          training_data_size,
-          test_data_size,
-          metrics,
-          created_at
-        FROM model_performance
-        WHERE disease = $1
-          AND location_uid = $2
-        ORDER BY evaluation_date DESC
-        LIMIT 1
-      `;
-
-      const result = await postgresService.query(query, [mappedDisease, locationUid]);
-
-      if (result.rows.length === 0) {
-        return null;
+      if (response.data.success) {
+        const perfData = response.data.data;
+        // Format to match old structure for backwards compatibility
+        return {
+          id: null,
+          disease: disease,
+          location_uid: locationUid,
+          model_type: 'unified',
+          model_version: perfData.model_version || '3.1',
+          evaluation_date: perfData.training_info?.trained_at || new Date().toISOString(),
+          mae: perfData.performance?.overall?.mae || 0,
+          rmse: perfData.performance?.overall?.rmse || 0,
+          mape: perfData.performance?.overall?.mape || 0,
+          r_squared: perfData.performance?.overall?.r2 || 0,
+          training_data_size: perfData.training_info?.n_samples || 0,
+          test_data_size: perfData.performance?.overall?.n_samples || 0,
+          metrics: perfData.performance,
+          created_at: new Date().toISOString()
+        };
       }
 
-      return result.rows[0];
+      return null;
     } catch (error) {
-      logger.error({ error }, 'Error fetching model performance');
-      throw error;
+      logger.warn('Could not fetch unified model performance, trying database fallback');
+
+      // Fallback to database (for old stored metrics)
+      try {
+        const mappedDisease = this.mapDiseaseIdToForecastName(disease);
+
+        const query = `
+          SELECT
+            id,
+            disease,
+            location_uid,
+            model_type,
+            model_version,
+            evaluation_date,
+            mae,
+            rmse,
+            mape,
+            r_squared,
+            training_data_size,
+            test_data_size,
+            metrics,
+            created_at
+          FROM model_performance
+          WHERE disease = $1
+            AND location_uid = $2
+          ORDER BY evaluation_date DESC
+          LIMIT 1
+        `;
+
+        const result = await postgresService.query(query, [mappedDisease, locationUid]);
+
+        if (result.rows.length === 0) {
+          return null;
+        }
+
+        return result.rows[0];
+      } catch (dbError) {
+        logger.error({ error: dbError }, 'Error fetching model performance from database');
+        return null;
+      }
     }
   }
 

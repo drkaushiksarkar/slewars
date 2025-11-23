@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
+import EmptyState from '../common/EmptyState';
 
 export default function ForecastChart({ forecast, height = 400 }) {
   const chartData = useMemo(() => {
@@ -87,11 +88,7 @@ export default function ForecastChart({ forecast, height = 400 }) {
   }, [forecast, height]);
 
   if (!chartData) {
-    return (
-      <div className="flex items-center justify-center h-full text-gray-500">
-        No forecast data available
-      </div>
-    );
+    return <EmptyState type="no-data" />;
   }
 
   const { predictions, predictedPath, areaPath, xScale, yScale, yTicks, padding, chartWidth, chartHeight } = chartData;
@@ -239,30 +236,6 @@ export default function ForecastChart({ forecast, height = 400 }) {
           </text>
         </g>
       </svg>
-
-      {/* Stats */}
-      <div className="grid grid-cols-4 gap-3 mt-6">
-        {predictions.map((p, i) => (
-          <div key={i} className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-            <div className="text-xs text-gray-600 mb-1">
-              {new Date(p.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-            </div>
-            <div className="text-lg font-bold text-gray-900">
-              {p.predicted_cases} cases
-            </div>
-            <div className="text-xs text-gray-500">
-              Range: {p.lower_bound} - {p.upper_bound}
-            </div>
-            <div className={`text-xs font-semibold mt-1 ${
-              p.risk_level === 'HIGH' ? 'text-red-600' :
-              p.risk_level === 'MEDIUM' ? 'text-yellow-600' :
-              'text-green-600'
-            }`}>
-              Risk: {p.risk_level}
-            </div>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }

@@ -33,13 +33,12 @@ tuberculosis: "z9dYcQ2DlBG"              // 9K cases
 meningitis: "JFFUt8yR2iW"                // 2K cases
 ```
 
-### 🪱 Neglected Tropical Diseases (5 diseases, 207K cases)
+### 🪱 Neglected Tropical Diseases (4 diseases, 206K cases)
 ```typescript
 wormInfestation: "Usk9Asj5DED"           // 189K cases
 schistosomiasis: "Y7Oq71I3ASg"           // 13K cases
 onchocerciasis: "DrEOxW8mbbh"            // 2K cases
 yaws: "FF3Ev33BuCh"                      // 1K cases
-leprosy: "zAW6b5Owalk"                   // 786 cases
 ```
 
 ### 💉 Vaccine-Preventable (4 diseases, 39K cases)
@@ -50,19 +49,13 @@ neonatalTetanus: "wcwbN1jR0ar"           // 170 cases
 afp: "FQ2o8UBlcrS"                       // 114 cases
 ```
 
-### 🩺 Other Infections & NCDs (11 diseases, 1.4M cases)
+### 🩺 Other Infections & NCDs (5 diseases, 988K cases)
 ```typescript
 allOther: "A2VfEfPflHV"                  // 552K cases
 skinInfection: "Y4cFzB4A9ZQ"             // 195K cases
 malnutrition: "TBbCcJfZ91x"              // 143K cases
-stiDischarge: "CN9Oxawn7bD"              // 140K cases
-anaemia: "HLPuaFB7Frw"                   // 107K cases
-wounds: "FJs8ZjlQE6f"                    // 93K cases
 eyeInfection: "BQI18TPLR7W"              // 73K cases
-hypertension: "UXW5hWW8dE1"              // 37K cases
 otitisMedia: "DWLCM68Q7Zl"               // 24K cases
-stiUlcer: "IeO1sWXVyp6"                  // 23K cases
-burns: "zMGEd921xd3"                     // 16K cases
 ```
 
 ### 🩸 Viral Hemorrhagic (1 disease)
@@ -101,7 +94,7 @@ noIzB569hTM  # Yellow Fever (25K cases)
 HS9zqaBdOQ4  # Plague (25K cases)
 ```
 
-### Week 2: High Burden (10 diseases)
+### Week 2: High Burden (7 diseases)
 ```bash
 iKGjnOOaPlE  # ARI Pneumonia (1M cases) - HIGHEST VOLUME
 U3jd8zVFKxY  # Diarrhoea - no dehydration (333K cases)
@@ -109,13 +102,10 @@ Cm4XUw6VAxv  # ARI Cough (329K cases)
 Y4cFzB4A9ZQ  # Skin Infection (195K cases)
 Usk9Asj5DED  # Worm Infestation (189K cases)
 TBbCcJfZ91x  # Clinical Malnutrition (143K cases)
-CN9Oxawn7bD  # STI - Genital Discharge (140K cases)
-HLPuaFB7Frw  # Anaemia (107K cases)
-FJs8ZjlQE6f  # Wounds/Trauma (93K cases)
 BQI18TPLR7W  # Eye Infection (73K cases)
 ```
 
-### Week 3: Remaining diseases (21 diseases)
+### Week 3: Remaining diseases (17 diseases)
 All others with lower case counts (NTDs, rare diseases, etc.)
 
 ---
@@ -254,7 +244,7 @@ const diseaseCategories = {
   },
   "Neglected Tropical Diseases": {
     icon: "🪱",
-    diseases: ["Worm Infestation", "Schistosomiasis", "Onchocerciasis", "Leprosy", "Yaws"]
+    diseases: ["Worm Infestation", "Schistosomiasis", "Onchocerciasis", "Yaws"]
   },
   "Vaccine-Preventable": {
     icon: "💉",
@@ -333,5 +323,5 @@ const CACHE_TTL = 3600000; // 1 hour
 
 **Quick Reference v2.1 - Simplified**
 **Last Updated:** 2025-01-19
-**Total Diseases:** 36 (Malaria simplified to single IDSR entry)
+**Total Diseases:** 29 (Malaria simplified to single IDSR entry)
 **Ready for Implementation:** ✅

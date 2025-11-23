@@ -16,6 +16,7 @@ from datetime import datetime, timedelta
 from loguru import logger
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
+from statsmodels.tsa.seasonal import STL
 
 from database import get_db_connection
 
@@ -144,6 +145,9 @@ class AnomalyDetector:
             # Sort anomalies by anomaly score (highest first)
             all_anomalies = sorted(all_anomalies, key=lambda x: x['anomaly_score'], reverse=True)
 
+            # Perform STL decomposition
+            stl_decomposition = self._perform_stl_decomposition(df)
+
             # Calculate summary statistics
             summary = {
                 'total_periods': len(df),
@@ -168,7 +172,8 @@ class AnomalyDetector:
                 'time_series': time_series_data,
                 'thresholds': thresholds,
                 'anomalies': all_anomalies[:50],  # Limit to top 50 anomalies
-                'summary': summary
+                'summary': summary,
+                'stl_decomposition': stl_decomposition
             }
 
         except Exception as e:
@@ -334,6 +339,136 @@ class AnomalyDetector:
             return "Medium"
         else:
             return "Low"
+
+    def _perform_stl_decomposition(self, df: pd.DataFrame) -> Dict[str, Any]:
+        """
+        Perform STL (Seasonal-Trend decomposition using Loess) on time series data
+
+        Args:
+            df: DataFrame with 'period' and 'cases' columns
+
+        Returns:
+            Dictionary containing STL decomposition results:
+            - trend: Trend component
+            - seasonal: Seasonal component
+            - residual: Residual component
+            - dates: Corresponding dates
+        """
+        try:
+            # Aggregate cases by date (sum across all locations)
+            daily_cases = df.groupby('period')['cases'].sum().sort_index()
+
+            # Need at least 2 complete seasonal cycles for STL
+            # For weekly data, a season is typically 52 weeks
+            # We'll use a minimum of 15 data points (3x seasonal period of 5)
+            if len(daily_cases) < 15:
+                logger.warning(f"Insufficient data for STL decomposition: {len(daily_cases)} points (minimum 15)")
+                return None
+
+            # Determine seasonal period
+            # For daily/weekly data, use 7 (weekly pattern) or 52 (yearly pattern)
+            # We'll infer from the data frequency
+            if len(daily_cases) > 1:
+                date_diff = (daily_cases.index[1] - daily_cases.index[0]).days
+            else:
+                date_diff = 7  # Default to weekly
+
+            if date_diff <= 1:
+                # Daily data - use weekly seasonality
+                seasonal_period = 7
+            elif date_diff <= 7:
+                # Weekly data - try yearly seasonality if enough data
+                seasonal_period = 52 if len(daily_cases) >= 104 else 4
+            else:
+                # Monthly data
+                seasonal_period = 12 if len(daily_cases) >= 24 else 4
+
+            # Ensure we have at least 2 full cycles
+            min_required = 2 * seasonal_period
+            if len(daily_cases) < min_required:
+                # Fall back to a smaller seasonal period
+                # Use at most 1/3 of the data length and at least 3
+                seasonal_period = max(3, min(len(daily_cases) // 3, seasonal_period))
+
+            # STL requires seasonal period to be odd
+            if seasonal_period % 2 == 0:
+                seasonal_period += 1
+
+            logger.info(f"Performing STL decomposition with seasonal_period={seasonal_period} on {len(daily_cases)} data points")
+
+            # Reset index and use integer index for STL (avoids date frequency issues)
+            values = daily_cases.values
+            dates_list = daily_cases.index
+
+            # Perform STL decomposition
+            # Both seasonal and trend parameters must be odd integers
+            # seasonal_period is already made odd above, so we can use it directly
+            seasonal_param = seasonal_period  # Already odd from line 395
+
+            # trend parameter should be odd and typically >= seasonal
+            # Calculate as next odd number >= 1.5 * seasonal_period
+            trend_param = int(1.5 * seasonal_period)
+            if trend_param % 2 == 0:
+                trend_param += 1
+
+            stl = STL(values, period=seasonal_period, seasonal=seasonal_param, trend=trend_param, robust=True)
+            result = stl.fit()
+
+            # Extract components
+            stl_data = {
+                'dates': [date.strftime('%Y-%m-%d') for date in dates_list],
+                'observed': values.tolist(),
+                'trend': result.trend.tolist(),
+                'seasonal': result.seasonal.tolist(),
+                'residual': result.resid.tolist(),
+                'seasonal_period': seasonal_period,
+                'seasonal_strength': self._calculate_seasonal_strength(result),
+                'trend_strength': self._calculate_trend_strength(result)
+            }
+
+            logger.info(f"STL decomposition completed successfully. Seasonal strength: {stl_data['seasonal_strength']:.2f}, Trend strength: {stl_data['trend_strength']:.2f}")
+
+            return stl_data
+
+        except Exception as e:
+            logger.error(f"Error performing STL decomposition: {e}", exc_info=True)
+            return None
+
+    def _calculate_seasonal_strength(self, stl_result) -> float:
+        """
+        Calculate the strength of seasonality
+        F_s = max(0, 1 - Var(R) / Var(S+R))
+        where R is residual and S is seasonal
+        """
+        try:
+            var_resid = np.var(stl_result.resid)
+            var_seasonal_resid = np.var(stl_result.seasonal + stl_result.resid)
+
+            if var_seasonal_resid == 0:
+                return 0.0
+
+            strength = max(0, 1 - (var_resid / var_seasonal_resid))
+            return float(strength)
+        except Exception:
+            return 0.0
+
+    def _calculate_trend_strength(self, stl_result) -> float:
+        """
+        Calculate the strength of trend
+        F_t = max(0, 1 - Var(R) / Var(T+R))
+        where R is residual and T is trend
+        """
+        try:
+            var_resid = np.var(stl_result.resid)
+            var_trend_resid = np.var(stl_result.trend + stl_result.resid)
+
+            if var_trend_resid == 0:
+                return 0.0
+
+            strength = max(0, 1 - (var_resid / var_trend_resid))
+            return float(strength)
+        except Exception:
+            return 0.0
 
     def _empty_response(self) -> Dict[str, Any]:
         """Return empty response structure"""

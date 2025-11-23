@@ -3,9 +3,9 @@
 > **✏️ SIMPLIFIED VERSION:** Malaria now uses single IDSR entry instead of 6 treatment variants for better user experience
 
 ## Summary Statistics
-- **Total Diseases Identified:** 36 diseases with case data
+- **Total Diseases Identified:** 29 diseases with case data
 - **Data Records:** 4.9+ million records
-- **Total Cases:** 3,612,583 cases (simplified, using IDSR surveillance data)
+- **Total Cases:** 3,094,569 cases (simplified, using IDSR surveillance data)
 - **Date Range:** 2015-2025
 - **Reporting Facilities:** 1,166 health facilities across 4 administrative levels
 
@@ -82,10 +82,9 @@
 | **Schistosomiasis** | Y7Oq71I3ASg | **13,484** | 324 | NTD - Parasitic |
 | **Worm Infestation** | Usk9Asj5DED | **189,058** | 1,043 | NTD - Parasitic |
 | **Onchocerciasis** | DrEOxW8mbbh | **2,104** | 128 | NTD - Parasitic |
-| **Leprosy** | zAW6b5Owalk | **786** | 104 | NTD - Bacterial |
 | **Yaws** | FF3Ev33BuCh | **1,386** | 112 | NTD - Bacterial |
 
-**Total NTD Cases:** ~206,818
+**Total NTD Cases:** ~206,032
 
 ---
 
@@ -104,42 +103,30 @@
 
 ---
 
-### 7. **Sexually Transmitted Infections (STIs)**
-
-| Disease | UID (Cases) | Total Cases | Facilities | Category |
-|---------|-------------|-------------|------------|----------|
-| **STI - Genital Discharge** | CN9Oxawn7bD | **139,810** | 1,073 | STI |
-| **STI - Genital Ulcer** | IeO1sWXVyp6 | **22,698** | 708 | STI |
-
-**Total STI Cases:** ~162,508
 
 ---
 
-### 8. **Non-Communicable Diseases (NCDs)** (Not infectious)
+### 7. **Non-Communicable Diseases (NCDs)** (Not infectious)
 
 | Disease | UID (Cases) | Total Cases | Facilities | Category |
 |---------|-------------|-------------|------------|----------|
-| **Hypertension** | UXW5hWW8dE1 | **37,386** | 920 | NCD - Cardiovascular |
 | **Clinical Malnutrition** | TBbCcJfZ91x | **142,566** | 1,033 | NCD - Nutritional |
-| **Anaemia** | HLPuaFB7Frw | **107,386** | 1,003 | NCD - Hematological |
 
-**Total NCD Cases:** ~287,338
+**Total NCD Cases:** ~142,566
 
 ---
 
-### 9. **Skin & Soft Tissue Infections**
+### 8. **Skin & Soft Tissue Infections**
 
 | Disease | UID (Cases) | Total Cases | Facilities | Category |
 |---------|-------------|-------------|------------|----------|
 | **Skin Infection** | Y4cFzB4A9ZQ | **194,524** | 1,086 | Dermatological |
-| **Wounds/Trauma** | FJs8ZjlQE6f | **92,848** | 1,042 | Injury |
-| **Burns** | zMGEd921xd3 | **15,706** | 911 | Injury |
 
-**Total Skin/Injury Cases:** ~303,078
+**Total Skin/Injury Cases:** ~194,524
 
 ---
 
-### 10. **Eye & ENT Infections**
+### 9. **Eye & ENT Infections**
 
 | Disease | UID (Cases) | Total Cases | Facilities | Category |
 |---------|-------------|-------------|------------|----------|
@@ -150,7 +137,7 @@
 
 ---
 
-### 11. **Other Diseases & Conditions**
+### 10. **Other Diseases & Conditions**
 
 | Disease | UID (Cases) | Total Cases | Facilities | Category |
 |---------|-------------|-------------|------------|----------|
@@ -236,14 +223,14 @@ Growing health burden:
 3. Air-Borne & Respiratory (4 diseases)
    - ARI/Pneumonia, Measles, Tuberculosis, Meningitis
 
-4. Neglected Tropical Diseases (5 diseases)
-   - Schistosomiasis, Worms, Onchocerciasis, Leprosy, Yaws
+4. Neglected Tropical Diseases (4 diseases)
+   - Schistosomiasis, Worms, Onchocerciasis, Yaws
 
 5. Vaccine-Preventable (4 diseases)
    - Measles, Tetanus, AFP/Polio, Rabies
 
-6. Other Infections & NCDs (10+ diseases)
-   - STIs, Skin infections, Eye/ENT, NCDs, Injuries
+6. Other Infections & NCDs (5 diseases)
+   - Skin infections, Eye/ENT, NCDs
 ```
 
 ### **Disease Dropdown Structure**
@@ -265,9 +252,9 @@ Growing health burden:
   },
   "Water-Borne": ["Cholera", "Typhoid", "Dysentery", "Diarrhoea (All)"],
   "Air-Borne": ["ARI/Pneumonia", "Measles", "Tuberculosis", "Meningitis"],
-  "NTDs": ["Schistosomiasis", "Worms", "Onchocerciasis", "Leprosy", "Yaws"],
+  "NTDs": ["Schistosomiasis", "Worms", "Onchocerciasis", "Yaws"],
   "Vaccine-Preventable": ["Measles", "Tetanus", "AFP", "Rabies"],
-  "Other": ["STIs", "Skin Infections", "Eye/ENT", "NCDs", "Injuries"]
+  "Other": ["Skin Infections", "Eye/ENT", "NCDs"]
 }
 ```
 
@@ -289,20 +276,17 @@ Growing health burden:
 Implement 5 IDSR diseases + Malaria aggregated + Typhoid = **7 diseases**
 
 ### **Phase 2 - Expanded View (Week 2)**
-Add 10 high-burden diseases:
+Add 7 high-burden diseases:
 - ARI/Pneumonia
 - Diarrhoeal diseases (grouped)
 - Measles
 - Skin infections
 - Worm infestation
 - Clinical Malnutrition
-- STIs (grouped)
-- Anaemia
 - Eye infections
-- Wounds/Trauma
 
 ### **Phase 3 - Complete Catalog (Week 3)**
-Add remaining 20+ diseases for comprehensive surveillance
+Add remaining 15+ diseases for comprehensive surveillance
 
 ### **Phase 4 - Malaria Breakdown (Week 4)**
 Implement detailed Malaria treatment categories as sub-view
@@ -318,8 +302,8 @@ Implement detailed Malaria treatment categories as sub-view
 5. **IDSR diseases need real-time alerting** - outbreak surveillance
 6. **Deaths data available** - can calculate CFR (Case Fatality Rate)
 
-**Total Disease Cases Tracked:** 3,612,583 cases (simplified)
-**Unique Diseases:** 36 with significant data
+**Total Disease Cases Tracked:** 3,094,569 cases (simplified)
+**Unique Diseases:** 29 with significant data
 **Reporting Facilities:** 1,166 across Sierra Leone
 **Admin Levels:** 4 (Country → 13 Districts → 152 Chiefdoms → 1,166 Facilities)
 

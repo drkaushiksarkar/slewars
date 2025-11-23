@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useForecast, useModelPerformance, useAnomalyDetection } from '../../hooks/useForecast';
 import ForecastChart from './ForecastChart';
+import ForecastHeatmap from './ForecastHeatmap';
 import AnomalyDetectionChart from './AnomalyDetectionChart';
+import EmptyState from '../common/EmptyState';
+import LoadingSpinner from '../common/LoadingSpinner';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -46,6 +49,9 @@ function ForecastDashboardContent() {
   const [showRetrainModal, setShowRetrainModal] = useState(false);
   const [showForecastInfo, setShowForecastInfo] = useState(false);
   const [showDataLagWarning, setShowDataLagWarning] = useState(false);
+  const [viewMode, setViewMode] = useState('heatmap'); // 'chart' or 'heatmap'
+  const [isIsolationForestExpanded, setIsIsolationForestExpanded] = useState(false);
+  const [isSTLExpanded, setIsSTLExpanded] = useState(false);
 
   console.log('Component state:', { selectedDisease, selectedLocation, locations });
 
@@ -223,181 +229,281 @@ function ForecastDashboardContent() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6"
+            className="mb-6"
           >
-            <div className="flex items-center">
-              <svg className="w-5 h-5 text-red-600 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-              <p className="text-sm text-red-800">{forecastError}</p>
-            </div>
+            <EmptyState
+              type={
+                forecastError.toLowerCase().includes('insufficient')
+                  ? 'insufficient-data'
+                  : forecastError.toLowerCase().includes('no data') || forecastError.toLowerCase().includes('not found')
+                  ? 'no-data'
+                  : 'error'
+              }
+              message={forecastError.toLowerCase().includes('insufficient') ? 'Insufficient Data' : undefined}
+              description={forecastError}
+            />
           </motion.div>
         )}
 
         {/* Main Content - Redesigned Layout */}
         <div className="space-y-6">
-          {/* Row 1: Forecast Chart (60-70%) + Sidebar (30-40%) */}
+          {/* Row 1: Forecast Chart (86%) + Model Performance Sidebar (14%) */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             className="flex flex-col lg:flex-row gap-6"
           >
-            {/* Left: Forecast Chart - 65% width */}
-            <div className="flex-1 bg-white rounded-xl shadow-sm p-6 lg:basis-[65%]">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-gray-900">
-                  4-Week Forecast
-                </h2>
+            {/* Left: Forecast Chart with Weekly Predictions - 86% width */}
+            <div className="flex-1 lg:basis-[86%] flex flex-col gap-6">
+              {/* 4-Week Forecast Card */}
+              <div className="bg-gradient-to-br from-white via-blue-50 to-indigo-50 rounded-xl shadow-lg p-5 border-2 border-blue-200 flex flex-col flex-1">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h2 className="text-xl font-bold text-gray-900">4-Week Forecast</h2>
+                    <p className="text-sm text-gray-600">AI-powered predictions with confidence intervals</p>
+                  </div>
 
-                {/* Outdated Forecast Warning - Pulsating i Button */}
-                {forecast?.predictions && forecast.predictions.length > 0 && (() => {
-                  const lastForecastDate = new Date(forecast.predictions[forecast.predictions.length - 1].date);
-                  const today = new Date();
-                  const isStale = lastForecastDate < today;
-                  const lastDataDate = forecast.data_availability?.end_date;
-
-                  if (isStale && lastDataDate) {
-                    return (
-                      <div className="relative">
-                        <button
-                          onClick={() => setShowDataLagWarning(!showDataLagWarning)}
-                          className="w-9 h-9 rounded-full bg-amber-100 hover:bg-amber-200 flex items-center justify-center transition-colors relative"
-                          title="Outdated Forecast - Data Lag Detected"
-                        >
-                          {/* Pulsating rings */}
-                          <span className="absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75 animate-ping"></span>
-                          <span className="absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75 animate-ping" style={{ animationDelay: '1s' }}></span>
-
-                          {/* Icon */}
-                          <svg className="w-5 h-5 text-amber-600 relative z-10" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                          </svg>
-                        </button>
-
-                        {/* Warning Popover */}
-                        {showDataLagWarning && (
-                          <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-amber-200 z-50"
-                          >
-                            <div className="bg-amber-50 border-b border-amber-200 p-4 rounded-t-lg">
-                              <div className="flex items-start justify-between">
-                                <div className="flex items-start gap-3">
-                                  <svg className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                  </svg>
-                                  <div>
-                                    <h3 className="font-semibold text-amber-900 text-sm mb-1">
-                                      Outdated Forecast - Data Lag Detected
-                                    </h3>
-                                  </div>
-                                </div>
-                                <button
-                                  onClick={() => setShowDataLagWarning(false)}
-                                  className="text-amber-600 hover:text-amber-800 ml-2"
-                                >
-                                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                                  </svg>
-                                </button>
-                              </div>
-                            </div>
-                            <div className="p-4">
-                              <p className="text-sm text-gray-700">
-                                The most recent data available is from <strong>{new Date(lastDataDate).toLocaleDateString()}</strong>.
-                                The forecast predicts from that date forward, resulting in predictions that are now in the past.
-                                Please contact data administrators to ensure recent disease surveillance data is being reported to the system.
-                              </p>
-                            </div>
-                          </motion.div>
-                        )}
+                  {/* View Mode Toggle */}
+                  <div className="flex items-center gap-2 bg-white/50 rounded-lg p-1 border border-blue-200">
+                    <button
+                      onClick={() => setViewMode('chart')}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                        viewMode === 'chart'
+                          ? 'bg-white text-blue-600 shadow-md'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                        </svg>
+                        Chart
                       </div>
-                    );
-                  }
-                  return null;
-                })()}
-              </div>
+                    </button>
+                    <button
+                      onClick={() => setViewMode('heatmap')}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                        viewMode === 'heatmap'
+                          ? 'bg-white text-blue-600 shadow-md'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                        </svg>
+                        Heatmap
+                      </div>
+                    </button>
+                  </div>
 
-              {forecastLoading ? (
-                <div className="flex items-center justify-center h-96">
-                  <div className="text-center">
-                    <svg className="animate-spin h-12 w-12 text-blue-600 mx-auto mb-4" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                    <p className="text-gray-600">Generating forecast...</p>
-                    <p className="text-sm text-gray-500 mt-2">This may take up to 60 seconds</p>
-                  </div>
+                  {/* Outdated Forecast Warning - Pulsating i Button */}
+                  {forecast?.predictions && forecast.predictions.length > 0 && (() => {
+                    const lastForecastDate = new Date(forecast.predictions[forecast.predictions.length - 1].date);
+                    const today = new Date();
+                    const isStale = lastForecastDate < today;
+                    const lastDataDate = forecast.data_availability?.end_date;
+
+                    if (isStale && lastDataDate) {
+                      return (
+                        <div className="relative">
+                          <button
+                            onClick={() => setShowDataLagWarning(!showDataLagWarning)}
+                            className="w-9 h-9 rounded-full bg-amber-100 hover:bg-amber-200 flex items-center justify-center transition-colors relative"
+                            title="Outdated Forecast - Data Lag Detected"
+                          >
+                            {/* Pulsating rings */}
+                            <span className="absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75 animate-ping"></span>
+                            <span className="absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75 animate-ping" style={{ animationDelay: '1s' }}></span>
+
+                            {/* Icon */}
+                            <svg className="w-5 h-5 text-amber-600 relative z-10" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                            </svg>
+                          </button>
+
+                          {/* Warning Popover */}
+                          {showDataLagWarning && (
+                            <motion.div
+                              initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                              animate={{ opacity: 1, scale: 1, y: 0 }}
+                              className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-amber-200 z-50"
+                            >
+                              <div className="bg-amber-50 border-b border-amber-200 p-4 rounded-t-lg">
+                                <div className="flex items-start justify-between">
+                                  <div className="flex items-start gap-3">
+                                    <svg className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                    </svg>
+                                    <div>
+                                      <h3 className="font-semibold text-amber-900 text-sm mb-1">
+                                        Outdated Forecast - Data Lag Detected
+                                      </h3>
+                                    </div>
+                                  </div>
+                                  <button
+                                    onClick={() => setShowDataLagWarning(false)}
+                                    className="text-amber-600 hover:text-amber-800 ml-2"
+                                  >
+                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                                    </svg>
+                                  </button>
+                                </div>
+                              </div>
+                              <div className="p-4">
+                                <p className="text-sm text-gray-700">
+                                  The most recent data available is from <strong>{new Date(lastDataDate).toLocaleDateString()}</strong>.
+                                  The forecast predicts from that date forward, resulting in predictions that are now in the past.
+                                  Please contact data administrators to ensure recent disease surveillance data is being reported to the system.
+                                </p>
+                              </div>
+                            </motion.div>
+                          )}
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
                 </div>
-              ) : forecast ? (
-                <ForecastChart forecast={forecast} />
-              ) : (
-                <div className="flex items-center justify-center h-96 text-gray-500">
-                  <div className="text-center">
-                    <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                    <p className="text-lg">No forecast data available</p>
-                    <p className="text-sm mt-2">Select a different disease or location, or use "Refresh & Retrain" to generate new forecasts</p>
-                  </div>
+
+                {/* Forecast Chart */}
+                <div className="flex-1 min-h-0 bg-white rounded-lg border border-blue-100 p-4 mb-4">
+                  {forecastLoading ? (
+                    <LoadingSpinner message="Generating forecast..." size="lg" className="h-full" />
+                  ) : forecast ? (
+                    viewMode === 'chart' ? (
+                      <ForecastChart forecast={forecast} height={450} />
+                    ) : (
+                      <ForecastHeatmap
+                        forecast={forecast}
+                        selectedLocation={selectedLocation}
+                        selectedDisease={selectedDisease}
+                      />
+                    )
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-gray-500">
+                      <div className="text-center">
+                        <svg className="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                        <p className="text-lg">No forecast data available</p>
+                        <p className="text-sm mt-2">Select a different disease or location, or use "Refresh & Retrain" to generate new forecasts</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
+
+                {/* Weekly Predictions - Bottom of Forecast Card */}
+                {forecast?.predictions && forecast.predictions.length > 0 && (
+                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-2.5 border border-blue-200">
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
+                      </svg>
+                      <h4 className="text-xs font-bold text-gray-900">Weekly Predictions</h4>
+                    </div>
+                    <div className="grid grid-cols-4 gap-2">
+                      {forecast.predictions.map((p, i) => (
+                        <div key={i} className="bg-white rounded-lg p-2 border border-blue-200 shadow-sm hover:shadow-md transition-all hover:scale-105">
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="text-xs text-gray-600 font-medium">
+                              Week {i + 1}
+                            </div>
+                            <div className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${
+                              p.risk_level === 'HIGH' ? 'bg-red-100 text-red-700' :
+                              p.risk_level === 'MEDIUM' ? 'bg-yellow-100 text-yellow-700' :
+                              'bg-green-100 text-green-700'
+                            }`}>
+                              {p.risk_level}
+                            </div>
+                          </div>
+                          <div className="text-xs text-gray-600 mb-1">
+                            {new Date(p.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          </div>
+                          <div className="flex items-baseline gap-1 mb-0.5">
+                            <div className="text-xl font-bold text-gray-900">
+                              {p.predicted_cases}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              cases
+                            </div>
+                          </div>
+                          <div className="text-xs text-gray-500 truncate">
+                            {p.lower_bound} - {p.upper_bound}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Right: Sidebar - 35% width */}
-            <div className="flex-shrink-0 lg:basis-[35%] flex flex-col gap-6">
-              {/* Combined Card: Metrics + Contributing Factors */}
-              <div className="bg-gradient-to-br from-white to-blue-50 rounded-xl shadow-md p-6 border-2 border-blue-100 flex-1 flex flex-col">
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-md">
-                    <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+            {/* Right: Model Performance Sidebar - 14% width */}
+            <div className="flex-shrink-0 lg:basis-[14%] flex flex-col">
+              {/* Model Performance Card with 4x1 Vertical Layout */}
+              <div className="bg-gradient-to-br from-white to-teal-50 rounded-xl shadow-md p-3 border-2 border-teal-100 flex flex-col h-full">
+                <div className="flex flex-col items-center gap-2 mb-4">
+                  <div className="w-9 h-9 bg-teal-600 rounded-lg flex items-center justify-center shadow-md">
+                    <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
                       <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900">Model Performance</h3>
+                  <h3 className="text-sm font-bold text-gray-900 text-center leading-tight">Model Performance</h3>
                 </div>
 
                 {perfLoading ? (
-                  <div className="text-center py-12 flex-1 flex items-center justify-center">
-                    <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto" />
-                  </div>
+                  <LoadingSpinner message="Loading..." size="sm" className="py-8" />
                 ) : performance ? (
-                  <>
-                    {/* 2x2 Metrics Grid */}
-                    <div className="grid grid-cols-2 gap-4 mb-6">
-                      <div className="bg-white rounded-lg p-4 shadow-sm border border-blue-100">
-                        <div className="text-xs text-gray-600 mb-2 font-medium uppercase tracking-wide">MAE</div>
-                        <div className="text-3xl font-bold text-blue-600">
-                          {performance.mae != null ? Number(performance.mae).toFixed(2) : 'N/A'}
+                  <div className="flex flex-col flex-1 justify-between">
+                    {/* Vertical 4x1 Metrics Stack */}
+                    <div className="flex flex-col flex-1 justify-evenly space-y-2.5">
+                      <div className="bg-white rounded-lg p-3 shadow-sm border border-teal-100 hover:shadow-md transition-shadow flex-1 flex items-center justify-center">
+                        <div className="flex flex-col items-center text-center w-full">
+                          <div className="text-xs text-gray-600 font-medium uppercase tracking-wide mb-1">MAE</div>
+                          <div className="text-2xl font-bold text-teal-600 mb-1">
+                            {performance.mae != null ? Number(performance.mae).toFixed(1) : 'N/A'}
+                          </div>
+                          <div className="text-xs text-gray-500 leading-tight">Mean Abs. Error</div>
                         </div>
-                        <div className="text-xs text-gray-500 mt-1">Mean Absolute Error</div>
                       </div>
 
-                      <div className="bg-white rounded-lg p-4 shadow-sm border border-blue-100">
-                        <div className="text-xs text-gray-600 mb-2 font-medium uppercase tracking-wide">RMSE</div>
-                        <div className="text-3xl font-bold text-blue-600">
-                          {performance.rmse != null ? Number(performance.rmse).toFixed(2) : 'N/A'}
+                      <div className="bg-white rounded-lg p-3 shadow-sm border border-teal-100 hover:shadow-md transition-shadow flex-1 flex items-center justify-center">
+                        <div className="flex flex-col items-center text-center w-full">
+                          <div className="text-xs text-gray-600 font-medium uppercase tracking-wide mb-1">RMSE</div>
+                          <div className="text-2xl font-bold text-teal-600 mb-1">
+                            {performance.rmse != null ? Number(performance.rmse).toFixed(1) : 'N/A'}
+                          </div>
+                          <div className="text-xs text-gray-500 leading-tight">Root Mean Sq.</div>
                         </div>
-                        <div className="text-xs text-gray-500 mt-1">Root Mean Squared Error</div>
                       </div>
 
-                      <div className="bg-white rounded-lg p-4 shadow-sm border border-blue-100">
-                        <div className="text-xs text-gray-600 mb-2 font-medium uppercase tracking-wide">R² Score</div>
-                        <div className="text-3xl font-bold text-blue-600">
-                          {performance.r_squared != null ? Number(performance.r_squared).toFixed(3) : 'N/A'}
+                      <div className="bg-white rounded-lg p-3 shadow-sm border border-teal-100 hover:shadow-md transition-shadow flex-1 flex items-center justify-center">
+                        <div className="flex flex-col items-center text-center w-full">
+                          <div className="text-xs text-gray-600 font-medium uppercase tracking-wide mb-1">R² Score</div>
+                          <div className="text-2xl font-bold text-teal-600 mb-1">
+                            {performance.r_squared != null ? Number(performance.r_squared).toFixed(2) : 'N/A'}
+                          </div>
+                          <div className="text-xs text-gray-500 leading-tight">Coeff. of Det.</div>
                         </div>
-                        <div className="text-xs text-gray-500 mt-1">Coefficient of Determination</div>
                       </div>
 
-                      <div className="bg-white rounded-lg p-4 shadow-sm border border-blue-100">
-                        <div className="text-xs text-gray-600 mb-2 font-medium uppercase tracking-wide">MAPE</div>
-                        <div className="text-3xl font-bold text-blue-600">
-                          {performance.mape != null ? Number(performance.mape).toFixed(2) + '%' : 'N/A'}
+                      <div className="bg-white rounded-lg p-3 shadow-sm border border-teal-100 hover:shadow-md transition-shadow flex-1 flex items-center justify-center">
+                        <div className="flex flex-col items-center text-center w-full">
+                          <div className="text-xs text-gray-600 font-medium uppercase tracking-wide mb-1">MAPE</div>
+                          <div className="text-2xl font-bold text-teal-600 mb-1">
+                            {performance.mape != null ? Number(performance.mape).toFixed(1) + '%' : 'N/A'}
+                          </div>
+                          <div className="text-xs text-gray-500 leading-tight">Mean Abs. %</div>
                         </div>
-                        <div className="text-xs text-gray-500 mt-1">Mean Absolute % Error</div>
                       </div>
                     </div>
 
@@ -417,28 +523,28 @@ function ForecastDashboardContent() {
                       }) || [];
 
                       return climateFactors.length > 0 && (
-                        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-5 border border-blue-200 mt-auto">
-                          <div className="flex items-center gap-2 mb-4">
-                            <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                        <div className="bg-gradient-to-br from-teal-50 to-emerald-50 rounded-lg p-2.5 border border-teal-200 mt-3">
+                          <div className="flex flex-col items-center gap-1.5 mb-2.5">
+                            <svg className="w-4 h-4 text-teal-600" fill="currentColor" viewBox="0 0 20 20">
                               <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
                               <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
                             </svg>
-                            <h4 className="text-sm font-bold text-blue-900">
-                              Key Contributing Factors
+                            <h4 className="text-xs font-bold text-teal-900 text-center leading-tight">
+                              Contributing Factors
                             </h4>
                           </div>
-                          <div className="space-y-3">
-                            {climateFactors.map((factor, i) => (
+                          <div className="space-y-2">
+                            {climateFactors.slice(0, 3).map((factor, i) => (
                               <div key={i} className="bg-white/60 rounded p-2">
-                                <div className="flex items-center justify-between mb-1">
-                                  <span className="text-xs font-semibold text-blue-900">{factor.factor}</span>
-                                  <span className="text-xs font-bold text-blue-700">
-                                    {(factor.impact * 100).toFixed(1)}%
+                                <div className="flex flex-col items-center mb-1.5">
+                                  <span className="text-xs font-semibold text-teal-900 text-center leading-tight mb-1">{factor.factor}</span>
+                                  <span className="text-xs font-bold text-teal-700">
+                                    {(factor.impact * 100).toFixed(0)}%
                                   </span>
                                 </div>
-                                <div className="w-full bg-blue-200 rounded-full h-2">
+                                <div className="w-full bg-teal-200 rounded-full h-1.5">
                                   <div
-                                    className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-300"
+                                    className="bg-gradient-to-r from-teal-500 to-teal-600 h-1.5 rounded-full transition-all duration-300"
                                     style={{ width: `${factor.impact * 100}%` }}
                                   />
                                 </div>
@@ -448,110 +554,48 @@ function ForecastDashboardContent() {
                         </div>
                       );
                     })()}
-                  </>
+                  </div>
                 ) : (
-                  <p className="text-sm text-gray-500 text-center py-12 flex-1 flex items-center justify-center">
-                    No performance metrics available
+                  <p className="text-sm text-gray-500 text-center py-8 flex-1 flex items-center justify-center">
+                    No metrics
                   </p>
                 )}
               </div>
             </div>
           </motion.div>
 
-          {/* Row 2: Data Availability Card */}
-          {forecast?.data_availability && (() => {
-            const lastDataDate = new Date(forecast.data_availability.end_date);
-            const today = new Date();
-            const daysOld = Math.floor((today - lastDataDate) / (1000 * 60 * 60 * 24));
-            const isStale = daysOld > 30;
-            const isVeryStale = daysOld > 60;
-
-            return (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.35 }}
-                className={`rounded-xl p-6 border-2 shadow-md ${
-                  isVeryStale ? 'bg-gradient-to-br from-red-50 to-red-100 border-red-300' :
-                  isStale ? 'bg-gradient-to-br from-amber-50 to-amber-100 border-amber-300' :
-                  'bg-gradient-to-br from-green-50 to-green-100 border-green-200'
-                }`}
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-md ${
-                    isVeryStale ? 'bg-red-600' :
-                    isStale ? 'bg-amber-600' :
-                    'bg-green-600'
-                  }`}>
-                    <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-bold text-gray-900">Data Availability</h3>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-white rounded-lg p-3 shadow-sm">
-                    <div className="text-xs text-gray-600 mb-1 font-medium">Latest Data</div>
-                    <div className="text-sm font-bold text-gray-900">
-                      {lastDataDate.toLocaleDateString()}
-                    </div>
-                    {daysOld > 0 && (
-                      <div className={`text-xs mt-1 ${
-                        isVeryStale ? 'text-red-600' :
-                        isStale ? 'text-amber-600' :
-                        'text-green-600'
-                      }`}>
-                        {daysOld} days ago
-                      </div>
-                    )}
-                  </div>
-                  <div className="bg-white rounded-lg p-3 shadow-sm">
-                    <div className="text-xs text-gray-600 mb-1 font-medium">Total Points</div>
-                    <div className="text-sm font-bold text-gray-900">
-                      {forecast.data_availability.total_points}
-                    </div>
-                    <div className={`text-xs mt-1 ${forecast.data_availability.has_climate_data ? 'text-green-600' : 'text-gray-500'}`}>
-                      {forecast.data_availability.has_climate_data ? '✓ Climate data' : '✗ No climate'}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            );
-          })()}
-
-          {/* Row 3: Anomaly Detection - Full Width */}
+          {/* Row 2: Anomaly Detection - Full Width */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="bg-gradient-to-br from-white via-purple-50 to-indigo-50 rounded-xl shadow-lg p-6 border-2 border-purple-200"
+            className="bg-gradient-to-br from-white via-purple-50 to-indigo-50 rounded-xl shadow-lg p-5 border-2 border-purple-200"
           >
-            <div className="flex items-center gap-3 mb-6">
+            <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
                 <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                 </svg>
               </div>
               <div>
-                <h3 className="text-xl font-bold text-gray-900">Anomaly Detection</h3>
-                <p className="text-sm text-gray-600">ML-powered pattern analysis using Isolation Forest</p>
+                <h3 className="text-xl font-bold text-gray-900">Anomaly Detection with STL Decomposition</h3>
+                <p className="text-sm text-gray-600">ML-powered pattern analysis using STL Decomposition</p>
               </div>
             </div>
 
             {anomalyLoading ? (
-              <div className="text-center py-16">
-                <div className="animate-spin h-12 w-12 border-4 border-purple-600 border-t-transparent rounded-full mx-auto mb-4" />
-                <p className="text-gray-600">Analyzing patterns...</p>
-              </div>
+              <LoadingSpinner message="Analyzing patterns..." size="lg" className="py-16" />
             ) : anomalyData ? (
-              <AnomalyDetectionChart data={anomalyData} />
+              <AnomalyDetectionChart
+                data={anomalyData}
+                forecast={forecast}
+                isIsolationForestExpanded={isIsolationForestExpanded}
+                setIsIsolationForestExpanded={setIsIsolationForestExpanded}
+                isSTLExpanded={isSTLExpanded}
+                setIsSTLExpanded={setIsSTLExpanded}
+              />
             ) : (
-              <div className="text-center py-16">
-                <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-                <p className="text-gray-500">No anomaly data available</p>
-              </div>
+              <EmptyState type="no-data" className="py-16" />
             )}
           </motion.div>
         </div>
