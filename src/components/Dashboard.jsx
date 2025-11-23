@@ -20,7 +20,7 @@ import NewOverview from "./NewOverview";
 import ClimateData from "./ClimateData";
 import Training from "./Training";
 import Simulation from "./Simulation";
-import DataGenerator from "./DataGenerator";
+import InfoPage from "./Info";
 import DiseaseAnalysis from "./DiseaseAnalysis";
 import LocationAnalysis from "./LocationAnalysis";
 import ForecastDashboard from "./forecast/ForecastDashboard";
@@ -55,6 +55,7 @@ const Dashboard = () => {
   }, []);
 
   const tabs = [
+    { id: "info", label: "Info", icon: Info },
     { id: "overview", label: "Overview", icon: Activity },
     { id: "forecast", label: "Prediction Risk", icon: TrendingUp },
     { id: "climate", label: "Climate Impact", icon: CloudRain },
@@ -62,7 +63,6 @@ const Dashboard = () => {
     { id: "disease-analysis", label: "Disease Analysis", icon: Activity },
     { id: "simulation", label: "Simulation", icon: PlayCircle },
     { id: "training", label: "Training", icon: GraduationCap },
-    { id: "data", label: "Info", icon: Info },
   ];
 
   return (
@@ -167,6 +167,7 @@ const Dashboard = () => {
         transition={{ duration: 0.3 }}
         className="bg-card rounded-lg p-6 shadow-lg"
       >
+        {activeTab === "info" && <InfoPage />}
         {activeTab === "overview" && <NewOverview />}
         {activeTab === "disease-analysis" && <DiseaseAnalysis />}
         {activeTab === "location-analysis" && <LocationAnalysis />}
@@ -174,7 +175,6 @@ const Dashboard = () => {
         {activeTab === "climate" && <ClimateData />}
         {activeTab === "training" && <Training />}
         {activeTab === "simulation" && <Simulation />}
-        {activeTab === "data" && <DataGenerator />}
       </motion.div>
     </div>
   );
