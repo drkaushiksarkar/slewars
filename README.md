@@ -11,21 +11,45 @@ Modern climate-aware Early Warning, Alert, and Response System with a Sierra Leo
 
 ## Getting Started
 
-### First-Time Setup
+### Quick Start (One-Line Deployment)
+
+For the fastest setup on a new machine with DHIS2 database already imported:
+
+```bash
+./setup.sh && npm run dev:full
+```
+
+This single command will:
+1. ✓ Check all prerequisites (PostgreSQL, Node.js, Python)
+2. ✓ Install all Node.js dependencies
+3. ✓ Set up Python virtual environment for ML service
+4. ✓ Install ML dependencies
+5. ✓ Train ML models automatically (if not present)
+6. ✓ Run database migrations
+7. ✓ Start all three services
+
+**Services started:**
+- Frontend: http://localhost:3000 (Vite proxies `/api` calls to the backend)
+- Backend API: http://localhost:4000
+- ML Service: http://localhost:8000
+
+### Manual Setup (Alternative)
+
+If you prefer step-by-step control:
 
 1. **Install dependencies**
    ```bash
    npm install
    ```
 
-2. **Configure environment variables**
+2. **Configure environment variables** (Optional)
    ```bash
    cp .env.example .env
    ```
-   Edit `.env` and configure the following:
+   Edit `.env` and configure:
    - `PORT` - Backend server port (default: 4000)
    - `POSTGRES_USER` and `POSTGRES_PASSWORD` - Your PostgreSQL credentials
-   - API keys for OpenWeather, Mapbox, ERA5
+   - API keys for OpenWeather, Mapbox, ERA5 (if needed)
    - DHIS2 credentials (if using DHIS2 as data source)
 
 3. **Set up ML service**
@@ -34,22 +58,27 @@ Modern climate-aware Early Warning, Alert, and Response System with a Sierra Leo
    cd ../..
    ```
 
-4. **Build the backend**
+4. **Train models** (First time only - or use auto-training)
    ```bash
-   npm run server:build
+   cd server/ml-service
+   source venv/bin/activate
+   python3 train_unified_model.py
+   cd ../..
    ```
 
-### Running the Application
+5. **Run the application**
+   ```bash
+   npm run dev:full
+   ```
 
-**Development mode** (runs frontend, backend, and ML service):
-```bash
-npm run dev:full
-```
-- Frontend: http://localhost:3000 (Vite proxies `/api` calls to the backend)
-- Backend API: http://localhost:4000
-- ML Service: http://localhost:8000
+### Auto-Training Feature
 
-**Production builds**:
+The ML service automatically trains models on first run if they don't exist. This happens transparently when you run `npm run dev:full`, so you don't need to manually train unless you want to retrain with new data.
+
+**Note:** First-time model training takes 5-10 minutes depending on your database size.
+
+### Production Builds
+
 ```bash
 npm run build:full           # Builds server (TS -> JS) and the SPA
 npm run preview              # Optional: preview the built SPA
@@ -150,11 +179,20 @@ If you encounter proxy errors when running on a different machine:
 
 When cloning this repository on a new machine:
 
-1. Install Node.js 18+ and PostgreSQL
-2. Run `npm install` to install dependencies
-3. Copy `.env.example` to `.env` and configure all variables
-4. Set up the ML service: `cd server/ml-service && ./setup.sh`
-5. Build the backend: `npm run server:build`
-6. Run the application: `npm run dev:full`
+**Quick way (recommended):**
+```bash
+./setup.sh && npm run dev:full
+```
 
-**IMPORTANT**: Never pull `node_modules/`, `dist/`, or `.env` from git. Always install fresh on each machine.
+**Manual way:**
+1. Install Node.js 18+ and PostgreSQL
+2. Import DHIS2 database as `dhis2SierraLeoneDemo`
+3. Run `npm install` to install dependencies
+4. (Optional) Copy `.env.example` to `.env` and configure variables
+5. Set up the ML service: `cd server/ml-service && ./setup.sh`
+6. Run the application: `npm run dev:full` (auto-trains models on first run)
+
+**IMPORTANT**:
+- Never pull `node_modules/`, `dist/`, or `.env` from git. Always install fresh on each machine.
+- The setup script will handle model training automatically if models don't exist
+- See `HOW-TO.md` for more detailed setup instructions
