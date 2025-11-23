@@ -2,8 +2,14 @@
 -- Date: 2025-11-15
 -- Description: Tables for disease forecasting, model performance tracking, and alerts
 
+-- Drop tables if they exist for fresh setup
+DROP TABLE IF EXISTS interventions CASCADE;
+DROP TABLE IF EXISTS alerts CASCADE;
+DROP TABLE IF EXISTS model_performance CASCADE;
+DROP TABLE IF EXISTS forecasts CASCADE;
+
 -- Forecasts table
-CREATE TABLE IF NOT EXISTS forecasts (
+CREATE TABLE forecasts (
   id SERIAL PRIMARY KEY,
   disease VARCHAR(100) NOT NULL,
   location_uid VARCHAR(11) NOT NULL,
@@ -23,7 +29,7 @@ CREATE TABLE IF NOT EXISTS forecasts (
 );
 
 -- Alerts table
-CREATE TABLE IF NOT EXISTS alerts (
+CREATE TABLE alerts (
   id SERIAL PRIMARY KEY,
   disease VARCHAR(100) NOT NULL,
   location_uid VARCHAR(11) NOT NULL,
@@ -40,7 +46,7 @@ CREATE TABLE IF NOT EXISTS alerts (
 );
 
 -- Interventions table
-CREATE TABLE IF NOT EXISTS interventions (
+CREATE TABLE interventions (
   id SERIAL PRIMARY KEY,
   alert_id INTEGER REFERENCES alerts(id),
   intervention_type VARCHAR(100),
@@ -58,7 +64,7 @@ CREATE TABLE IF NOT EXISTS interventions (
 );
 
 -- Model performance tracking
-CREATE TABLE IF NOT EXISTS model_performance (
+CREATE TABLE model_performance (
   id SERIAL PRIMARY KEY,
   disease VARCHAR(100),
   location_uid VARCHAR(11),
@@ -76,19 +82,19 @@ CREATE TABLE IF NOT EXISTS model_performance (
 );
 
 -- Create indexes for better performance
-CREATE INDEX IF NOT EXISTS idx_forecasts_disease_location ON forecasts(disease, location_uid, target_date);
-CREATE INDEX IF NOT EXISTS idx_forecasts_target_date ON forecasts(target_date);
-CREATE INDEX IF NOT EXISTS idx_forecasts_forecast_date ON forecasts(forecast_date);
+CREATE INDEX idx_forecasts_disease_location ON forecasts(disease, location_uid, target_date);
+CREATE INDEX idx_forecasts_target_date ON forecasts(target_date);
+CREATE INDEX idx_forecasts_forecast_date ON forecasts(forecast_date);
 
-CREATE INDEX IF NOT EXISTS idx_alerts_disease_location ON alerts(disease, location_uid, alert_date);
-CREATE INDEX IF NOT EXISTS idx_alerts_status ON alerts(status);
-CREATE INDEX IF NOT EXISTS idx_alerts_severity ON alerts(severity);
+CREATE INDEX idx_alerts_disease_location ON alerts(disease, location_uid, alert_date);
+CREATE INDEX idx_alerts_status ON alerts(status);
+CREATE INDEX idx_alerts_severity ON alerts(severity);
 
-CREATE INDEX IF NOT EXISTS idx_interventions_alert ON interventions(alert_id);
-CREATE INDEX IF NOT EXISTS idx_interventions_location ON interventions(location_uid);
+CREATE INDEX idx_interventions_alert ON interventions(alert_id);
+CREATE INDEX idx_interventions_location ON interventions(location_uid);
 
-CREATE INDEX IF NOT EXISTS idx_model_performance_disease ON model_performance(disease, evaluation_date);
-CREATE INDEX IF NOT EXISTS idx_model_performance_location ON model_performance(location_uid);
+CREATE INDEX idx_model_performance_disease ON model_performance(disease, evaluation_date);
+CREATE INDEX idx_model_performance_location ON model_performance(location_uid);
 
 -- Add trigger to update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()

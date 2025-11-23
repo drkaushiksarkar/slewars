@@ -100,7 +100,7 @@ export const DISEASE_DATA_ELEMENTS = {
         deaths: "MSZuQ1mTsia",
         category: DISEASE_CATEGORIES.AIR_BORNE,
     },
-    // Neglected Tropical Diseases (5 diseases)
+    // Neglected Tropical Diseases (4 diseases)
     wormInfestation: {
         name: "Worm Infestation",
         cases: "Usk9Asj5DED",
@@ -119,11 +119,6 @@ export const DISEASE_DATA_ELEMENTS = {
     yaws: {
         name: "Yaws",
         cases: "FF3Ev33BuCh",
-        category: DISEASE_CATEGORIES.NEGLECTED_TROPICAL,
-    },
-    leprosy: {
-        name: "Leprosy",
-        cases: "zAW6b5Owalk",
         category: DISEASE_CATEGORIES.NEGLECTED_TROPICAL,
     },
     // Vaccine-Preventable (3 diseases - measles counted in Air-Borne)
@@ -145,7 +140,7 @@ export const DISEASE_DATA_ELEMENTS = {
         deaths: "FTRrcoaog83",
         category: DISEASE_CATEGORIES.VACCINE_PREVENTABLE,
     },
-    // Other Infections & NCDs (11 diseases)
+    // Other Infections & NCDs (5 diseases)
     allOther: {
         name: "All Other",
         cases: "A2VfEfPflHV",
@@ -161,44 +156,14 @@ export const DISEASE_DATA_ELEMENTS = {
         cases: "TBbCcJfZ91x",
         category: DISEASE_CATEGORIES.OTHER_INFECTIONS,
     },
-    stiDischarge: {
-        name: "STI - Genital Discharge",
-        cases: "CN9Oxawn7bD",
-        category: DISEASE_CATEGORIES.OTHER_INFECTIONS,
-    },
-    anaemia: {
-        name: "Anaemia",
-        cases: "HLPuaFB7Frw",
-        category: DISEASE_CATEGORIES.OTHER_INFECTIONS,
-    },
-    wounds: {
-        name: "Wounds/Trauma",
-        cases: "FJs8ZjlQE6f",
-        category: DISEASE_CATEGORIES.OTHER_INFECTIONS,
-    },
     eyeInfection: {
         name: "Eye Infection",
         cases: "BQI18TPLR7W",
         category: DISEASE_CATEGORIES.OTHER_INFECTIONS,
     },
-    hypertension: {
-        name: "Hypertension",
-        cases: "UXW5hWW8dE1",
-        category: DISEASE_CATEGORIES.OTHER_INFECTIONS,
-    },
     otitisMedia: {
         name: "Otitis Media",
         cases: "DWLCM68Q7Zl",
-        category: DISEASE_CATEGORIES.OTHER_INFECTIONS,
-    },
-    stiUlcer: {
-        name: "STI - Genital Ulcer",
-        cases: "IeO1sWXVyp6",
-        category: DISEASE_CATEGORIES.OTHER_INFECTIONS,
-    },
-    burns: {
-        name: "Burns",
-        cases: "zMGEd921xd3",
         category: DISEASE_CATEGORIES.OTHER_INFECTIONS,
     },
     // Viral Hemorrhagic (1 disease)

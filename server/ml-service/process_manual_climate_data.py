@@ -196,7 +196,12 @@ def process_grib_file(grib_file, year):
                         precip_time_coord = 'valid_time' if 'valid_time' in district_precip.coords else 'time'
                         daily_precip = district_precip.resample({precip_time_coord: '1D'}).sum()
                         # Convert from meters to millimeters
-                        precip = daily_precip['tp'].values * 1000
+                        # Use .to_numpy() to safely extract values and handle multi-dimensional indices
+                        precip_values = daily_precip['tp']
+                        if hasattr(precip_values, 'to_numpy'):
+                            precip = precip_values.to_numpy() * 1000
+                        else:
+                            precip = np.array(precip_values.values).flatten() * 1000
                     except Exception as e:
                         logger.warning(f"Error processing precipitation for {district['name']}: {e}")
 

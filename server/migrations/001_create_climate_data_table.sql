@@ -1,7 +1,10 @@
 -- Climate Data Integration - Phase 5
 -- This table stores historical and forecasted climate data from ERA5
 
-CREATE TABLE IF NOT EXISTS climate_data (
+-- Drop table if it exists for fresh setup
+DROP TABLE IF EXISTS climate_data CASCADE;
+
+CREATE TABLE climate_data (
   id SERIAL PRIMARY KEY,
   location_uid VARCHAR(11) NOT NULL,
   date DATE NOT NULL,
@@ -18,9 +21,9 @@ CREATE TABLE IF NOT EXISTS climate_data (
 );
 
 -- Create indexes for efficient querying
-CREATE INDEX IF NOT EXISTS idx_climate_location_date ON climate_data(location_uid, date);
-CREATE INDEX IF NOT EXISTS idx_climate_date ON climate_data(date);
-CREATE INDEX IF NOT EXISTS idx_climate_location ON climate_data(location_uid);
+CREATE INDEX idx_climate_location_date ON climate_data(location_uid, date);
+CREATE INDEX idx_climate_date ON climate_data(date);
+CREATE INDEX idx_climate_location ON climate_data(location_uid);
 
 -- Create a function to automatically update updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
