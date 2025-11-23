@@ -39,7 +39,7 @@ if [[ "$OSTYPE" != "darwin"* ]]; then
 fi
 
 # Step 1: Check PostgreSQL
-print_info "Step 1/6: Checking PostgreSQL..."
+print_info "Step 1/7: Checking PostgreSQL..."
 if ! command -v psql &> /dev/null; then
     print_error "PostgreSQL not found. Please install PostgreSQL first."
     exit 1
@@ -53,7 +53,7 @@ fi
 print_success "PostgreSQL database found"
 
 # Step 2: Check Python
-print_info "Step 2/6: Checking Python..."
+print_info "Step 2/7: Checking Python..."
 if ! command -v python3 &> /dev/null; then
     print_error "Python 3 not found. Installing via Homebrew..."
     if ! command -v brew &> /dev/null; then
@@ -67,7 +67,7 @@ PYTHON_VERSION=$(python3 --version | awk '{print $2}')
 print_success "Python $PYTHON_VERSION found"
 
 # Step 3: Check Node.js and npm
-print_info "Step 3/6: Checking Node.js..."
+print_info "Step 3/7: Checking Node.js..."
 if ! command -v node &> /dev/null; then
     print_error "Node.js not found. Please install Node.js first."
     exit 1
@@ -77,7 +77,7 @@ NODE_VERSION=$(node --version)
 print_success "Node.js $NODE_VERSION found"
 
 # Step 4: Install Node dependencies
-print_info "Step 4/6: Installing Node.js dependencies..."
+print_info "Step 4/7: Installing Node.js dependencies..."
 if [ ! -d "node_modules" ]; then
     npm install
 else
@@ -86,7 +86,7 @@ fi
 print_success "Node.js dependencies ready"
 
 # Step 5: Setup Python ML Service
-print_info "Step 5/6: Setting up ML Service..."
+print_info "Step 5/7: Setting up ML Service..."
 cd "$SCRIPT_DIR/server/ml-service"
 
 # Check if libomp is installed (required for LightGBM on macOS)
@@ -118,6 +118,21 @@ print_success "Python dependencies installed"
 # Create models directory
 mkdir -p models
 
+# Step 5.5: Load climate data from ZIP files
+print_info "Step 5.5/7: Loading climate data..."
+if [ -d "data" ] && [ -n "$(ls -A data/*.zip 2>/dev/null)" ]; then
+    print_info "Found climate data ZIP files, loading into database..."
+    python3 auto_load_climate_data.py
+    if [ $? -eq 0 ]; then
+        print_success "Climate data loaded successfully"
+    else
+        print_info "Climate data load completed with warnings (check logs above)"
+    fi
+else
+    print_info "No climate data ZIP files found in server/ml-service/data/"
+    print_info "Climate data will be downloaded when needed"
+fi
+
 # Check if models exist, if not train them
 print_info "Checking ML models..."
 if [ ! -f "models/improved_unified_model_v3.1.pkl" ] && \
@@ -133,7 +148,7 @@ fi
 cd "$SCRIPT_DIR"
 
 # Step 6: Run database migrations
-print_info "Step 6/6: Running database migrations..."
+print_info "Step 6/7: Running database migrations..."
 cd "$SCRIPT_DIR/server/migrations"
 if [ -f "run_migrations.sh" ]; then
     ./run_migrations.sh
@@ -143,6 +158,19 @@ else
 fi
 
 cd "$SCRIPT_DIR"
+
+# Step 7: Build server TypeScript files
+print_info "Step 7/7: Building server..."
+if [ -d "server/src" ]; then
+    npm run server:build
+    if [ $? -eq 0 ]; then
+        print_success "Server build complete"
+    else
+        print_info "Server build completed with warnings"
+    fi
+else
+    print_info "Server source not found, skipping build..."
+fi
 
 echo ""
 echo "=============================================="

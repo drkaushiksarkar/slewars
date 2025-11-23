@@ -12,7 +12,9 @@
     "server:start": "node server/dist/index.js",
     "ml:start": "cd server/ml-service && ./start.sh",
     "dev:full": "concurrently -n \"API,FRONTEND,ML\" -c \"blue,green,yellow\" \"npm run server-dev\" \"npm run dev\" \"npm run ml:start\"",
-    "build:full": "npm run server:build && npm run build"
+    "build:full": "npm run server:build && npm run build",
+    "setup": "chmod +x setup.sh && ./setup.sh",
+    "postinstall": "echo '\n✓ Dependencies installed! Run \"npm run setup\" to complete initial setup.\n'"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.0.5",
