@@ -48,8 +48,10 @@ const ClimateDashboard = ({
   const [diseasesByCategory, setDiseasesByCategory] = useState({});
   const [selectedDisease, setSelectedDisease] = useState(null);
   const [diseaseData, setDiseaseData] = useState([]);
+  const [allDiseasesData, setAllDiseasesData] = useState([]); // For multi-level Sankey
   const [loadingDiseases, setLoadingDiseases] = useState(true);
   const [loadingDiseaseData, setLoadingDiseaseData] = useState(false);
+  const [loadingAllDiseases, setLoadingAllDiseases] = useState(false);
 
   // Calculate date range based on period
   const dateRange = useMemo(() => {
@@ -142,6 +144,52 @@ const ClimateDashboard = ({
 
     fetchDiseaseData();
   }, [selectedDisease, locationUid, dateRange.startDate, dateRange.endDate]);
+
+  // Fetch ALL diseases data for multi-level Sankey diagram
+  useEffect(() => {
+    if (Object.keys(diseasesByCategory).length === 0) {
+      setAllDiseasesData([]);
+      return;
+    }
+
+    const fetchAllDiseasesData = async () => {
+      try {
+        setLoadingAllDiseases(true);
+
+        // Get all disease IDs from diseasesByCategory
+        const allDiseaseIds = Object.values(diseasesByCategory).flat().map(d => d.id);
+
+        // Fetch data for all diseases in parallel
+        const promises = allDiseaseIds.map(async (diseaseId) => {
+          const params = new URLSearchParams();
+          params.append('startDate', dateRange.startDate);
+          params.append('endDate', dateRange.endDate);
+          if (locationUid && locationUid !== 'all') {
+            params.append('locationUid', locationUid);
+          }
+
+          try {
+            const response = await apiClient.get(`/diseases/${diseaseId}/timeseries?${params}`);
+            return response.data || [];
+          } catch (error) {
+            console.error(`Error fetching data for disease ${diseaseId}:`, error);
+            return [];
+          }
+        });
+
+        const results = await Promise.all(promises);
+        const combinedData = results.flat();
+        setAllDiseasesData(combinedData);
+      } catch (error) {
+        console.error('Error fetching all diseases data:', error);
+        setAllDiseasesData([]);
+      } finally {
+        setLoadingAllDiseases(false);
+      }
+    };
+
+    fetchAllDiseasesData();
+  }, [diseasesByCategory, locationUid, dateRange.startDate, dateRange.endDate]);
 
   // Calculate historical averages for comparison
   const historicalMetrics = useMemo(() => {
@@ -420,7 +468,7 @@ const ClimateDashboard = ({
       )}
 
       {/* Climate Impact Sankey Diagram */}
-      {climateData && climateData.length > 0 && diseaseData && diseaseData.length > 0 && selectedDisease && (
+      {climateData && climateData.length > 0 && !loadingAllDiseases && allDiseasesData.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -428,8 +476,8 @@ const ClimateDashboard = ({
         >
           <ClimateSankeyDiagram
             climateData={climateData}
-            diseaseData={diseaseData}
-            selectedDisease={Object.values(diseasesByCategory).flat().find(d => d.id === selectedDisease)}
+            diseaseData={allDiseasesData}
+            diseasesByCategory={diseasesByCategory}
           />
         </motion.div>
       )}
