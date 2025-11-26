@@ -99,7 +99,11 @@ async function initializeDatabase(): Promise<void> {
     pool = new Pool({
       ...config,
       max: 5,
-      connectionTimeoutMillis: 5000
+      connectionTimeoutMillis: 5000,
+      // SSL configuration for RDS and remote databases
+      ssl: {
+        rejectUnauthorized: false, // Required for RDS and self-signed certificates
+      },
     });
 
     // Test connection

@@ -14,6 +14,10 @@ class PostgresService {
         max: 20,
         idleTimeoutMillis: 30000,
         connectionTimeoutMillis: 2000,
+        // SSL configuration for RDS and remote databases
+        ssl: {
+          rejectUnauthorized: false, // Required for RDS and self-signed certificates
+        },
       };
 
       // Only add user/password if they are provided
@@ -83,7 +87,6 @@ class PostgresService {
     `;
 
     if (diseaseNames && diseaseNames.length > 0) {
-      const diseasePattern = diseaseNames.map(d => `%${d}%`).join("|");
       query += ` AND (${diseaseNames.map((_, i) => `de.name ILIKE $${i + 1}`).join(" OR ")})`;
       const result = await this.query(query, diseaseNames.map(d => `%${d}%`));
       return result.rows;
