@@ -24,11 +24,12 @@ const envSchema = z.object({
     .string()
     .optional()
     .default(path.join(process.cwd(), "server", "config", "country-config.json")),
-  POSTGRES_HOST: z.string().optional().default("localhost"),
-  POSTGRES_PORT: z.coerce.number().optional().default(5432),
-  POSTGRES_DB: z.string().optional().default("dhis2"),
-  POSTGRES_USER: z.string().optional().default("dhis"),
-  POSTGRES_PASSWORD: z.string().optional().default("dhis")
+  // PostgreSQL configuration - REQUIRED for connecting to DHIS2 database
+  POSTGRES_HOST: z.string().default("localhost"),
+  POSTGRES_PORT: z.coerce.number().default(5432),
+  POSTGRES_DB: z.string().min(1, "POSTGRES_DB is required - must specify DHIS2 database name"),
+  POSTGRES_USER: z.string().min(1, "POSTGRES_USER is required - must specify database username"),
+  POSTGRES_PASSWORD: z.string().min(1, "POSTGRES_PASSWORD is required - must specify database password")
 });
 
 const parsed = envSchema.safeParse(process.env);

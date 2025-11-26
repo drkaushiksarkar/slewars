@@ -1,12 +1,15 @@
 """Test database connection"""
 import psycopg2
 from psycopg2.extras import RealDictCursor
+import config
 
-# Connect
+# Connect using configuration from .env
 conn = psycopg2.connect(
-    host='localhost',
-    port=5432,
-    database='dhis2SierraLeoneDemo'
+    host=config.POSTGRES_HOST,
+    port=config.POSTGRES_PORT,
+    database=config.POSTGRES_DB,
+    user=config.POSTGRES_USER,
+    password=config.POSTGRES_PASSWORD
 )
 
 cursor = conn.cursor(cursor_factory=RealDictCursor)

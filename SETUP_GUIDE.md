@@ -9,12 +9,12 @@ Before starting, ensure you have:
 1. **PostgreSQL** installed and running
 2. **Node.js** (v18 or higher)
 3. **Python 3.12** or higher
-4. **DHIS2 Database**: Import your DHIS2 database dump as `dhis2SierraLeoneDemo`
+4. **DHIS2 Database**: Access to a DHIS2 PostgreSQL database (local or remote)
 5. **macOS**: The setup script is optimized for macOS (uses Homebrew for dependencies)
 
 ## Quick Setup (Recommended)
 
-For a fresh clone of the repository, follow these three simple steps:
+For a fresh clone of the repository, follow these simple steps:
 
 ### Step 1: Clone and Configure
 
@@ -23,12 +23,21 @@ For a fresh clone of the repository, follow these three simple steps:
 git clone <repository-url>
 cd slewars
 
-# Copy and configure environment variables
-cp .env.example .env
-# Edit .env and add your database credentials:
-# - POSTGRES_USER
-# - POSTGRES_PASSWORD
+# Configure your DHIS2 database credentials in .env file
+# Edit .env and set the following REQUIRED fields:
+# - POSTGRES_HOST (e.g., localhost or remote IP)
+# - POSTGRES_PORT (usually 5432)
+# - POSTGRES_DB (your DHIS2 database name)
+# - POSTGRES_USER (database username)
+# - POSTGRES_PASSWORD (database password)
 ```
+
+**Important**: The system will automatically:
+1. Verify the database is a valid DHIS2 database
+2. Create required tables (`climate_data`, `forecasts`, `alerts`, etc.) if they don't exist
+3. Start the dashboard server
+
+This means you can point the application to **any DHIS2 database** by simply updating the `.env` file!
 
 ### Step 2: Install Dependencies
 
@@ -45,12 +54,13 @@ npm run setup
 ```
 
 This comprehensive setup script will:
-- ✓ Check PostgreSQL database connection
+- ✓ Verify PostgreSQL database connection
+- ✓ Verify this is a DHIS2 database (checks for required DHIS2 tables)
+- ✓ Create required custom tables if they don't exist (climate_data, forecasts, etc.)
 - ✓ Verify Python and Node.js installations
 - ✓ Install Python ML dependencies in a virtual environment
 - ✓ Load climate data from ZIP files (if available in `server/ml-service/data/`)
 - ✓ Train ML models (one-time, takes 5-10 minutes)
-- ✓ Run database migrations
 - ✓ Build server TypeScript files
 
 ### Step 4: Start the Application
@@ -123,19 +133,41 @@ If setup fails with database connection errors:
    psql -l
    ```
 
-2. Check database exists:
+2. Check your DHIS2 database exists:
    ```bash
-   psql -l | grep dhis2SierraLeoneDemo
+   psql -l | grep <your-dhis2-database-name>
    ```
 
 3. Verify credentials in `.env` file:
    ```
-   POSTGRES_HOST=localhost
+   POSTGRES_HOST=localhost           # or your database server IP
    POSTGRES_PORT=5432
-   POSTGRES_DB=dhis2SierraLeoneDemo
+   POSTGRES_DB=<your-dhis2-db-name>  # e.g., dhis2SierraLeoneDemo
    POSTGRES_USER=<your-username>
    POSTGRES_PASSWORD=<your-password>
    ```
+
+4. Test connection manually:
+   ```bash
+   psql -h <POSTGRES_HOST> -p <POSTGRES_PORT> -U <POSTGRES_USER> -d <POSTGRES_DB>
+   ```
+
+### Pointing to a New DHIS2 Database
+
+To use a different DHIS2 database:
+
+1. Update `.env` file with the new database credentials
+2. Run the application:
+   ```bash
+   npm run dev:full
+   ```
+
+The system will automatically:
+- Verify the new database is a valid DHIS2 database
+- Create required custom tables if they don't exist
+- Start the dashboard
+
+No other changes are needed!
 
 ### Python Dependencies Issues
 

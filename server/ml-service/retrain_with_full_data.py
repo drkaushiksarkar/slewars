@@ -13,8 +13,15 @@ logger.add(sys.stdout, level="INFO", format="<green>{time:HH:mm:ss}</green> | <l
 def get_all_districts():
     """Get all district locations from database"""
     import psycopg2
+    import config
     try:
-        conn = psycopg2.connect(database='dhis2SierraLeoneDemo')
+        conn = psycopg2.connect(
+            host=config.POSTGRES_HOST,
+            port=config.POSTGRES_PORT,
+            database=config.POSTGRES_DB,
+            user=config.POSTGRES_USER,
+            password=config.POSTGRES_PASSWORD
+        )
         cursor = conn.cursor()
         cursor.execute("SELECT uid, name FROM organisationunit WHERE hierarchylevel = 2 ORDER BY name")
         districts = cursor.fetchall()

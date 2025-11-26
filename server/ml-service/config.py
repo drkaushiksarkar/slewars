@@ -6,12 +6,20 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# Database configuration
+# Database configuration (must be set in .env file)
 POSTGRES_HOST = os.getenv('POSTGRES_HOST', 'localhost')
 POSTGRES_PORT = int(os.getenv('POSTGRES_PORT', '5432'))
-POSTGRES_DB = os.getenv('POSTGRES_DB', 'dhis2SierraLeoneDemo')
-POSTGRES_USER = os.getenv('POSTGRES_USER', '')
-POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD', '')
+POSTGRES_DB = os.getenv('POSTGRES_DB')
+POSTGRES_USER = os.getenv('POSTGRES_USER')
+POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD')
+
+# Validate required database configuration
+if not POSTGRES_DB:
+    raise ValueError("POSTGRES_DB environment variable is required")
+if not POSTGRES_USER:
+    raise ValueError("POSTGRES_USER environment variable is required")
+if not POSTGRES_PASSWORD:
+    raise ValueError("POSTGRES_PASSWORD environment variable is required")
 
 # Service configuration
 ML_SERVICE_PORT = int(os.getenv('ML_SERVICE_PORT', '8000'))
