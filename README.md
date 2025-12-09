@@ -1,198 +1,378 @@
-# Slewars EWARS Platform
+# EWARS Platform - Early Warning, Alert, and Response System
 
-Modern climate-aware Early Warning, Alert, and Response System with a Sierra Leone–specific Vite + React frontend and a hardened Express backend that aggregates DHIS2 data, runs lightweight ML models, and exposes configurable APIs.
+A modern climate-aware Early Warning, Alert, and Response System with machine learning-powered outbreak prediction, real-time surveillance, and DHIS2 integration.
 
-## Architecture
+## Features
 
-- **Frontend** – React 18, Vite, Tailwind, Radix UI, mapbox-gl for Sierra Leone provincial overlays (ADM1 geoBoundaries). Data access is centralized through `CountryContext` and `DashboardDataContext`, so every widget consumes live API data instead of mock objects.
-- **Backend** – TypeScript + Express service under `server/` with structured logging (Pino), configuration validation (Zod), caching, and layered services (`dashboardService`, `dhis2Service`, `mlService`).
-- **Configuration** – Country metadata lives in `server/config/country-config.json` and can be overridden via `COUNTRY_CONFIG_PATH`. Secrets and DHIS2 connectivity are managed through `.env`.
-- **ML layer** – Custom logistic regression (outbreak risk) plus seasonal anomaly detection feed the dashboard with risk scores, alert recommendations, and model explainability.
+- **Real-time Disease Surveillance** - Track disease outbreaks across regions
+- **ML-Powered Predictions** - Outbreak risk forecasting using logistic regression and anomaly detection
+- **DHIS2 Integration** - Direct integration with DHIS2 health information systems
+- **Interactive Maps** - Province-level visualization with Mapbox integration
+- **Climate Data Analysis** - Weather and environmental risk factors
+- **Configurable Alerts** - Automated outbreak detection and notifications
 
-## Getting Started
+## Technology Stack
 
-### Quick Start (One-Line Deployment)
+- **Frontend:** React 18, Vite, Tailwind CSS, Radix UI, Mapbox GL
+- **Backend:** Node.js, Express, TypeScript, PostgreSQL
+- **ML Service:** Python, Flask, scikit-learn, pandas
+- **Process Management:** PM2
+- **Web Server:** Nginx
 
-For the fastest setup on a new machine with DHIS2 database already imported:
+---
+
+## Quick Deployment to AWS Lightsail
+
+**Fastest way to deploy to production:**
+
+### 1. Create Lightsail Instance
+
+- Go to AWS Lightsail console
+- Create Ubuntu 22.04 LTS instance ($10/month recommended)
+- Configure firewall to allow HTTP (port 80)
+
+### 2. Connect and Deploy
+
+SSH into your instance and run:
 
 ```bash
-./setup.sh && npm run dev:full
+# Clone repository
+git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git
+cd YOUR_REPO
+
+# Run automated setup (one command!)
+./lightsail-setup.sh
 ```
 
-This single command will:
-1. ✓ Check all prerequisites (PostgreSQL, Node.js, Python)
-2. ✓ Install all Node.js dependencies
-3. ✓ Set up Python virtual environment for ML service
-4. ✓ Install ML dependencies
-5. ✓ Train ML models automatically (if not present)
-6. ✓ Run database migrations
-7. ✓ Start all three services
+**That's it!** The script will:
+- Install all dependencies (Node.js, PostgreSQL, Python)
+- Set up the database
+- Build the application
+- Configure Nginx reverse proxy
+- Start all services with PM2
+- Configure auto-restart on reboot
 
-**Services started:**
-- Frontend: http://localhost:3000 (Vite proxies `/api` calls to the backend)
+**Access your app:** `http://YOUR_LIGHTSAIL_IP`
+
+**Detailed Guide:** See [LIGHTSAIL_DEPLOYMENT.md](./LIGHTSAIL_DEPLOYMENT.md) for complete step-by-step instructions.
+
+---
+
+## Local Development Setup
+
+### Prerequisites
+
+- Node.js 18+
+- PostgreSQL 14+
+- Python 3.9+
+- Git
+
+### Quick Start
+
+```bash
+# Install dependencies and setup
+npm install
+./setup.sh
+
+# Start all services (frontend, backend, ML)
+npm run dev:full
+```
+
+**Services will be available at:**
+- Frontend: http://localhost:3000
 - Backend API: http://localhost:4000
 - ML Service: http://localhost:8000
 
-### Manual Setup (Alternative)
+### Manual Setup
 
-If you prefer step-by-step control:
-
-1. **Install dependencies**
+1. **Install dependencies:**
    ```bash
    npm install
    ```
 
-2. **Configure environment variables** (Optional)
+2. **Configure environment:**
    ```bash
    cp .env.example .env
-   ```
-   Edit `.env` and configure:
-   - `PORT` - Backend server port (default: 4000)
-   - `POSTGRES_USER` and `POSTGRES_PASSWORD` - Your PostgreSQL credentials
-   - API keys for OpenWeather, Mapbox, ERA5 (if needed)
-   - DHIS2 credentials (if using DHIS2 as data source)
-
-3. **Set up ML service**
-   ```bash
-   cd server/ml-service && ./setup.sh
-   cd ../..
+   # Edit .env with your settings
    ```
 
-4. **Train models** (First time only - or use auto-training)
+3. **Setup ML service:**
    ```bash
    cd server/ml-service
-   source venv/bin/activate
-   python3 train_unified_model.py
+   ./setup.sh
    cd ../..
    ```
 
-5. **Run the application**
+4. **Run application:**
    ```bash
    npm run dev:full
    ```
 
-### Auto-Training Feature
+---
 
-The ML service automatically trains models on first run if they don't exist. This happens transparently when you run `npm run dev:full`, so you don't need to manually train unless you want to retrain with new data.
+## Environment Configuration
 
-**Note:** First-time model training takes 5-10 minutes depending on your database size.
-
-### Production Builds
+Create `.env` file with these settings:
 
 ```bash
-npm run build:full           # Builds server (TS -> JS) and the SPA
-npm run preview              # Optional: preview the built SPA
-npm run server:start        # Serve compiled backend from server/dist
+# Server
+NODE_ENV=development
+PORT=4000
+
+# Database
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_DB=ewars_db
+POSTGRES_USER=your_user
+POSTGRES_PASSWORD=your_password
+
+# Data Source
+DASHBOARD_DATA_SOURCE=synthetic  # or 'dhis2' or 'hybrid'
+
+# DHIS2 (Optional)
+DHIS2_BASE_URL=https://your-dhis2-instance.org
+DHIS2_USERNAME=your_username
+DHIS2_PASSWORD=your_password
+
+# API Keys (Optional)
+MAPBOX_TOKEN=your_mapbox_token
+OPENWEATHER_API_KEY=your_api_key
 ```
 
-### Important Notes
+---
 
-- **NEVER commit** `node_modules/`, `dist/`, or `.env` files to git
-- Always use `.env.example` as a template when setting up on a new machine
-- Ensure the backend server is running before starting the frontend
-- The PORT in `.env` must match the proxy configuration in `vite.config.js`
+## Production Build
 
-## Environment Variables (`.env`)
+```bash
+# Build both backend and frontend
+npm run build:full
 
-| Key | Description |
-| --- | --- |
-| `PORT` | Backend port (default `4000`) |
-| `DASHBOARD_DATA_SOURCE` | Default source: `synthetic`, `dhis2`, or `hybrid` |
-| `DHIS2_BASE_URL` / `DHIS2_USERNAME` / `DHIS2_PASSWORD` | Credentials for the DHIS2 instance |
-| `DHIS2_VERIFY_SSL` | Set to `false` for self-signed certs (not recommended in prod) |
-| `COUNTRY_CONFIG_PATH` | Path to the JSON configuration file |
+# Start in production mode
+npm run production:start
+```
 
-Frontend overrides: optionally set `VITE_API_BASE_URL`, `VITE_DEFAULT_DATA_SOURCE`, or `VITE_MAPBOX_TOKEN` (needed to visualize the Sierra Leone boundaries) when you need non-relative API targets or a different default feed in the UI.
+---
 
-## API Surface
+## API Endpoints
 
-| Method | Path | Description |
-| --- | --- | --- |
-| `GET /api/config/countries` | Country metadata + DHIS2 mapping |
-| `GET /api/data/overview?country=<id>&source=<synthetic|dhis2|hybrid>` | Aggregated dashboard payload (alerts, metrics, time series, ML results) |
-| `GET /api/dhis2/analytics` | Signed pass-through to the configured DHIS2 instance |
-| `POST /api/ml/predict` | Run the outbreak risk model with custom features |
-| `POST /api/ml/anomalies` | Run anomaly detection on an arbitrary time series |
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/config/countries` | Get country configurations |
+| `GET` | `/api/data/overview` | Get dashboard overview data |
+| `GET` | `/api/dhis2/analytics` | DHIS2 analytics proxy |
+| `POST` | `/api/ml/predict` | Outbreak risk prediction |
+| `POST` | `/api/ml/anomalies` | Anomaly detection |
 
-Responses are cached for 2 minutes; use the Dashboard's “Refresh” button to force an early refresh when adjusting configurations.
+---
 
-## Extending Country Configurations
+## Deployment Options
 
-1. Edit `server/config/country-config.json` (currently pinned to Sierra Leone) or point `COUNTRY_CONFIG_PATH` to a different file.
-2. Each entry supports `map` settings (center/zoom) and optional `dhis2` metadata (`orgUnit`, `dataElements`, `program`), and the geojson overlay in `server/data/sierra-leone-adm1.geojson` powers the ADM1 shading on the map.
-3. Restart the backend after changing the file (or add your own reload endpoint if hot-swapping configs is required).
+### AWS Lightsail (Recommended)
+- **Best for:** Production deployment, professional hosting
+- **Cost:** $10-20/month
+- **Setup time:** 30 minutes
+- **Guide:** [LIGHTSAIL_DEPLOYMENT.md](./LIGHTSAIL_DEPLOYMENT.md)
 
-## Testing & Validation
+### AWS App Runner
+- **Best for:** Auto-scaling applications
+- **Cost:** $50-100/month
+- **Requires:** Docker configuration, 2 services
 
-- `npm run server:build` – Type-checks and emits compiled backend assets.
-- `npm run build` – Compiles the SPA with Vite to ensure every component renders with real API calls.
-- Recommended: wire the API into your preferred test runner (Jest, Vitest, Postman collections) if you need broader coverage in CI/CD.
+### Other Platforms
+- **Railway / Render:** Easy deployment, built-in PostgreSQL
+- **AWS EC2:** Full control, more complex setup
+- **Docker:** Container-based deployment
 
-## Deployment Notes
+---
 
-- Serve `dist/` via any static host (S3 + CloudFront, Azure Blob, etc.).
-- Deploy the backend to any Node 18+ environment (Docker, PM2, serverless) and ensure the SPA's `/api` proxy points to the deployed host (set `VITE_API_BASE_URL` at build time).
-- Keep DHIS2 credentials in your secret manager (Vault, AWS Secrets Manager) and surface them as env vars at runtime.
+## Project Structure
 
-This setup gives you a configurable, DHIS2-aware EWARS stack with explainable ML, ready for enterprise hardening (observability, auth, CI/CD) as your next steps.
+```
+.
+├── src/                    # Frontend React application
+├── server/
+│   ├── src/               # Backend Express server
+│   ├── ml-service/        # Python ML service
+│   ├── config/            # Configuration files
+│   └── scripts/           # Database initialization
+├── public/                # Static assets
+├── dist/                  # Built frontend (generated)
+├── lightsail-setup.sh     # AWS Lightsail deployment script
+└── LIGHTSAIL_DEPLOYMENT.md # Detailed deployment guide
+```
+
+---
+
+## Management Commands
+
+### PM2 (Production)
+
+```bash
+pm2 status              # Check service status
+pm2 logs                # View logs
+pm2 restart all         # Restart all services
+pm2 monit               # Monitor resources
+```
+
+### Development
+
+```bash
+npm run dev             # Frontend only
+npm run server-dev      # Backend only
+npm run dev:full        # All services
+```
+
+### Database
+
+```bash
+npm run db:init         # Initialize database
+psql -U ewars_user -d ewars_db  # Connect to database
+```
+
+---
+
+## Monitoring and Logs
+
+**Application Logs:**
+```bash
+pm2 logs ewars-backend
+pm2 logs ewars-ml
+```
+
+**Nginx Logs:**
+```bash
+sudo tail -f /var/log/nginx/access.log
+sudo tail -f /var/log/nginx/error.log
+```
+
+**System Resources:**
+```bash
+pm2 monit
+htop
+```
+
+---
 
 ## Troubleshooting
 
-### HTTP Proxy Error at `/api/config/countries`
-
-If you encounter proxy errors when running on a different machine:
-
-1. **Ensure the backend is running**
-   ```bash
-   # Check if the backend is running on port 4000 (or your configured PORT)
-   lsof -i :4000
-   ```
-
-2. **Verify environment variables**
-   - Make sure you've created `.env` from `.env.example`
-   - Confirm `PORT` matches in both `.env` and the backend process
-
-3. **Clean install dependencies**
-   ```bash
-   # Remove old dependencies and reinstall
-   rm -rf node_modules package-lock.json
-   npm install
-   ```
-
-4. **Rebuild the backend**
-   ```bash
-   npm run server:build
-   ```
-
-5. **Check proxy configuration**
-   - The vite dev server proxies `/api/*` to `http://localhost:${PORT}`
-   - Ensure the PORT environment variable is set correctly
-
-### Common Issues
-
-- **Port already in use**: Change the `PORT` in `.env` or kill the process using that port
-- **Database connection errors**: Verify PostgreSQL is running and credentials in `.env` are correct
-- **ML service errors**: Run `cd server/ml-service && ./setup.sh` to ensure Python dependencies are installed
-- **Build errors**: Delete `server/dist/` and `dist/` directories, then run `npm run build:full`
-
-### Setup on a New Machine
-
-When cloning this repository on a new machine:
-
-**Quick way (recommended):**
+### Application won't start
 ```bash
-./setup.sh && npm run dev:full
+# Check PM2 status
+pm2 status
+pm2 logs
+
+# Restart services
+pm2 restart all
 ```
 
-**Manual way:**
-1. Install Node.js 18+ and PostgreSQL
-2. Import DHIS2 database as `dhis2SierraLeoneDemo`
-3. Run `npm install` to install dependencies
-4. (Optional) Copy `.env.example` to `.env` and configure variables
-5. Set up the ML service: `cd server/ml-service && ./setup.sh`
-6. Run the application: `npm run dev:full` (auto-trains models on first run)
+### Database connection errors
+```bash
+# Check PostgreSQL status
+sudo systemctl status postgresql
 
-**IMPORTANT**:
-- Never pull `node_modules/`, `dist/`, or `.env` from git. Always install fresh on each machine.
-- The setup script will handle model training automatically if models don't exist
-- See `HOW-TO.md` for more detailed setup instructions
+# Verify credentials
+cat .env | grep POSTGRES
+```
+
+### Port already in use
+```bash
+# Find process using port
+lsof -i :4000
+
+# Kill process
+kill -9 PID
+```
+
+---
+
+## Security
+
+**Production Recommendations:**
+- Enable HTTPS with Let's Encrypt SSL certificate
+- Use strong database passwords
+- Keep system packages updated
+- Restrict SSH access to specific IPs
+- Enable UFW firewall
+- Use environment variables for secrets
+- Enable automatic security updates
+
+---
+
+## Contributing
+
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open Pull Request
+
+---
+
+## License
+
+See [LICENSE](./LICENSE) file for details.
+
+---
+
+## Support
+
+For deployment issues, see [LIGHTSAIL_DEPLOYMENT.md](./LIGHTSAIL_DEPLOYMENT.md) troubleshooting section.
+
+For DHIS2 integration questions, ensure your credentials are correct in `.env` file.
+
+---
+
+## Architecture
+
+**Data Flow:**
+```
+User Browser
+    ↓
+Nginx (Port 80) → Frontend (Static Files)
+    ↓
+    → Backend API (Port 4000)
+        ↓
+        ├─→ PostgreSQL Database
+        ├─→ ML Service (Port 8000)
+        └─→ DHIS2 (Optional)
+```
+
+**Services:**
+- **Frontend:** React SPA served by Nginx
+- **Backend:** Express API server with PM2
+- **ML Service:** Python Flask service with PM2
+- **Database:** PostgreSQL for data storage
+- **Proxy:** Nginx reverse proxy for routing
+
+---
+
+## Performance
+
+**Recommended Instance Specs:**
+- **Minimum:** 2 GB RAM, 1 vCPU (Lightsail $10/month)
+- **Recommended:** 4 GB RAM, 2 vCPU (Lightsail $20/month)
+- **Storage:** 60 GB SSD minimum
+
+**Optimization Tips:**
+- Enable Nginx caching
+- Use PM2 cluster mode for backend
+- Add swap space if needed
+- Monitor with PM2 and system tools
+
+---
+
+## Updates
+
+To update deployed application:
+
+```bash
+cd ~/your-repo
+git pull origin main
+npm install
+npm run build:full
+pm2 restart all
+```
+
+---
+
+**Ready to deploy?** Follow the [LIGHTSAIL_DEPLOYMENT.md](./LIGHTSAIL_DEPLOYMENT.md) guide!
