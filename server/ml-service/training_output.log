@@ -1,0 +1,65 @@
+01:25:42 | ================================================================================
+01:25:42 | QUICK TRAINING - Malaria Forecasting Models
+01:25:42 | ================================================================================
+01:25:42 | 
+================================================================================
+01:25:42 | Training Malaria model for Bo
+01:25:42 | ================================================================================
+01:25:42 | Training model...
+01:25:42 | Training model for Malaria in O6uvpzGd5pu
+01:25:42 | Error executing disease query: list index out of range
+01:25:42 | Query params: ['wZwzzRnr9N4', 'O6uvpzGd5pu', '2023-11-17', '2025-11-16']
+01:25:42 | Database error: list index out of range
+01:25:42 | Error training model: list index out of range
+01:25:42 | ✗ Training failed: list index out of range
+01:25:43 | 
+================================================================================
+01:25:43 | Training Malaria model for Bombali
+01:25:43 | ================================================================================
+01:25:43 | Training model...
+01:25:43 | Training model for Malaria in fdc6uOvgoji
+01:25:43 | Error executing disease query: list index out of range
+01:25:43 | Query params: ['wZwzzRnr9N4', 'fdc6uOvgoji', '2023-11-17', '2025-11-16']
+01:25:43 | Database error: list index out of range
+01:25:43 | Error training model: list index out of range
+01:25:43 | ✗ Training failed: list index out of range
+01:25:44 | 
+================================================================================
+01:25:44 | Training Malaria model for Bonthe
+01:25:44 | ================================================================================
+01:25:44 | Training model...
+01:25:44 | Training model for Malaria in lc3eMKXaEfw
+01:25:44 | Error executing disease query: list index out of range
+01:25:44 | Query params: ['wZwzzRnr9N4', 'lc3eMKXaEfw', '2023-11-17', '2025-11-16']
+01:25:44 | Database error: list index out of range
+01:25:44 | Error training model: list index out of range
+01:25:44 | ✗ Training failed: list index out of range
+01:25:45 | 
+================================================================================
+01:25:45 | Training Malaria model for Kailahun
+01:25:45 | ================================================================================
+01:25:45 | Training model...
+01:25:45 | Training model for Malaria in jUb8gELQApl
+01:25:45 | Error executing disease query: list index out of range
+01:25:45 | Query params: ['wZwzzRnr9N4', 'jUb8gELQApl', '2023-11-17', '2025-11-16']
+01:25:45 | Database error: list index out of range
+01:25:45 | Error training model: list index out of range
+01:25:45 | ✗ Training failed: list index out of range
+01:25:46 | 
+================================================================================
+01:25:46 | Training Malaria model for Kambia
+01:25:46 | ================================================================================
+01:25:46 | Training model...
+01:25:46 | Training model for Malaria in PMa2VCrupOd
+01:25:46 | Error executing disease query: list index out of range
+01:25:46 | Query params: ['wZwzzRnr9N4', 'PMa2VCrupOd', '2023-11-17', '2025-11-16']
+01:25:46 | Database error: list index out of range
+01:25:46 | Error training model: list index out of range
+01:25:46 | ✗ Training failed: list index out of range
+01:25:47 | 
+================================================================================
+01:25:47 | SUMMARY
+01:25:47 | ================================================================================
+01:25:47 | Successful: 0/5
+01:25:47 | Failed: 5/5
+01:25:47 | ================================================================================

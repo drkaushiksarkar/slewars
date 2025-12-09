@@ -1,16 +1,18 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { 
-  BookOpen, 
-  Play, 
-  Award, 
-  CheckCircle, 
+import {
+  BookOpen,
+  Play,
+  Award,
+  CheckCircle,
   Clock,
   Star,
   Users,
   Video,
   FileText,
-  MessageSquare
+  MessageSquare,
+  Sparkles,
+  Info as InfoIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -102,7 +104,13 @@ const Training = () => {
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold">Training & Capacity Building</h2>
+          <div className="flex items-center space-x-3 mb-2">
+            <h2 className="text-2xl font-bold">Training & Capacity Building</h2>
+            <span className="inline-flex items-center space-x-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white text-xs font-semibold px-3 py-1 rounded-full">
+              <Sparkles className="h-3 w-3" />
+              <span>BETA</span>
+            </span>
+          </div>
           <p className="text-muted-foreground">Enhance your EWARS expertise</p>
         </div>
         <div className="flex items-center space-x-4">
@@ -120,6 +128,30 @@ const Training = () => {
           </Button>
         </div>
       </div>
+
+      {/* IMACS Foundation Model Notice */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 border-2 border-blue-200 dark:border-blue-800 rounded-lg p-4"
+      >
+        <div className="flex items-start space-x-3">
+          <div className="flex-shrink-0 mt-0.5">
+            <InfoIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+          </div>
+          <div className="flex-1">
+            <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-1 flex items-center space-x-2">
+              <Sparkles className="h-4 w-4" />
+              <span>Coming Soon: IMACS Foundation Model</span>
+            </h3>
+            <p className="text-sm text-blue-800 dark:text-blue-200">
+              This training module is currently in beta. Content will be updated with the upcoming{" "}
+              <span className="font-semibold">IMACS (Institute of Health Modelling and Climate Solutions) Foundation Model</span>,
+              featuring advanced AI-powered learning experiences, personalized training paths, and real-time case simulations.
+            </p>
+          </div>
+        </div>
+      </motion.div>
 
       {/* Course Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

@@ -1,7 +1,7 @@
 import axios, { AxiosInstance } from "axios";
 import https from "https";
-import { env } from "../config/env";
-import logger from "./logger";
+import { env } from "../config/env.js";
+import logger from "./logger.js";
 
 class Dhis2Service {
   private client: AxiosInstance | null = null;

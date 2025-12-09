@@ -1,0 +1,19 @@
+{
+  "trained_at": "2025-11-23T18:21:42.229313",
+  "n_samples": 8261,
+  "n_diseases": 28,
+  "n_locations": 13,
+  "date_range": {
+    "start": null,
+    "end": null
+  },
+  "performance": {
+    "mae": 47.96899880079381,
+    "rmse": 634.8535723704385,
+    "r2": 0.5636355138314162,
+    "mape": 21.183460543038482,
+    "coverage": 53.2258064516129,
+    "mean_interval_width": 114.00364609584192,
+    "n_samples": 1240
+  }
+}

@@ -1,0 +1,23 @@
+2025-11-16 02:13:48 | INFO     | __main__:<module> - Starting Disease Forecasting ML Service on 0.0.0.0:8000
+INFO:     Will watch for changes in these directories: ['/Users/Rishabh.Dev/Documents/Projects/experiments/slewars/server/ml-service']
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [12621] using StatReload
+INFO:     Started server process [12640]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:65009 - "GET /health HTTP/1.1" 200 OK
+2025-11-16 02:18:57 | INFO     | main:generate_forecast - Received forecast request for Malaria in O6uvpzGd5pu (force_retrain=False)
+2025-11-16 02:18:57 | INFO     | forecast_service:generate_forecast - Generating forecast for Malaria in O6uvpzGd5pu, horizon=4, force_retrain=False
+2025-11-16 02:18:57 | INFO     | forecast_service:generate_forecast - Loading saved model for Malaria in O6uvpzGd5pu...
+2025-11-16 02:18:57 | INFO     | models_simple:load - Ensemble model loaded from models/Malaria/O6uvpzGd5pu/ensemble_model.pkl
+2025-11-16 02:18:57 | INFO     | forecast_service:generate_forecast - Saved model loaded successfully
+2025-11-16 02:18:57 | INFO     | database:fetch_disease_timeseries - Fetched 11 disease time series records for disease
+2025-11-16 02:18:57 | INFO     | database:fetch_climate_data - Fetched 53 climate records
+/Users/Rishabh.Dev/Documents/Projects/experiments/slewars/server/ml-service/feature_engineering.py:154: FutureWarning: DataFrame.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  df = df.fillna(method='ffill').fillna(method='bfill')
+2025-11-16 02:18:57 | INFO     | feature_engineering:_merge_climate_features - Merged 4 climate features
+2025-11-16 02:18:57 | INFO     | feature_engineering:prepare_training_data - Prepared 11 training samples with 30 features
+2025-11-16 02:18:57 | INFO     | feature_engineering:prepare_forecast_features - Prepared forecast features for 4 periods
+2025-11-16 02:18:57 | INFO     | models_simple:forecast - Generating 4-step forecast
+2025-11-16 02:18:57 | INFO     | forecast_service:generate_forecast - Forecast generated successfully for 4 weeks
+INFO:     127.0.0.1:49370 - "POST /forecast HTTP/1.1" 200 OK

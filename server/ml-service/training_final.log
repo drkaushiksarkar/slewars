@@ -1,0 +1,114 @@
+01:49:48 | ================================================================================
+01:49:48 | QUICK TRAINING - Malaria Forecasting Models
+01:49:48 | ================================================================================
+01:49:48 | 
+================================================================================
+01:49:48 | Training Malaria model for Bo
+01:49:48 | ================================================================================
+01:49:48 | Training model...
+01:49:48 | Training model for Malaria in O6uvpzGd5pu
+01:49:48 | Fetched 22 disease time series records for disease
+01:49:48 | Fetched 98 climate records
+01:49:48 | Fetched 22 disease records and 98 climate records
+/Users/Rishabh.Dev/Documents/Projects/experiments/slewars/server/ml-service/feature_engineering.py:154: FutureWarning: DataFrame.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  df = df.fillna(method='ffill').fillna(method='bfill')
+01:49:48 | Merged 4 climate features
+01:49:48 | Prepared 22 training samples with 30 features
+01:49:48 | Training set: 17 samples, Test set: 5 samples
+01:49:48 | Training XGBoost forecaster on 17 samples
+01:49:48 | Dropping non-numeric column: startdate
+01:49:48 | Dropping non-numeric column: enddate
+01:49:48 | Training XGBoost model with 17 samples
+01:49:48 | XGBoost model trained successfully
+01:49:48 | Ensemble (XGBoost) trained successfully
+01:49:48 | Error training model: Feature shape mismatch, expected: 27, got 29
+01:49:48 | ✗ Training failed: Feature shape mismatch, expected: 27, got 29
+01:49:49 | 
+================================================================================
+01:49:49 | Training Malaria model for Bombali
+01:49:49 | ================================================================================
+01:49:49 | Training model...
+01:49:49 | Training model for Malaria in fdc6uOvgoji
+01:49:50 | Fetched 20 disease time series records for disease
+01:49:50 | Fetched 53 climate records
+01:49:50 | Fetched 20 disease records and 53 climate records
+/Users/Rishabh.Dev/Documents/Projects/experiments/slewars/server/ml-service/feature_engineering.py:154: FutureWarning: DataFrame.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  df = df.fillna(method='ffill').fillna(method='bfill')
+01:49:50 | Merged 4 climate features
+01:49:50 | Prepared 20 training samples with 30 features
+01:49:50 | Training set: 16 samples, Test set: 4 samples
+01:49:50 | Training XGBoost forecaster on 16 samples
+01:49:50 | Dropping non-numeric column: startdate
+01:49:50 | Dropping non-numeric column: enddate
+01:49:50 | Training XGBoost model with 16 samples
+01:49:50 | XGBoost model trained successfully
+01:49:50 | Ensemble (XGBoost) trained successfully
+01:49:50 | Error training model: Feature shape mismatch, expected: 27, got 29
+01:49:50 | ✗ Training failed: Feature shape mismatch, expected: 27, got 29
+01:49:51 | 
+================================================================================
+01:49:51 | Training Malaria model for Bonthe
+01:49:51 | ================================================================================
+01:49:51 | Training model...
+01:49:51 | Training model for Malaria in lc3eMKXaEfw
+01:49:51 | Fetched 20 disease time series records for disease
+01:49:51 | Fetched 26 climate records
+01:49:51 | Fetched 20 disease records and 26 climate records
+/Users/Rishabh.Dev/Documents/Projects/experiments/slewars/server/ml-service/feature_engineering.py:154: FutureWarning: DataFrame.fillna with 'method' is deprecated and will raise in a future version. Use obj.ffill() or obj.bfill() instead.
+  df = df.fillna(method='ffill').fillna(method='bfill')
+01:49:51 | Merged 4 climate features
+01:49:51 | Prepared 20 training samples with 30 features
+01:49:51 | Training set: 16 samples, Test set: 4 samples
+01:49:51 | Training XGBoost forecaster on 16 samples
+01:49:51 | Dropping non-numeric column: startdate
+01:49:51 | Dropping non-numeric column: enddate
+01:49:51 | Training XGBoost model with 16 samples
+01:49:51 | XGBoost model trained successfully
+01:49:51 | Ensemble (XGBoost) trained successfully
+01:49:51 | Error training model: Feature shape mismatch, expected: 27, got 29
+01:49:51 | ✗ Training failed: Feature shape mismatch, expected: 27, got 29
+01:49:52 | 
+================================================================================
+01:49:52 | Training Malaria model for Kailahun
+01:49:52 | ================================================================================
+01:49:52 | Training model...
+01:49:52 | Training model for Malaria in jUb8gELQApl
+01:49:52 | Fetched 22 disease time series records for disease
+01:49:52 | Fetched 0 climate records
+01:49:52 | Fetched 22 disease records and 0 climate records
+01:49:52 | Prepared 14 training samples with 16 features
+01:49:52 | Training set: 11 samples, Test set: 3 samples
+01:49:52 | Training XGBoost forecaster on 11 samples
+01:49:52 | Dropping non-numeric column: startdate
+01:49:52 | Dropping non-numeric column: enddate
+01:49:52 | Training XGBoost model with 11 samples
+01:49:52 | XGBoost model trained successfully
+01:49:52 | Ensemble (XGBoost) trained successfully
+01:49:52 | Error training model: Feature shape mismatch, expected: 13, got 15
+01:49:52 | ✗ Training failed: Feature shape mismatch, expected: 13, got 15
+01:49:54 | 
+================================================================================
+01:49:54 | Training Malaria model for Kambia
+01:49:54 | ================================================================================
+01:49:54 | Training model...
+01:49:54 | Training model for Malaria in PMa2VCrupOd
+01:49:54 | Fetched 22 disease time series records for disease
+01:49:54 | Fetched 0 climate records
+01:49:54 | Fetched 22 disease records and 0 climate records
+01:49:54 | Prepared 14 training samples with 16 features
+01:49:54 | Training set: 11 samples, Test set: 3 samples
+01:49:54 | Training XGBoost forecaster on 11 samples
+01:49:54 | Dropping non-numeric column: startdate
+01:49:54 | Dropping non-numeric column: enddate
+01:49:54 | Training XGBoost model with 11 samples
+01:49:54 | XGBoost model trained successfully
+01:49:54 | Ensemble (XGBoost) trained successfully
+01:49:54 | Error training model: Feature shape mismatch, expected: 13, got 15
+01:49:54 | ✗ Training failed: Feature shape mismatch, expected: 13, got 15
+01:49:55 | 
+================================================================================
+01:49:55 | SUMMARY
+01:49:55 | ================================================================================
+01:49:55 | Successful: 0/5
+01:49:55 | Failed: 5/5
+01:49:55 | ================================================================================

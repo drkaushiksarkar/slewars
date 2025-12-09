@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
-import routes from "./routes";
-import logger from "./services/logger";
+import routes from "./routes/index.js";
+import logger from "./services/logger.js";
 
 export const app = express();
 

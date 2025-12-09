@@ -1,17 +1,17 @@
 import fs from "fs/promises";
 import path from "path";
 import NodeCache from "node-cache";
-import { env } from "../config/env";
-import { getCountryConfig } from "../config/countryConfig";
-import { mlService } from "./ml/mlService";
-import { dhis2Service } from "./dhis2Service";
-import logger from "./logger";
+import { env } from "../config/env.js";
+import { getCountryConfig } from "../config/countryConfig.js";
+import { mlService } from "./ml/mlService.js";
+import { dhis2Service } from "./dhis2Service.js";
+import logger from "./logger.js";
 import {
   AlertDetail,
   OverviewPayload,
   TimeSeriesPoint
 } from "../types/dashboard";
-import { CountryConfig } from "../types/country";
+import { CountryConfig } from "../types/country.js";
 
 type SampleDataset = Record<string, TimeSeriesPoint[]>;
 
@@ -28,7 +28,7 @@ class DashboardService {
 
   public async getOverview(
     countryId: string,
-    source: "synthetic" | "dhis2" | "hybrid" = env.DASHBOARD_DATA_SOURCE
+    source: "synthetic" | "dhis2" | "hybrid" | "postgres" = env.DASHBOARD_DATA_SOURCE
   ): Promise<OverviewPayload> {
     const cacheKey = `overview:${countryId}:${source}`;
     const cached = this.cache.get<OverviewPayload>(cacheKey);

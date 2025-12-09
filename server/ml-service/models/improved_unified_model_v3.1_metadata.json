@@ -1,0 +1,116 @@
+{
+  "trained_at": "2025-11-23T19:41:04.717165",
+  "model_version": "3.1",
+  "compatibility": "Full V2.0 feature compatibility",
+  "n_samples": 8261,
+  "n_diseases": 28,
+  "n_locations": 13,
+  "n_features": 32,
+  "date_range": {
+    "start": "2023-12-27T00:00:00",
+    "end": null
+  },
+  "performance": {
+    "overall": {
+      "mae": 13.238262124225287,
+      "rmse": 22.94161666818881,
+      "r2": 0.9500188631010373,
+      "mape": 46.294648952673484,
+      "coverage": 57.97101449275362,
+      "n_samples": 1242
+    },
+    "by_category": {
+      "vector_borne": {
+        "mae": 2.556714459272512,
+        "rmse": 4.639031801600826,
+        "r2": 0.9238077139318287,
+        "mape": 52.73062394891388,
+        "coverage": 46.72364672364672,
+        "n_samples": 351
+      },
+      "water_borne": {
+        "mae": 10.380719731300463,
+        "rmse": 19.607245572653362,
+        "r2": 0.9831343828477642,
+        "mape": 19.246170701387992,
+        "coverage": 50.56179775280899,
+        "n_samples": 267
+      },
+      "respiratory": {
+        "mae": 3.399681205152179,
+        "rmse": 7.991160589440736,
+        "r2": 0.9669254673332389,
+        "mape": 12.542576293206833,
+        "coverage": 70.13888888888889,
+        "n_samples": 288
+      },
+      "vaccine_preventable": {
+        "mae": 3.4507808498314856,
+        "rmse": 8.856840042104722,
+        "r2": 0.50860067370407,
+        "mape": 36.07268144722766,
+        "coverage": 42.30769230769231,
+        "n_samples": 26
+      },
+      "ntd": {
+        "mae": 7.399217023188189,
+        "rmse": 21.948530419620823,
+        "r2": 0.9918477055782536,
+        "mape": 40.581764945670294,
+        "coverage": 81.98198198198197,
+        "n_samples": 111
+      },
+      "other": {
+        "mae": 54.687040382274354,
+        "rmse": 83.72881509647539,
+        "r2": 0.961692425796978,
+        "mape": 124.60326541125733,
+        "coverage": 58.79396984924623,
+        "n_samples": 199
+      }
+    }
+  },
+  "disease_categories": {
+    "vector_borne": [
+      "IDSR Malaria",
+      "IDSR Yellow Fever",
+      "Yellow Fever",
+      "IDSR Plague",
+      "Malaria"
+    ],
+    "water_borne": [
+      "IDSR Cholera",
+      "Typhoid Fever",
+      "Diarrhoea without Severe Dehydration",
+      "Diarrhoea with Blood (Dysentery)",
+      "Diarrhoea with Severe Dehydration"
+    ],
+    "respiratory": [
+      "ARI Treated with Antibiotics (Pneumonia)",
+      "ARI Treated without Antibiotics (Cough)",
+      "Tuberculosis",
+      "IDSR Measles",
+      "Measles",
+      "Meningitis/Severe Bacterial Infection"
+    ],
+    "vaccine_preventable": [
+      "Tetanus (not incl. 0-28 days)",
+      "Neonatal Tetanus",
+      "Acute Flaccid Paralysis (AFP)"
+    ],
+    "ntd": [
+      "Worm Infestation",
+      "Schistosomiasis",
+      "Onchocerciasis",
+      "Yaws"
+    ],
+    "other": [
+      "Lassa Fever",
+      "All Other",
+      "Skin Infection",
+      "Clinical Malnutrition",
+      "Eye Infection",
+      "Otitis Media"
+    ]
+  }
+}
