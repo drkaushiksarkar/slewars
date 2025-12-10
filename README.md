@@ -21,44 +21,38 @@ A modern climate-aware Early Warning, Alert, and Response System with machine le
 
 ---
 
-## Quick Deployment to AWS Lightsail
+## 🚀 Deployment
 
-**Fastest way to deploy to production:**
+### AWS Lightsail (Recommended)
 
-### 1. Create Lightsail Instance
+See **[LIGHTSAIL_DEPLOYMENT.md](LIGHTSAIL_DEPLOYMENT.md)** for complete deployment guide.
 
-- Go to AWS Lightsail console
-- Create Ubuntu 22.04 LTS instance ($10/month recommended)
-- Configure firewall to allow HTTP (port 80)
-
-### 2. Connect and Deploy
-
-SSH into your instance and run:
-
+**Quick Start (30 minutes):**
 ```bash
-# Clone repository
-git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git
-cd YOUR_REPO
+# 1. Create Ubuntu 22.04 Lightsail instance
+# 2. SSH into instance
+# 3. Clone repository
+git clone https://github.com/your-org/slewars.git
+cd slewars
 
-# Run automated setup (one command!)
+# 4. Run automated setup
+chmod +x lightsail-setup.sh
 ./lightsail-setup.sh
+
+# 5. Configure .env with your DHIS2 database credentials
+nano .env
+
+# 6. Restart services
+pm2 restart all
 ```
 
-**That's it!** The script will:
-- Install all dependencies (Node.js, PostgreSQL, Python)
-- Set up the database
-- Build the application
-- Configure Nginx reverse proxy
-- Start all services with PM2
-- Configure auto-restart on reboot
+**Done!** Access at `http://your-lightsail-ip`
 
-**Access your app:** `http://YOUR_LIGHTSAIL_IP`
-
-**Detailed Guide:** See [LIGHTSAIL_DEPLOYMENT.md](./LIGHTSAIL_DEPLOYMENT.md) for complete step-by-step instructions.
+For troubleshooting and technical details, see [DEPLOYMENT_LEARNINGS.md](DEPLOYMENT_LEARNINGS.md).
 
 ---
 
-## Local Development Setup
+## Local Development
 
 ### Prerequisites
 
