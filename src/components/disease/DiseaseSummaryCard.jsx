@@ -21,7 +21,7 @@ const DiseaseSummaryCard = ({ diseaseId, locationUid, startDate, endDate }) => {
         if (locationUid && locationUid !== "all") params.append("locationUid", locationUid);
 
         // Fetch time series data with filters
-        let timeSeriesUrl = `http://localhost:4000/api/diseases/${diseaseId}/timeseries`;
+        let timeSeriesUrl = `/api/diseases/${diseaseId}/timeseries`;
         if (params.toString()) {
           timeSeriesUrl += `?${params.toString()}`;
         }
@@ -37,7 +37,7 @@ const DiseaseSummaryCard = ({ diseaseId, locationUid, startDate, endDate }) => {
         setTimeSeries(timeSeriesResults);
 
         // Fetch facilities data with location filter to get deaths and cases
-        let facilitiesUrl = `http://localhost:4000/api/diseases/${diseaseId}/facilities?limit=1000`;
+        let facilitiesUrl = `/api/diseases/${diseaseId}/facilities?limit=1000`;
         if (locationUid && locationUid !== "all") {
           facilitiesUrl += `&locationUid=${locationUid}`;
         }
@@ -72,7 +72,7 @@ const DiseaseSummaryCard = ({ diseaseId, locationUid, startDate, endDate }) => {
           : new Date().toISOString();
 
         // Fetch base disease name
-        const diseasesRes = await fetch(`http://localhost:4000/api/diseases`);
+        const diseasesRes = await fetch(`/api/diseases`);
         const diseasesData = await diseasesRes.json();
         const diseaseInfo = diseasesData.success
           ? diseasesData.data.find(d => d.id === diseaseId)

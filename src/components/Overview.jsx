@@ -71,7 +71,7 @@ const Overview = () => {
   React.useEffect(() => {
     const fetchDiseases = async () => {
       try {
-        const response = await fetch("http://localhost:4000/api/diseases/categories");
+        const response = await fetch("/api/diseases/categories");
         const data = await response.json();
         if (data.success) {
           setDiseasesByCategory(data.data);
@@ -114,7 +114,7 @@ const Overview = () => {
         startDate.setDate(startDate.getDate() - days);
 
         const response = await fetch(
-          `http://localhost:4000/api/analytics/heatmap?` +
+          `/api/analytics/heatmap?` +
           `startDate=${startDate.toISOString().split('T')[0]}` +
           `&endDate=${endDate.toISOString().split('T')[0]}` +
           `${selectedDisease !== 'all' ? `&disease=${selectedDisease}` : ''}` +

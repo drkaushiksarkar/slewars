@@ -21,7 +21,7 @@ const FacilityTable = ({ filters }) => {
         setLoading(true);
         setError(null);
         const response = await axios.get(
-          "http://localhost:4000/api/locations/facilities/performance",
+          "/api/locations/facilities/performance",
           {
             params: {
               districtUid: filters.location !== "all" ? filters.location : undefined,

@@ -13,7 +13,7 @@ const SpeciesDistribution = ({ locationUid }) => {
         setLoading(true);
         setError(null);
 
-        let url = "http://localhost:4000/api/diseases/malaria/species";
+        let url = "/api/diseases/malaria/species";
         if (locationUid) {
           url += `?locationUid=${locationUid}`;
         }

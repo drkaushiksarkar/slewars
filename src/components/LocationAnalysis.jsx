@@ -6,6 +6,7 @@ import DistrictComparison from "./location/DistrictComparison";
 import ChiefdomDrillDown from "./location/ChiefdomDrillDown";
 import LocationHeatmap from "./location/LocationHeatmap";
 import axios from "axios";
+import { apiFetch } from "@/utils/api";
 
 const LocationAnalysis = () => {
   const [view, setView] = useState("districts"); // map, districts, chiefdoms
@@ -30,11 +31,11 @@ const LocationAnalysis = () => {
         setLoading(true);
         setError(null);
         const [districtsRes, diseasesRes] = await Promise.all([
-          axios.get("http://localhost:4000/api/locations?level=2"),
-          axios.get("http://localhost:4000/api/diseases/categories"),
+          apiFetch("locations?level=2"),
+          apiFetch("diseases/categories"),
         ]);
-        setDistricts(districtsRes.data.data || []);
-        setDiseasesByCategory(diseasesRes.data.data || {});
+        setDistricts(districtsRes.data || []);
+        setDiseasesByCategory(diseasesRes.data || {});
       } catch (error) {
         console.error("Error fetching filter data:", error);
         setError("Failed to load filter data. Please check your connection.");
