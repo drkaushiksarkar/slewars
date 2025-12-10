@@ -185,6 +185,11 @@ POSTGRES_PASSWORD=ewars_password_2024
 # Data Source (postgres for DHIS2 database, synthetic for demo data)
 DASHBOARD_DATA_SOURCE=postgres
 
+# Module System Configuration
+# NOTE: Backend TypeScript compiles ES modules to CommonJS
+# server/tsconfig.json has "module": "commonjs"
+# This creates server/package.json with correct module type
+
 # DHIS2 Configuration (Optional - configure if using DHIS2)
 DHIS2_BASE_URL=
 DHIS2_USERNAME=
@@ -206,18 +211,44 @@ else
 fi
 
 ###############################################################################
-# Step 11: Build Application
+# Step 11: Configure Backend Module System
 ###############################################################################
 echo ""
-echo "Step 11: Building application..."
+echo "Step 11: Configuring backend module system..."
+# Ensure server/package.json exists with CommonJS (TypeScript compiles to CommonJS)
+if [ ! -f "server/package.json" ]; then
+    echo '{"type":"commonjs"}' > server/package.json
+    print_success "Created server/package.json with CommonJS configuration"
+else
+    print_info "server/package.json already exists"
+fi
+
+# Ensure server/dist directory will have the correct package.json after build
+mkdir -p server/dist
+echo '{"type":"commonjs"}' > server/dist/package.json
+print_success "Backend module system configured for CommonJS"
+
+###############################################################################
+# Step 12: Build Application
+###############################################################################
+echo ""
+echo "Step 12: Building application..."
 npm run build:full
 print_success "Application built successfully"
 
+# Verify backend build
+if [ -f "server/dist/index.js" ]; then
+    print_success "Backend compiled successfully"
+else
+    print_error "Backend compilation failed"
+    exit 1
+fi
+
 ###############################################################################
-# Step 12: Configure Nginx
+# Step 13: Configure Nginx
 ###############################################################################
 echo ""
-echo "Step 12: Configuring Nginx reverse proxy..."
+echo "Step 13: Configuring Nginx reverse proxy..."
 PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
 
 sudo tee /etc/nginx/sites-available/ewars > /dev/null << EOF
@@ -254,26 +285,26 @@ sudo systemctl reload nginx
 print_success "Nginx configured"
 
 ###############################################################################
-# Step 13: Initialize Database
+# Step 14: Initialize Database
 ###############################################################################
 echo ""
-echo "Step 13: Initializing database..."
+echo "Step 14: Initializing database..."
 npm run db:init
 print_success "Database initialized"
 
 ###############################################################################
-# Step 14: Setup PM2 Startup
+# Step 15: Setup PM2 Startup
 ###############################################################################
 echo ""
-echo "Step 14: Configuring PM2 to start on boot..."
+echo "Step 15: Configuring PM2 to start on boot..."
 pm2 startup systemd -u $USER --hp $HOME | grep sudo | bash || true
 print_success "PM2 startup configured"
 
 ###############################################################################
-# Step 15: Start Services with PM2
+# Step 16: Start Services with PM2
 ###############################################################################
 echo ""
-echo "Step 15: Starting application services..."
+echo "Step 16: Starting application services..."
 
 # Stop any existing PM2 processes
 pm2 delete all 2>/dev/null || true
