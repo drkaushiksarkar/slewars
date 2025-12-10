@@ -1,6 +1,11 @@
-import axios from 'axios';
-import { postgresService } from './postgresService';
-import logger from './logger';
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const axios_1 = __importDefault(require("axios"));
+const postgresService_1 = require("./postgresService");
+const logger_1 = __importDefault(require("./logger"));
 class ForecastService {
     constructor() {
         this.mlServiceUrl = process.env.ML_SERVICE_URL || 'http://localhost:8000';
@@ -75,8 +80,8 @@ class ForecastService {
             const forceRetrain = params.force_retrain === true;
             // Map disease ID to forecast database name
             const mappedDisease = this.mapDiseaseIdToForecastName(params.disease);
-            logger.info(`Generating forecast for ${params.disease} (mapped: ${mappedDisease}) in ${params.location_uid} (force_retrain: ${forceRetrain})`);
-            const response = await axios.post(`${this.mlServiceUrl}/forecast`, {
+            logger_1.default.info(`Generating forecast for ${params.disease} (mapped: ${mappedDisease}) in ${params.location_uid} (force_retrain: ${forceRetrain})`);
+            const response = await axios_1.default.post(`${this.mlServiceUrl}/forecast`, {
                 disease: mappedDisease,
                 location_uid: params.location_uid,
                 horizon: params.horizon || 4,
@@ -88,8 +93,8 @@ class ForecastService {
             return response.data;
         }
         catch (error) {
-            if (axios.isAxiosError(error)) {
-                logger.error({ error: error.message, response: error.response?.data }, 'ML service error');
+            if (axios_1.default.isAxiosError(error)) {
+                logger_1.default.error({ error: error.message, response: error.response?.data }, 'ML service error');
                 throw new Error(error.response?.data?.detail || 'Forecast generation failed');
             }
             throw error;
@@ -102,8 +107,8 @@ class ForecastService {
         try {
             // Map disease ID to forecast database name
             const mappedDisease = this.mapDiseaseIdToForecastName(params.disease);
-            logger.info(`Training model for ${params.disease} (mapped: ${mappedDisease}) in ${params.location_uid}`);
-            const response = await axios.post(`${this.mlServiceUrl}/train`, {
+            logger_1.default.info(`Training model for ${params.disease} (mapped: ${mappedDisease}) in ${params.location_uid}`);
+            const response = await axios_1.default.post(`${this.mlServiceUrl}/train`, {
                 ...params,
                 disease: mappedDisease
             }, {
@@ -112,8 +117,8 @@ class ForecastService {
             return response.data;
         }
         catch (error) {
-            if (axios.isAxiosError(error)) {
-                logger.error({ error: error.message, response: error.response?.data }, 'ML service training error');
+            if (axios_1.default.isAxiosError(error)) {
+                logger_1.default.error({ error: error.message, response: error.response?.data }, 'ML service training error');
                 throw new Error(error.response?.data?.detail || 'Model training failed');
             }
             throw error;
@@ -151,11 +156,11 @@ class ForecastService {
             const params = forecastDate
                 ? [mappedDisease, locationUid, forecastDate]
                 : [mappedDisease, locationUid];
-            const result = await postgresService.query(query, params);
+            const result = await postgresService_1.postgresService.query(query, params);
             return result.rows;
         }
         catch (error) {
-            logger.error({ error }, 'Error fetching stored forecasts');
+            logger_1.default.error({ error }, 'Error fetching stored forecasts');
             throw error;
         }
     }
@@ -192,7 +197,7 @@ class ForecastService {
           )
         ORDER BY target_date, forecast_date DESC
       `;
-            const result = await postgresService.query(query, [mappedDisease, locationUid]);
+            const result = await postgresService_1.postgresService.query(query, [mappedDisease, locationUid]);
             if (result.rows.length === 0) {
                 return null;
             }
@@ -215,7 +220,7 @@ class ForecastService {
                 }
             }
             catch (err) {
-                logger.warn('Could not fetch data availability info');
+                logger_1.default.warn('Could not fetch data availability info');
             }
             return {
                 disease,
@@ -236,7 +241,7 @@ class ForecastService {
             };
         }
         catch (error) {
-            logger.error({ error }, 'Error fetching latest forecast');
+            logger_1.default.error({ error }, 'Error fetching latest forecast');
             throw error;
         }
     }
@@ -248,7 +253,7 @@ class ForecastService {
         try {
             // For unified model, get global performance
             // The model doesn't have per-disease-location metrics anymore
-            const response = await axios.get(`${this.mlServiceUrl}/performance`, {
+            const response = await axios_1.default.get(`${this.mlServiceUrl}/performance`, {
                 timeout: 5000
             });
             if (response.data.success) {
@@ -274,7 +279,7 @@ class ForecastService {
             return null;
         }
         catch (error) {
-            logger.warn('Could not fetch unified model performance, trying database fallback');
+            logger_1.default.warn('Could not fetch unified model performance, trying database fallback');
             // Fallback to database (for old stored metrics)
             try {
                 const mappedDisease = this.mapDiseaseIdToForecastName(disease);
@@ -300,14 +305,14 @@ class ForecastService {
           ORDER BY evaluation_date DESC
           LIMIT 1
         `;
-                const result = await postgresService.query(query, [mappedDisease, locationUid]);
+                const result = await postgresService_1.postgresService.query(query, [mappedDisease, locationUid]);
                 if (result.rows.length === 0) {
                     return null;
                 }
                 return result.rows[0];
             }
             catch (dbError) {
-                logger.error({ error: dbError }, 'Error fetching model performance from database');
+                logger_1.default.error({ error: dbError }, 'Error fetching model performance from database');
                 return null;
             }
         }
@@ -334,11 +339,11 @@ class ForecastService {
         ORDER BY ou.name, f.disease
       `;
             const params = mappedDisease ? [mappedDisease] : [];
-            const result = await postgresService.query(query, params);
+            const result = await postgresService_1.postgresService.query(query, params);
             return result.rows;
         }
         catch (error) {
-            logger.error({ error }, 'Error fetching districts with forecasts');
+            logger_1.default.error({ error }, 'Error fetching districts with forecasts');
             throw error;
         }
     }
@@ -356,10 +361,10 @@ class ForecastService {
         WHERE hierarchylevel = 2
         ORDER BY name
       `;
-            const districts = await postgresService.query(districtsQuery);
-            logger.info(`Generating forecasts for ${disease} (mapped: ${mappedDisease}) across ${districts.rows.length} districts`);
+            const districts = await postgresService_1.postgresService.query(districtsQuery);
+            logger_1.default.info(`Generating forecasts for ${disease} (mapped: ${mappedDisease}) across ${districts.rows.length} districts`);
             // Call ML service batch forecast
-            const response = await axios.post(`${this.mlServiceUrl}/forecast/batch`, {
+            const response = await axios_1.default.post(`${this.mlServiceUrl}/forecast/batch`, {
                 diseases: [mappedDisease],
                 location_uids: districts.rows.map((d) => d.uid),
                 horizon
@@ -369,8 +374,8 @@ class ForecastService {
             return response.data;
         }
         catch (error) {
-            if (axios.isAxiosError(error)) {
-                logger.error({ error: error.message }, 'Batch forecast error');
+            if (axios_1.default.isAxiosError(error)) {
+                logger_1.default.error({ error: error.message }, 'Batch forecast error');
                 throw new Error(error.response?.data?.detail || 'Batch forecast failed');
             }
             throw error;
@@ -381,13 +386,13 @@ class ForecastService {
      */
     async checkMLServiceHealth() {
         try {
-            const response = await axios.get(`${this.mlServiceUrl}/health`, {
+            const response = await axios_1.default.get(`${this.mlServiceUrl}/health`, {
                 timeout: 5000
             });
             return response.data.status === 'healthy';
         }
         catch (error) {
-            logger.warn('ML service health check failed');
+            logger_1.default.warn('ML service health check failed');
             return false;
         }
     }
@@ -429,7 +434,7 @@ class ForecastService {
         WHERE ou.hierarchylevel = 2
         ORDER BY max_risk_score DESC NULLS LAST, ou.name
       `;
-            const result = await postgresService.query(query, [mappedDisease]);
+            const result = await postgresService_1.postgresService.query(query, [mappedDisease]);
             // Group by location
             const locationMap = new Map();
             result.rows.forEach((row) => {
@@ -455,7 +460,7 @@ class ForecastService {
             return Array.from(locationMap.values());
         }
         catch (error) {
-            logger.error({ error }, 'Error getting risk analysis');
+            logger_1.default.error({ error }, 'Error getting risk analysis');
             throw error;
         }
     }
@@ -466,8 +471,8 @@ class ForecastService {
         try {
             // Map disease ID to forecast database name
             const mappedDisease = this.mapDiseaseIdToForecastName(disease);
-            logger.info(`Detecting anomalies for ${disease} (mapped: ${mappedDisease}) at level ${level}${locationUid ? ` for location ${locationUid}` : ''}`);
-            const response = await axios.get(`${this.mlServiceUrl}/anomaly-detection/${encodeURIComponent(mappedDisease)}`, {
+            logger_1.default.info(`Detecting anomalies for ${disease} (mapped: ${mappedDisease}) at level ${level}${locationUid ? ` for location ${locationUid}` : ''}`);
+            const response = await axios_1.default.get(`${this.mlServiceUrl}/anomaly-detection/${encodeURIComponent(mappedDisease)}`, {
                 params: {
                     level,
                     start_date: startDate,
@@ -479,12 +484,12 @@ class ForecastService {
             return response.data.data;
         }
         catch (error) {
-            if (axios.isAxiosError(error)) {
-                logger.error({ error: error.message, response: error.response?.data }, 'Anomaly detection error');
+            if (axios_1.default.isAxiosError(error)) {
+                logger_1.default.error({ error: error.message, response: error.response?.data }, 'Anomaly detection error');
                 throw new Error(error.response?.data?.detail || 'Anomaly detection failed');
             }
             throw error;
         }
     }
 }
-export default new ForecastService();
+exports.default = new ForecastService();

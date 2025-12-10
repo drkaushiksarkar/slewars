@@ -1,15 +1,21 @@
-import { Router } from "express";
-import { diseaseService } from "../services/diseaseService.js";
-import logger from "../services/logger.js";
-export const diseaseRouter = Router();
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.diseaseRouter = void 0;
+const express_1 = require("express");
+const diseaseService_js_1 = require("../services/diseaseService.js");
+const logger_js_1 = __importDefault(require("../services/logger.js"));
+exports.diseaseRouter = (0, express_1.Router)();
 /**
  * GET /api/diseases
  * List all diseases with available data
  */
-diseaseRouter.get("/", async (_req, res, next) => {
+exports.diseaseRouter.get("/", async (_req, res, next) => {
     try {
-        logger.debug("GET /api/diseases");
-        const diseases = await diseaseService.getAllDiseases();
+        logger_js_1.default.debug("GET /api/diseases");
+        const diseases = await diseaseService_js_1.diseaseService.getAllDiseases();
         res.json({
             success: true,
             data: diseases,
@@ -24,10 +30,10 @@ diseaseRouter.get("/", async (_req, res, next) => {
  * GET /api/diseases/categories
  * Get diseases grouped by category
  */
-diseaseRouter.get("/categories", async (_req, res, next) => {
+exports.diseaseRouter.get("/categories", async (_req, res, next) => {
     try {
-        logger.debug("GET /api/diseases/categories");
-        const diseasesByCategory = await diseaseService.getDiseasesByCategory();
+        logger_js_1.default.debug("GET /api/diseases/categories");
+        const diseasesByCategory = await diseaseService_js_1.diseaseService.getDiseasesByCategory();
         res.json({
             success: true,
             data: diseasesByCategory,
@@ -41,11 +47,11 @@ diseaseRouter.get("/categories", async (_req, res, next) => {
  * GET /api/diseases/:diseaseId/summary
  * Get disease summary statistics
  */
-diseaseRouter.get("/:diseaseId/summary", async (req, res, next) => {
+exports.diseaseRouter.get("/:diseaseId/summary", async (req, res, next) => {
     try {
         const { diseaseId } = req.params;
-        logger.debug({ diseaseId }, "GET /api/diseases/:diseaseId/summary");
-        const summary = await diseaseService.getDiseaseSummary(diseaseId);
+        logger_js_1.default.debug({ diseaseId }, "GET /api/diseases/:diseaseId/summary");
+        const summary = await diseaseService_js_1.diseaseService.getDiseaseSummary(diseaseId);
         if (!summary) {
             return res.status(404).json({
                 success: false,
@@ -66,12 +72,12 @@ diseaseRouter.get("/:diseaseId/summary", async (req, res, next) => {
  * Get time series data for a disease
  * Query params: startDate, endDate, locationUid
  */
-diseaseRouter.get("/:diseaseId/timeseries", async (req, res, next) => {
+exports.diseaseRouter.get("/:diseaseId/timeseries", async (req, res, next) => {
     try {
         const { diseaseId } = req.params;
         const { startDate, endDate, locationUid } = req.query;
-        logger.debug({ diseaseId, startDate, endDate, locationUid }, "GET /api/diseases/:diseaseId/timeseries");
-        const timeSeries = await diseaseService.getDiseaseTimeSeries(diseaseId, startDate, endDate, locationUid);
+        logger_js_1.default.debug({ diseaseId, startDate, endDate, locationUid }, "GET /api/diseases/:diseaseId/timeseries");
+        const timeSeries = await diseaseService_js_1.diseaseService.getDiseaseTimeSeries(diseaseId, startDate, endDate, locationUid);
         res.json({
             success: true,
             data: timeSeries,
@@ -87,12 +93,12 @@ diseaseRouter.get("/:diseaseId/timeseries", async (req, res, next) => {
  * Get disease cases by location
  * Query params: hierarchyLevel (default: 2 for districts)
  */
-diseaseRouter.get("/:diseaseId/locations", async (req, res, next) => {
+exports.diseaseRouter.get("/:diseaseId/locations", async (req, res, next) => {
     try {
         const { diseaseId } = req.params;
         const hierarchyLevel = parseInt(req.query.hierarchyLevel) || 2;
-        logger.debug({ diseaseId, hierarchyLevel }, "GET /api/diseases/:diseaseId/locations");
-        const locations = await diseaseService.getDiseaseCasesByLocation(diseaseId, hierarchyLevel);
+        logger_js_1.default.debug({ diseaseId, hierarchyLevel }, "GET /api/diseases/:diseaseId/locations");
+        const locations = await diseaseService_js_1.diseaseService.getDiseaseCasesByLocation(diseaseId, hierarchyLevel);
         res.json({
             success: true,
             data: locations,
@@ -108,13 +114,13 @@ diseaseRouter.get("/:diseaseId/locations", async (req, res, next) => {
  * Get Disease Breakdown by Category for all diseases
  * Query params: locationUid, days, diseaseId
  */
-diseaseRouter.get("/breakdown/all", async (req, res, next) => {
+exports.diseaseRouter.get("/breakdown/all", async (req, res, next) => {
     try {
         const locationUid = req.query.locationUid;
         const days = req.query.days ? parseInt(req.query.days) : undefined;
         const diseaseId = req.query.diseaseId;
-        logger.debug({ locationUid, days, diseaseId }, "GET /api/diseases/breakdown/all");
-        const breakdown = await diseaseService.getDiseaseBreakdown(locationUid, days, diseaseId);
+        logger_js_1.default.debug({ locationUid, days, diseaseId }, "GET /api/diseases/breakdown/all");
+        const breakdown = await diseaseService_js_1.diseaseService.getDiseaseBreakdown(locationUid, days, diseaseId);
         res.json({
             success: true,
             data: breakdown,
@@ -130,13 +136,13 @@ diseaseRouter.get("/breakdown/all", async (req, res, next) => {
  * Get facility performance data for a disease
  * Query params: locationUid, limit
  */
-diseaseRouter.get("/:diseaseId/facilities", async (req, res, next) => {
+exports.diseaseRouter.get("/:diseaseId/facilities", async (req, res, next) => {
     try {
         const { diseaseId } = req.params;
         const locationUid = req.query.locationUid;
         const limit = req.query.limit ? parseInt(req.query.limit) : 50;
-        logger.debug({ diseaseId, locationUid, limit }, "GET /api/diseases/:diseaseId/facilities");
-        const facilities = await diseaseService.getFacilityPerformance(diseaseId, locationUid, limit);
+        logger_js_1.default.debug({ diseaseId, locationUid, limit }, "GET /api/diseases/:diseaseId/facilities");
+        const facilities = await diseaseService_js_1.diseaseService.getFacilityPerformance(diseaseId, locationUid, limit);
         res.json({
             success: true,
             data: facilities,

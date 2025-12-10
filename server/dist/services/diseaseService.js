@@ -1,7 +1,13 @@
-import { postgresService } from "./postgresService.js";
-import logger from "./logger.js";
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.diseaseService = exports.DISEASE_DATA_ELEMENTS = exports.DISEASE_CATEGORIES = void 0;
+const postgresService_js_1 = require("./postgresService.js");
+const logger_js_1 = __importDefault(require("./logger.js"));
 // Disease categories
-export const DISEASE_CATEGORIES = {
+exports.DISEASE_CATEGORIES = {
     VECTOR_BORNE: "Vector-Borne",
     WATER_BORNE: "Water-Borne & Diarrheal",
     AIR_BORNE: "Air-Borne & Respiratory",
@@ -11,166 +17,166 @@ export const DISEASE_CATEGORIES = {
     VIRAL_HEMORRHAGIC: "Viral Hemorrhagic",
 };
 // Disease UIDs from DHIS2 Sierra Leone
-export const DISEASE_DATA_ELEMENTS = {
+exports.DISEASE_DATA_ELEMENTS = {
     // Vector-Borne (4 diseases)
     malariaIDSR: {
         name: "IDSR Malaria",
         cases: "vq2qO3eTrNi",
         deaths: "r6nrJANOqMw",
-        category: DISEASE_CATEGORIES.VECTOR_BORNE,
+        category: exports.DISEASE_CATEGORIES.VECTOR_BORNE,
     },
     yellowFeverIDSR: {
         name: "IDSR Yellow Fever",
         cases: "noIzB569hTM",
         deaths: "USBq0VHSkZq",
-        category: DISEASE_CATEGORIES.VECTOR_BORNE,
+        category: exports.DISEASE_CATEGORIES.VECTOR_BORNE,
     },
     yellowFever: {
         name: "Yellow Fever",
         cases: "XWU1Huh0Luy",
         deaths: "USBq0VHSkZq",
-        category: DISEASE_CATEGORIES.VECTOR_BORNE,
+        category: exports.DISEASE_CATEGORIES.VECTOR_BORNE,
     },
     plague: {
         name: "IDSR Plague",
         cases: "HS9zqaBdOQ4",
         deaths: "lXolhoWewYH",
-        category: DISEASE_CATEGORIES.VECTOR_BORNE,
+        category: exports.DISEASE_CATEGORIES.VECTOR_BORNE,
     },
     // Water-Borne & Diarrheal (5 diseases)
     diarrhoeaNoDehydration: {
         name: "Diarrhoea without Severe Dehydration",
         cases: "U3jd8zVFKxY",
-        category: DISEASE_CATEGORIES.WATER_BORNE,
+        category: exports.DISEASE_CATEGORIES.WATER_BORNE,
     },
     diarrhoeaDysentery: {
         name: "Diarrhoea with Blood (Dysentery)",
         cases: "nymNRxmnj4z",
         deaths: "Ix2HsbDMLea",
-        category: DISEASE_CATEGORIES.WATER_BORNE,
+        category: exports.DISEASE_CATEGORIES.WATER_BORNE,
     },
     diarrhoeaSevere: {
         name: "Diarrhoea with Severe Dehydration",
         cases: "UfZcabJUVcZ",
-        category: DISEASE_CATEGORIES.WATER_BORNE,
+        category: exports.DISEASE_CATEGORIES.WATER_BORNE,
     },
     typhoid: {
         name: "Typhoid Fever",
         cases: "Cj5rTc9nEvl",
         deaths: "Yy9NtNfwYZJ",
-        category: DISEASE_CATEGORIES.WATER_BORNE,
+        category: exports.DISEASE_CATEGORIES.WATER_BORNE,
     },
     cholera: {
         name: "IDSR Cholera",
         cases: "UsSUX0cpKsH",
         deaths: "eY5ehpbEsB7",
-        category: DISEASE_CATEGORIES.WATER_BORNE,
+        category: exports.DISEASE_CATEGORIES.WATER_BORNE,
     },
     // Air-Borne & Respiratory (6 diseases)
     ariPneumonia: {
         name: "ARI Treated with Antibiotics (Pneumonia)",
         cases: "iKGjnOOaPlE",
-        category: DISEASE_CATEGORIES.AIR_BORNE,
+        category: exports.DISEASE_CATEGORIES.AIR_BORNE,
     },
     ariCough: {
         name: "ARI Treated without Antibiotics (Cough)",
         cases: "Cm4XUw6VAxv",
-        category: DISEASE_CATEGORIES.AIR_BORNE,
+        category: exports.DISEASE_CATEGORIES.AIR_BORNE,
     },
     measlesIDSR: {
         name: "IDSR Measles",
         cases: "YazgqXbizv1",
         deaths: "f7n9E0hX8qk",
-        category: DISEASE_CATEGORIES.AIR_BORNE,
+        category: exports.DISEASE_CATEGORIES.AIR_BORNE,
     },
     measles: {
         name: "Measles",
         cases: "GCvqIM3IzN0",
         deaths: "f7n9E0hX8qk",
-        category: DISEASE_CATEGORIES.AIR_BORNE,
+        category: exports.DISEASE_CATEGORIES.AIR_BORNE,
     },
     tuberculosis: {
         name: "Tuberculosis",
         cases: "z9dYcQ2DlBG",
-        category: DISEASE_CATEGORIES.AIR_BORNE,
+        category: exports.DISEASE_CATEGORIES.AIR_BORNE,
     },
     meningitis: {
         name: "Meningitis/Severe Bacterial Infection",
         cases: "JFFUt8yR2iW",
         deaths: "MSZuQ1mTsia",
-        category: DISEASE_CATEGORIES.AIR_BORNE,
+        category: exports.DISEASE_CATEGORIES.AIR_BORNE,
     },
     // Neglected Tropical Diseases (4 diseases)
     wormInfestation: {
         name: "Worm Infestation",
         cases: "Usk9Asj5DED",
-        category: DISEASE_CATEGORIES.NEGLECTED_TROPICAL,
+        category: exports.DISEASE_CATEGORIES.NEGLECTED_TROPICAL,
     },
     schistosomiasis: {
         name: "Schistosomiasis",
         cases: "Y7Oq71I3ASg",
-        category: DISEASE_CATEGORIES.NEGLECTED_TROPICAL,
+        category: exports.DISEASE_CATEGORIES.NEGLECTED_TROPICAL,
     },
     onchocerciasis: {
         name: "Onchocerciasis",
         cases: "DrEOxW8mbbh",
-        category: DISEASE_CATEGORIES.NEGLECTED_TROPICAL,
+        category: exports.DISEASE_CATEGORIES.NEGLECTED_TROPICAL,
     },
     yaws: {
         name: "Yaws",
         cases: "FF3Ev33BuCh",
-        category: DISEASE_CATEGORIES.NEGLECTED_TROPICAL,
+        category: exports.DISEASE_CATEGORIES.NEGLECTED_TROPICAL,
     },
     // Vaccine-Preventable (3 diseases - measles counted in Air-Borne)
     tetanus: {
         name: "Tetanus (not incl. 0-28 days)",
         cases: "Uoj2wmnr5Dw",
         deaths: "hM4ya5T2AqX",
-        category: DISEASE_CATEGORIES.VACCINE_PREVENTABLE,
+        category: exports.DISEASE_CATEGORIES.VACCINE_PREVENTABLE,
     },
     neonatalTetanus: {
         name: "Neonatal Tetanus",
         cases: "wcwbN1jR0ar",
         deaths: "Vp12ncSU1Av",
-        category: DISEASE_CATEGORIES.VACCINE_PREVENTABLE,
+        category: exports.DISEASE_CATEGORIES.VACCINE_PREVENTABLE,
     },
     afp: {
         name: "Acute Flaccid Paralysis (AFP)",
         cases: "FQ2o8UBlcrS",
         deaths: "FTRrcoaog83",
-        category: DISEASE_CATEGORIES.VACCINE_PREVENTABLE,
+        category: exports.DISEASE_CATEGORIES.VACCINE_PREVENTABLE,
     },
     // Other Infections & NCDs (5 diseases)
     allOther: {
         name: "All Other",
         cases: "A2VfEfPflHV",
-        category: DISEASE_CATEGORIES.OTHER_INFECTIONS,
+        category: exports.DISEASE_CATEGORIES.OTHER_INFECTIONS,
     },
     skinInfection: {
         name: "Skin Infection",
         cases: "Y4cFzB4A9ZQ",
-        category: DISEASE_CATEGORIES.OTHER_INFECTIONS,
+        category: exports.DISEASE_CATEGORIES.OTHER_INFECTIONS,
     },
     malnutrition: {
         name: "Clinical Malnutrition",
         cases: "TBbCcJfZ91x",
-        category: DISEASE_CATEGORIES.OTHER_INFECTIONS,
+        category: exports.DISEASE_CATEGORIES.OTHER_INFECTIONS,
     },
     eyeInfection: {
         name: "Eye Infection",
         cases: "BQI18TPLR7W",
-        category: DISEASE_CATEGORIES.OTHER_INFECTIONS,
+        category: exports.DISEASE_CATEGORIES.OTHER_INFECTIONS,
     },
     otitisMedia: {
         name: "Otitis Media",
         cases: "DWLCM68Q7Zl",
-        category: DISEASE_CATEGORIES.OTHER_INFECTIONS,
+        category: exports.DISEASE_CATEGORIES.OTHER_INFECTIONS,
     },
     // Viral Hemorrhagic (1 disease)
     lassaFever: {
         name: "Lassa Fever",
         cases: "NCteyX2xpMf",
-        category: DISEASE_CATEGORIES.VIRAL_HEMORRHAGIC,
+        category: exports.DISEASE_CATEGORIES.VIRAL_HEMORRHAGIC,
     },
 };
 class DiseaseService {
@@ -179,8 +185,8 @@ class DiseaseService {
      */
     async getAllDiseases() {
         try {
-            logger.debug("Fetching all diseases");
-            const diseases = Object.entries(DISEASE_DATA_ELEMENTS).map(([id, config]) => ({
+            logger_js_1.default.debug("Fetching all diseases");
+            const diseases = Object.entries(exports.DISEASE_DATA_ELEMENTS).map(([id, config]) => ({
                 id,
                 name: config.name,
                 uid: config.cases,
@@ -189,7 +195,7 @@ class DiseaseService {
             return diseases;
         }
         catch (error) {
-            logger.error({ error }, "Error fetching all diseases");
+            logger_js_1.default.error({ error }, "Error fetching all diseases");
             throw error;
         }
     }
@@ -220,9 +226,9 @@ class DiseaseService {
      */
     async getDiseasesByCategory() {
         try {
-            logger.debug("Fetching diseases grouped by category with disease groups");
+            logger_js_1.default.debug("Fetching diseases grouped by category with disease groups");
             const diseasesByCategory = {};
-            Object.entries(DISEASE_DATA_ELEMENTS).forEach(([id, config]) => {
+            Object.entries(exports.DISEASE_DATA_ELEMENTS).forEach(([id, config]) => {
                 if (!diseasesByCategory[config.category]) {
                     diseasesByCategory[config.category] = [];
                 }
@@ -237,7 +243,7 @@ class DiseaseService {
             return diseasesByCategory;
         }
         catch (error) {
-            logger.error({ error }, "Error fetching diseases by category");
+            logger_js_1.default.error({ error }, "Error fetching diseases by category");
             throw error;
         }
     }
@@ -246,10 +252,10 @@ class DiseaseService {
      */
     async getDiseaseSummary(diseaseId) {
         try {
-            logger.debug({ diseaseId }, "Fetching disease summary");
-            const diseaseConfig = DISEASE_DATA_ELEMENTS[diseaseId];
+            logger_js_1.default.debug({ diseaseId }, "Fetching disease summary");
+            const diseaseConfig = exports.DISEASE_DATA_ELEMENTS[diseaseId];
             if (!diseaseConfig) {
-                logger.warn({ diseaseId }, "Disease not found");
+                logger_js_1.default.warn({ diseaseId }, "Disease not found");
                 return null;
             }
             // Get data element IDs
@@ -277,7 +283,7 @@ class DiseaseService {
           AND p.startdate <= NOW()
         GROUP BY de.uid, de.name
       `;
-            const result = await postgresService.query(query, [dataElementUIDs]);
+            const result = await postgresService_js_1.postgresService.query(query, [dataElementUIDs]);
             if (result.rows.length === 0) {
                 return null;
             }
@@ -301,7 +307,7 @@ class DiseaseService {
             };
         }
         catch (error) {
-            logger.error({ error, diseaseId }, "Error fetching disease summary");
+            logger_js_1.default.error({ error, diseaseId }, "Error fetching disease summary");
             throw error;
         }
     }
@@ -310,10 +316,10 @@ class DiseaseService {
      */
     async getDiseaseTimeSeries(diseaseId, startDate, endDate, locationUid) {
         try {
-            logger.debug({ diseaseId, startDate, endDate, locationUid }, "Fetching disease time series");
-            const diseaseConfig = DISEASE_DATA_ELEMENTS[diseaseId];
+            logger_js_1.default.debug({ diseaseId, startDate, endDate, locationUid }, "Fetching disease time series");
+            const diseaseConfig = exports.DISEASE_DATA_ELEMENTS[diseaseId];
             if (!diseaseConfig) {
-                logger.warn({ diseaseId }, "Disease not found");
+                logger_js_1.default.warn({ diseaseId }, "Disease not found");
                 return [];
             }
             let query = `
@@ -358,7 +364,7 @@ class DiseaseService {
         GROUP BY p.periodid, p.startdate, p.enddate
         ORDER BY p.startdate ASC
       `;
-            const result = await postgresService.query(query, params);
+            const result = await postgresService_js_1.postgresService.query(query, params);
             return result.rows.map((row) => ({
                 disease: diseaseConfig.name,
                 date: row.startdate,
@@ -369,7 +375,7 @@ class DiseaseService {
             }));
         }
         catch (error) {
-            logger.error({ error, diseaseId }, "Error fetching disease time series");
+            logger_js_1.default.error({ error, diseaseId }, "Error fetching disease time series");
             throw error;
         }
     }
@@ -379,15 +385,15 @@ class DiseaseService {
      */
     async getDiseaseBreakdown(locationUid, days, diseaseId) {
         try {
-            logger.debug({ locationUid, days, diseaseId }, "Fetching Disease Breakdown by Category");
+            logger_js_1.default.debug({ locationUid, days, diseaseId }, "Fetching Disease Breakdown by Category");
             // Build disease UIDs array based on filter
             let allCaseUIDs;
             if (diseaseId && diseaseId !== 'all') {
-                const diseaseConfig = DISEASE_DATA_ELEMENTS[diseaseId];
+                const diseaseConfig = exports.DISEASE_DATA_ELEMENTS[diseaseId];
                 allCaseUIDs = diseaseConfig ? [diseaseConfig.cases] : [];
             }
             else {
-                allCaseUIDs = Object.values(DISEASE_DATA_ELEMENTS).map((d) => d.cases);
+                allCaseUIDs = Object.values(exports.DISEASE_DATA_ELEMENTS).map((d) => d.cases);
             }
             if (allCaseUIDs.length === 0) {
                 return [];
@@ -431,7 +437,7 @@ class DiseaseService {
         GROUP BY de.uid, de.name
         ORDER BY total_cases DESC
       `;
-            const result = await postgresService.query(query, params);
+            const result = await postgresService_js_1.postgresService.query(query, params);
             return result.rows.map((row) => ({
                 disease: row.disease,
                 totalCases: parseInt(row.total_cases) || 0,
@@ -441,7 +447,7 @@ class DiseaseService {
             }));
         }
         catch (error) {
-            logger.error({ error }, "Error fetching Disease Breakdown by Category");
+            logger_js_1.default.error({ error }, "Error fetching Disease Breakdown by Category");
             throw error;
         }
     }
@@ -451,10 +457,10 @@ class DiseaseService {
     async getDiseaseCasesByLocation(diseaseId, hierarchyLevel = 2 // 2 = districts
     ) {
         try {
-            logger.debug({ diseaseId, hierarchyLevel }, "Fetching disease cases by location");
-            const diseaseConfig = DISEASE_DATA_ELEMENTS[diseaseId];
+            logger_js_1.default.debug({ diseaseId, hierarchyLevel }, "Fetching disease cases by location");
+            const diseaseConfig = exports.DISEASE_DATA_ELEMENTS[diseaseId];
             if (!diseaseConfig) {
-                logger.warn({ diseaseId }, "Disease not found");
+                logger_js_1.default.warn({ diseaseId }, "Disease not found");
                 return [];
             }
             const query = `
@@ -475,7 +481,7 @@ class DiseaseService {
         GROUP BY ou.organisationunitid, ou.uid, ou.name, ou.hierarchylevel, ou.geometry
         ORDER BY total_cases DESC
       `;
-            const result = await postgresService.query(query, [diseaseConfig.cases, hierarchyLevel]);
+            const result = await postgresService_js_1.postgresService.query(query, [diseaseConfig.cases, hierarchyLevel]);
             return result.rows.map((row) => ({
                 uid: row.uid,
                 locationName: row.location_name,
@@ -486,7 +492,7 @@ class DiseaseService {
             }));
         }
         catch (error) {
-            logger.error({ error, diseaseId }, "Error fetching disease cases by location");
+            logger_js_1.default.error({ error, diseaseId }, "Error fetching disease cases by location");
             throw error;
         }
     }
@@ -495,10 +501,10 @@ class DiseaseService {
      */
     async getFacilityPerformance(diseaseId, locationUid, limit = 50) {
         try {
-            logger.debug({ diseaseId, locationUid, limit }, "Fetching facility performance");
-            const diseaseConfig = DISEASE_DATA_ELEMENTS[diseaseId];
+            logger_js_1.default.debug({ diseaseId, locationUid, limit }, "Fetching facility performance");
+            const diseaseConfig = exports.DISEASE_DATA_ELEMENTS[diseaseId];
             if (!diseaseConfig) {
-                logger.warn({ diseaseId }, "Disease not found");
+                logger_js_1.default.warn({ diseaseId }, "Disease not found");
                 return [];
             }
             // Build UIDs array for cases and deaths
@@ -554,7 +560,7 @@ class DiseaseService {
             params.push(diseaseConfig.cases);
             params.push(deathsUid || diseaseConfig.cases); // Use cases UID if deaths not available
             params.push(limit);
-            const result = await postgresService.query(query, params);
+            const result = await postgresService_js_1.postgresService.query(query, params);
             return result.rows.map((row) => {
                 const cases = parseInt(row.cases) || 0;
                 const deaths = parseInt(row.deaths) || 0;
@@ -583,9 +589,9 @@ class DiseaseService {
             });
         }
         catch (error) {
-            logger.error({ error, diseaseId }, "Error fetching facility performance");
+            logger_js_1.default.error({ error, diseaseId }, "Error fetching facility performance");
             throw error;
         }
     }
 }
-export const diseaseService = new DiseaseService();
+exports.diseaseService = new DiseaseService();

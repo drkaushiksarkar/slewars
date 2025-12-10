@@ -1,5 +1,10 @@
-import { postgresService } from './postgresService';
-import logger from './logger';
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const postgresService_1 = require("./postgresService");
+const logger_1 = __importDefault(require("./logger"));
 class ClimateService {
     constructor() {
         this.era5Config = {
@@ -14,14 +19,14 @@ class ClimateService {
      */
     async getClimateData(locationUid, startDate, endDate) {
         try {
-            logger.info(`Fetching climate data for ${locationUid} from ${startDate} to ${endDate}`);
+            logger_1.default.info(`Fetching climate data for ${locationUid} from ${startDate} to ${endDate}`);
             // First, check if we have cached data
             const cachedData = await this.getCachedData(locationUid, startDate, endDate);
             // Calculate missing dates
             const missingDates = this.findMissingDates(cachedData, startDate, endDate);
             // If we have missing dates and ERA5 is configured, fetch from ERA5
             if (missingDates.length > 0 && this.era5Config.apiKey) {
-                logger.info(`Found ${missingDates.length} missing dates, fetching from ERA5...`);
+                logger_1.default.info(`Found ${missingDates.length} missing dates, fetching from ERA5...`);
                 const era5Data = await this.fetchFromERA5(locationUid, missingDates);
                 // Store the fetched data in cache
                 if (era5Data.length > 0) {
@@ -30,7 +35,7 @@ class ClimateService {
                 }
             }
             else if (missingDates.length > 0) {
-                logger.warn(`Missing ${missingDates.length} dates but ERA5 API key not configured. Using synthetic data.`);
+                logger_1.default.warn(`Missing ${missingDates.length} dates but ERA5 API key not configured. Using synthetic data.`);
                 // Generate synthetic data for missing dates (for development/testing)
                 const syntheticData = await this.generateSyntheticData(locationUid, missingDates);
                 await this.storeCachedData(syntheticData);
@@ -40,7 +45,7 @@ class ClimateService {
             return cachedData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         }
         catch (error) {
-            logger.error({ error }, 'Error in getClimateData');
+            logger_1.default.error({ error }, 'Error in getClimateData');
             throw error;
         }
     }
@@ -66,12 +71,12 @@ class ClimateService {
           AND date <= $3::date
         ORDER BY date
       `;
-            const result = await postgresService.query(query, [locationUid, startDate, endDate]);
-            logger.info(`Found ${result.rows.length} cached climate records`);
+            const result = await postgresService_1.postgresService.query(query, [locationUid, startDate, endDate]);
+            logger_1.default.info(`Found ${result.rows.length} cached climate records`);
             return result.rows;
         }
         catch (error) {
-            logger.error({ error }, 'Error fetching cached climate data');
+            logger_1.default.error({ error }, 'Error fetching cached climate data');
             return [];
         }
     }
@@ -98,11 +103,11 @@ class ClimateService {
      */
     async fetchFromERA5(locationUid, dates) {
         try {
-            logger.info(`Fetching ${dates.length} dates from ERA5 API...`);
+            logger_1.default.info(`Fetching ${dates.length} dates from ERA5 API...`);
             // Get location coordinates from DHIS2
             const coords = await this.getLocationCoordinates(locationUid);
             if (!coords) {
-                logger.warn(`No coordinates found for location ${locationUid}`);
+                logger_1.default.warn(`No coordinates found for location ${locationUid}`);
                 return [];
             }
             // In a real implementation, this would:
@@ -112,11 +117,11 @@ class ClimateService {
             // 4. Parse NetCDF data
             // 5. Extract values for specific location
             // For now, we'll use a mock/placeholder
-            logger.warn('ERA5 API integration not fully implemented, using synthetic data');
+            logger_1.default.warn('ERA5 API integration not fully implemented, using synthetic data');
             return this.generateSyntheticData(locationUid, dates);
         }
         catch (error) {
-            logger.error({ error }, 'Error fetching from ERA5');
+            logger_1.default.error({ error }, 'Error fetching from ERA5');
             return [];
         }
     }
@@ -133,7 +138,7 @@ class ClimateService {
         WHERE uid = $1
           AND geometry IS NOT NULL
       `;
-            const result = await postgresService.query(query, [locationUid]);
+            const result = await postgresService_1.postgresService.query(query, [locationUid]);
             if (result.rows.length > 0) {
                 return {
                     lat: parseFloat(result.rows[0].lat),
@@ -143,7 +148,7 @@ class ClimateService {
             return null;
         }
         catch (error) {
-            logger.error({ error }, 'Error fetching location coordinates');
+            logger_1.default.error({ error }, 'Error fetching location coordinates');
             return null;
         }
     }
@@ -155,7 +160,7 @@ class ClimateService {
      * - Temperature: 24-32°C year-round, relatively stable
      */
     async generateSyntheticData(locationUid, dates) {
-        logger.info(`Generating synthetic climate data for ${dates.length} dates`);
+        logger_1.default.info(`Generating synthetic climate data for ${dates.length} dates`);
         return dates.map(dateStr => {
             const date = new Date(dateStr);
             const month = date.getMonth() + 1; // 1-12
@@ -199,7 +204,7 @@ class ClimateService {
         if (data.length === 0)
             return;
         try {
-            logger.info(`Storing ${data.length} climate records in cache`);
+            logger_1.default.info(`Storing ${data.length} climate records in cache`);
             // Build bulk insert query with ON CONFLICT update
             const values = data.map((d, index) => {
                 const offset = index * 9;
@@ -232,11 +237,11 @@ class ClimateService {
           wind_speed = EXCLUDED.wind_speed,
           updated_at = NOW()
       `;
-            await postgresService.query(query, params);
-            logger.info(`Successfully stored ${data.length} climate records`);
+            await postgresService_1.postgresService.query(query, params);
+            logger_1.default.info(`Successfully stored ${data.length} climate records`);
         }
         catch (error) {
-            logger.error({ error }, 'Error storing climate data');
+            logger_1.default.error({ error }, 'Error storing climate data');
             throw error;
         }
     }
@@ -269,7 +274,7 @@ class ClimateService {
         GROUP BY period, location_uid
         ORDER BY period
       `;
-            const result = await postgresService.query(query, [locationUid, startDate, endDate]);
+            const result = await postgresService_1.postgresService.query(query, [locationUid, startDate, endDate]);
             return result.rows.map((row) => ({
                 ...row,
                 period: row.period,
@@ -283,7 +288,7 @@ class ClimateService {
             }));
         }
         catch (error) {
-            logger.error({ error }, 'Error getting aggregated climate data');
+            logger_1.default.error({ error }, 'Error getting aggregated climate data');
             throw error;
         }
     }
@@ -309,7 +314,7 @@ class ClimateService {
         WHERE location_uid = $1
         GROUP BY location_uid
       `;
-            const result = await postgresService.query(query, [locationUid]);
+            const result = await postgresService_1.postgresService.query(query, [locationUid]);
             if (result.rows.length === 0) {
                 return null;
             }
@@ -329,7 +334,7 @@ class ClimateService {
             };
         }
         catch (error) {
-            logger.error({ error }, 'Error getting climate statistics');
+            logger_1.default.error({ error }, 'Error getting climate statistics');
             throw error;
         }
     }
@@ -339,7 +344,7 @@ class ClimateService {
      */
     async syncAllDistricts(startDate, endDate) {
         try {
-            logger.info(`Starting climate data sync for all districts from ${startDate} to ${endDate}`);
+            logger_1.default.info(`Starting climate data sync for all districts from ${startDate} to ${endDate}`);
             // Get all level 2 organization units (districts)
             const query = `
         SELECT uid, name
@@ -347,28 +352,28 @@ class ClimateService {
         WHERE hierarchylevel = 2
         ORDER BY name
       `;
-            const result = await postgresService.query(query);
+            const result = await postgresService_1.postgresService.query(query);
             const districts = result.rows;
-            logger.info(`Found ${districts.length} districts to sync`);
+            logger_1.default.info(`Found ${districts.length} districts to sync`);
             let successCount = 0;
             let errorCount = 0;
             for (const district of districts) {
                 try {
-                    logger.info(`Syncing climate data for ${district.name} (${district.uid})`);
+                    logger_1.default.info(`Syncing climate data for ${district.name} (${district.uid})`);
                     await this.getClimateData(district.uid, startDate, endDate);
                     successCount++;
                 }
                 catch (error) {
-                    logger.error({ error, district: district.name }, `Error syncing ${district.name}`);
+                    logger_1.default.error({ error, district: district.name }, `Error syncing ${district.name}`);
                     errorCount++;
                 }
             }
-            logger.info(`Climate sync complete: ${successCount} succeeded, ${errorCount} failed`);
+            logger_1.default.info(`Climate sync complete: ${successCount} succeeded, ${errorCount} failed`);
         }
         catch (error) {
-            logger.error({ error }, 'Error in syncAllDistricts');
+            logger_1.default.error({ error }, 'Error in syncAllDistricts');
             throw error;
         }
     }
 }
-export default new ClimateService();
+exports.default = new ClimateService();

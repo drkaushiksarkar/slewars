@@ -1,23 +1,29 @@
-import fs from "fs/promises";
-import path from "path";
-import NodeCache from "node-cache";
-import { env } from "../config/env.js";
-import { getCountryConfig } from "../config/countryConfig.js";
-import { mlService } from "./ml/mlService.js";
-import { dhis2Service } from "./dhis2Service.js";
-import logger from "./logger.js";
-const SAMPLE_DATA_FILE = path.join(process.cwd(), "server", "data", "sample-timeseries.json");
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.dashboardService = void 0;
+const promises_1 = __importDefault(require("fs/promises"));
+const path_1 = __importDefault(require("path"));
+const node_cache_1 = __importDefault(require("node-cache"));
+const env_js_1 = require("../config/env.js");
+const countryConfig_js_1 = require("../config/countryConfig.js");
+const mlService_js_1 = require("./ml/mlService.js");
+const dhis2Service_js_1 = require("./dhis2Service.js");
+const logger_js_1 = __importDefault(require("./logger.js"));
+const SAMPLE_DATA_FILE = path_1.default.join(process.cwd(), "server", "data", "sample-timeseries.json");
 class DashboardService {
     constructor() {
-        this.cache = new NodeCache({ stdTTL: 120 });
+        this.cache = new node_cache_1.default({ stdTTL: 120 });
         this.syntheticData = null;
     }
-    async getOverview(countryId, source = env.DASHBOARD_DATA_SOURCE) {
+    async getOverview(countryId, source = env_js_1.env.DASHBOARD_DATA_SOURCE) {
         const cacheKey = `overview:${countryId}:${source}`;
         const cached = this.cache.get(cacheKey);
         if (cached)
             return cached;
-        const country = await getCountryConfig(countryId);
+        const country = await (0, countryConfig_js_1.getCountryConfig)(countryId);
         if (!country) {
             throw new Error(`Unknown country configuration: ${countryId}`);
         }
@@ -32,15 +38,15 @@ class DashboardService {
                 }
             }
             catch (error) {
-                logger.warn({ error }, "Falling back to synthetic data");
+                logger_js_1.default.warn({ error }, "Falling back to synthetic data");
             }
         }
         const latestPoint = series.at(-1);
         if (!latestPoint) {
             throw new Error("No time series data available");
         }
-        const anomalies = mlService.detectAnomalies(series);
-        const prediction = await mlService.predictRisk({
+        const anomalies = mlService_js_1.mlService.detectAnomalies(series);
+        const prediction = await mlService_js_1.mlService.predictRisk({
             cases: latestPoint.cases,
             rainfall: latestPoint.rainfall,
             temperature: latestPoint.temperature,
@@ -60,7 +66,7 @@ class DashboardService {
     }
     async loadSyntheticSeries(countryId) {
         if (!this.syntheticData) {
-            const raw = await fs.readFile(SAMPLE_DATA_FILE, "utf-8");
+            const raw = await promises_1.default.readFile(SAMPLE_DATA_FILE, "utf-8");
             this.syntheticData = JSON.parse(raw);
         }
         return this.syntheticData[countryId] ?? [];
@@ -69,7 +75,7 @@ class DashboardService {
         if (!country.dhis2)
             return [];
         try {
-            const data = await dhis2Service.fetchAnalytics({
+            const data = await dhis2Service_js_1.dhis2Service.fetchAnalytics({
                 dimension: [`dx:${country.dhis2.dataElements.join(";")}`, "pe:LAST_12_MONTHS"],
                 filter: `ou:${country.dhis2.orgUnit}`,
                 displayProperty: "NAME"
@@ -85,7 +91,7 @@ class DashboardService {
             }));
         }
         catch (error) {
-            logger.error({ error }, "Failed to fetch DHIS2 analytics");
+            logger_js_1.default.error({ error }, "Failed to fetch DHIS2 analytics");
             throw error;
         }
     }
@@ -201,4 +207,4 @@ class DashboardService {
         }));
     }
 }
-export const dashboardService = new DashboardService();
+exports.dashboardService = new DashboardService();

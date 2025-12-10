@@ -1,12 +1,18 @@
-import { postgresService } from "./postgresService.js";
-import logger from "./logger.js";
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.locationService = void 0;
+const postgresService_js_1 = require("./postgresService.js");
+const logger_js_1 = __importDefault(require("./logger.js"));
 class LocationService {
     /**
      * Get all organization units
      */
     async getAllLocations() {
         try {
-            logger.debug("Fetching all locations");
+            logger_js_1.default.debug("Fetching all locations");
             const query = `
         SELECT
           ou.uid,
@@ -21,7 +27,7 @@ class LocationService {
         FROM organisationunit ou
         ORDER BY ou.hierarchylevel, ou.name
       `;
-            const result = await postgresService.query(query);
+            const result = await postgresService_js_1.postgresService.query(query);
             return result.rows.map((row) => ({
                 uid: row.uid,
                 name: row.name,
@@ -35,7 +41,7 @@ class LocationService {
             }));
         }
         catch (error) {
-            logger.error({ error }, "Error fetching all locations");
+            logger_js_1.default.error({ error }, "Error fetching all locations");
             throw error;
         }
     }
@@ -44,7 +50,7 @@ class LocationService {
      */
     async getLocationsByLevel(level) {
         try {
-            logger.debug({ level }, "Fetching locations by level");
+            logger_js_1.default.debug({ level }, "Fetching locations by level");
             const query = `
         SELECT
           ou.uid,
@@ -62,7 +68,7 @@ class LocationService {
         WHERE ou.hierarchylevel = $1
         ORDER BY ou.name
       `;
-            const result = await postgresService.query(query, [level]);
+            const result = await postgresService_js_1.postgresService.query(query, [level]);
             return result.rows.map((row) => ({
                 uid: row.uid,
                 name: row.name,
@@ -77,7 +83,7 @@ class LocationService {
             }));
         }
         catch (error) {
-            logger.error({ error, level }, "Error fetching locations by level");
+            logger_js_1.default.error({ error, level }, "Error fetching locations by level");
             throw error;
         }
     }
@@ -86,7 +92,7 @@ class LocationService {
      */
     async getLocationByUid(uid) {
         try {
-            logger.debug({ uid }, "Fetching location by UID");
+            logger_js_1.default.debug({ uid }, "Fetching location by UID");
             const query = `
         SELECT
           ou.uid,
@@ -103,7 +109,7 @@ class LocationService {
         LEFT JOIN organisationunit parent ON ou.parentid = parent.organisationunitid
         WHERE ou.uid = $1
       `;
-            const result = await postgresService.query(query, [uid]);
+            const result = await postgresService_js_1.postgresService.query(query, [uid]);
             if (result.rows.length === 0) {
                 return null;
             }
@@ -122,7 +128,7 @@ class LocationService {
             };
         }
         catch (error) {
-            logger.error({ error, uid }, "Error fetching location by UID");
+            logger_js_1.default.error({ error, uid }, "Error fetching location by UID");
             throw error;
         }
     }
@@ -131,7 +137,7 @@ class LocationService {
      */
     async getLocationChildren(uid) {
         try {
-            logger.debug({ uid }, "Fetching location children");
+            logger_js_1.default.debug({ uid }, "Fetching location children");
             const query = `
         SELECT
           child.uid,
@@ -148,7 +154,7 @@ class LocationService {
         WHERE parent.uid = $1
         ORDER BY child.name
       `;
-            const result = await postgresService.query(query, [uid]);
+            const result = await postgresService_js_1.postgresService.query(query, [uid]);
             return result.rows.map((row) => ({
                 uid: row.uid,
                 name: row.name,
@@ -162,7 +168,7 @@ class LocationService {
             }));
         }
         catch (error) {
-            logger.error({ error, uid }, "Error fetching location children");
+            logger_js_1.default.error({ error, uid }, "Error fetching location children");
             throw error;
         }
     }
@@ -171,7 +177,7 @@ class LocationService {
      */
     async getLocationHierarchy(rootUid) {
         try {
-            logger.debug({ rootUid }, "Fetching location hierarchy");
+            logger_js_1.default.debug({ rootUid }, "Fetching location hierarchy");
             // First, get all locations
             let query = `
         SELECT
@@ -189,7 +195,7 @@ class LocationService {
                 params.push(rootUid);
             }
             query += ` ORDER BY ou.hierarchylevel, ou.name`;
-            const result = await postgresService.query(query, params);
+            const result = await postgresService_js_1.postgresService.query(query, params);
             // Build the tree structure
             const locationsMap = new Map();
             const roots = [];
@@ -223,7 +229,7 @@ class LocationService {
             return roots;
         }
         catch (error) {
-            logger.error({ error, rootUid }, "Error fetching location hierarchy");
+            logger_js_1.default.error({ error, rootUid }, "Error fetching location hierarchy");
             throw error;
         }
     }
@@ -232,7 +238,7 @@ class LocationService {
      */
     async getLocationData(uid, startDate, endDate) {
         try {
-            logger.debug({ uid, startDate, endDate }, "Fetching location data");
+            logger_js_1.default.debug({ uid, startDate, endDate }, "Fetching location data");
             // First get the location details
             const location = await this.getLocationByUid(uid);
             if (!location) {
@@ -278,7 +284,7 @@ class LocationService {
         GROUP BY de.name
         ORDER BY cases DESC
       `;
-            const result = await postgresService.query(query, params);
+            const result = await postgresService_js_1.postgresService.query(query, params);
             const diseases = result.rows.map((row) => ({
                 disease: row.disease,
                 cases: parseInt(row.cases) || 0,
@@ -297,7 +303,7 @@ class LocationService {
             };
         }
         catch (error) {
-            logger.error({ error, uid }, "Error fetching location data");
+            logger_js_1.default.error({ error, uid }, "Error fetching location data");
             throw error;
         }
     }
@@ -306,7 +312,7 @@ class LocationService {
      */
     async getDistrictComparison() {
         try {
-            logger.debug("Fetching district comparison data");
+            logger_js_1.default.debug("Fetching district comparison data");
             // Disease case data element UIDs
             const diseaseUIDs = ['vq2qO3eTrNi', 'YazgqXbizv1', 'Cj5rTc9nEvl', 'XWU1Huh0Luy', 'UsSUX0cpKsH', 'NCteyX2xpMf'];
             const query = `
@@ -328,7 +334,7 @@ class LocationService {
         GROUP BY ou.uid, ou.name, ou.geometry
         ORDER BY total_cases DESC
       `;
-            const result = await postgresService.query(query, [diseaseUIDs]);
+            const result = await postgresService_js_1.postgresService.query(query, [diseaseUIDs]);
             return result.rows.map((row) => ({
                 uid: row.uid,
                 districtName: row.district_name,
@@ -339,7 +345,7 @@ class LocationService {
             }));
         }
         catch (error) {
-            logger.error({ error }, "Error fetching district comparison data");
+            logger_js_1.default.error({ error }, "Error fetching district comparison data");
             throw error;
         }
     }
@@ -348,7 +354,7 @@ class LocationService {
      */
     async getFacilityPerformance(districtUid, startDate, endDate, diseaseFilter) {
         try {
-            logger.debug({ districtUid, startDate, endDate, diseaseFilter }, "Fetching facility performance data");
+            logger_js_1.default.debug({ districtUid, startDate, endDate, diseaseFilter }, "Fetching facility performance data");
             // Disease case and death data element UIDs - filter by specific disease if provided
             let caseUIDs = ['vq2qO3eTrNi', 'YazgqXbizv1', 'Cj5rTc9nEvl', 'XWU1Huh0Luy', 'UsSUX0cpKsH', 'NCteyX2xpMf'];
             let deathUIDs = ['r6nrJANOqMw', 'f7n9E0hX8qk', 'Yy9NtNfwYZJ', 'USBq0VHSkZq', 'eY5ehpbEsB7'];
@@ -443,7 +449,7 @@ class LocationService {
         ORDER BY total_cases DESC, facility_name
         LIMIT 500
       `;
-            const result = await postgresService.query(query, params);
+            const result = await postgresService_js_1.postgresService.query(query, params);
             return result.rows.map((row) => ({
                 uid: row.uid,
                 facilityName: row.facility_name,
@@ -461,7 +467,7 @@ class LocationService {
             }));
         }
         catch (error) {
-            logger.error({ error }, "Error fetching facility performance data");
+            logger_js_1.default.error({ error }, "Error fetching facility performance data");
             throw error;
         }
     }
@@ -470,7 +476,7 @@ class LocationService {
      */
     async getChiefdomData(districtUid, startDate, endDate) {
         try {
-            logger.debug({ districtUid, startDate, endDate }, "Fetching chiefdom data");
+            logger_js_1.default.debug({ districtUid, startDate, endDate }, "Fetching chiefdom data");
             // Disease case data element UIDs
             const diseaseUIDs = ['vq2qO3eTrNi', 'YazgqXbizv1', 'Cj5rTc9nEvl', 'XWU1Huh0Luy', 'UsSUX0cpKsH', 'NCteyX2xpMf'];
             let query = `
@@ -519,7 +525,7 @@ class LocationService {
         GROUP BY ou.uid, ou.name, ou.geometry
         ORDER BY total_cases DESC
       `;
-            const result = await postgresService.query(query, params);
+            const result = await postgresService_js_1.postgresService.query(query, params);
             return result.rows.map((row) => ({
                 uid: row.uid,
                 chiefdomName: row.chiefdom_name,
@@ -530,9 +536,9 @@ class LocationService {
             }));
         }
         catch (error) {
-            logger.error({ error, districtUid }, "Error fetching chiefdom data");
+            logger_js_1.default.error({ error, districtUid }, "Error fetching chiefdom data");
             throw error;
         }
     }
 }
-export const locationService = new LocationService();
+exports.locationService = new LocationService();

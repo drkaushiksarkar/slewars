@@ -1,4 +1,7 @@
-export class SeasonalAnomalyModel {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.SeasonalAnomalyModel = void 0;
+class SeasonalAnomalyModel {
     constructor(windowSize = 3, threshold = 2) {
         this.windowSize = windowSize;
         this.threshold = threshold;
@@ -41,3 +44,4 @@ export class SeasonalAnomalyModel {
         return "Low";
     }
 }
+exports.SeasonalAnomalyModel = SeasonalAnomalyModel;
