@@ -306,7 +306,7 @@ const Simulation = () => {
   useEffect(() => {
     const fetchLocations = async () => {
       try {
-        const response = await axios.get("http://localhost:4000/api/locations?level=2");
+        const response = await axios.get("/api/locations?level=2");
         setRegions(response.data.data || []);
       } catch (error) {
         console.error("Error fetching locations:", error);

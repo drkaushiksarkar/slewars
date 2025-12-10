@@ -19,7 +19,7 @@ const FacilityPerformanceTable = ({ diseaseId, locationUid }) => {
         setLoading(true);
         setError(null);
 
-        let url = `http://localhost:4000/api/diseases/${diseaseId}/facilities?limit=100`;
+        let url = `/api/diseases/${diseaseId}/facilities?limit=100`;
         if (locationUid) {
           url += `&locationUid=${locationUid}`;
         }

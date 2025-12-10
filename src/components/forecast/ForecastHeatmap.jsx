@@ -21,7 +21,7 @@ export default function ForecastHeatmap({ forecast, selectedLocation, selectedDi
   useEffect(() => {
     const fetchLocations = async () => {
       try {
-        const response = await axios.get('http://localhost:4000/api/locations?level=2');
+        const response = await axios.get('/api/locations?level=2');
         if (response.data.success) {
           setLocations(response.data.data);
         }
@@ -46,7 +46,7 @@ export default function ForecastHeatmap({ forecast, selectedLocation, selectedDi
         const forecastPromises = locations.map(async (location) => {
           try {
             const response = await axios.get(
-              `http://localhost:4000/api/forecast/${encodeURIComponent(disease)}/${location.uid}`
+              `/api/forecast/${encodeURIComponent(disease)}/${location.uid}`
             );
             if (response.data.success && response.data.data) {
               return {

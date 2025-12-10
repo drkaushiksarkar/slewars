@@ -19,7 +19,7 @@ const DistrictComparison = ({ filters, onDistrictSelect }) => {
         setError(null);
 
         // Fetch ADM2 (district) data
-        const heatmapRes = await axios.get("http://localhost:4000/api/analytics/heatmap", {
+        const heatmapRes = await axios.get("/api/analytics/heatmap", {
           params: {
             startDate: filters.startDate,
             endDate: filters.endDate,
@@ -68,7 +68,7 @@ const DistrictComparison = ({ filters, onDistrictSelect }) => {
       const nextLevel = currentLevel + 1;
 
       // Fetch child data from the heatmap API
-      const response = await axios.get("http://localhost:4000/api/analytics/heatmap", {
+      const response = await axios.get("/api/analytics/heatmap", {
         params: {
           startDate: filters.startDate,
           endDate: filters.endDate,

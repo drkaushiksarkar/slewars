@@ -13,7 +13,7 @@ const TreatmentTimeline = ({ diseaseId, locationUid }) => {
         setLoading(true);
         setError(null);
 
-        let url = `http://localhost:4000/api/diseases/${diseaseId}/treatment`;
+        let url = `/api/diseases/${diseaseId}/treatment`;
         if (locationUid) {
           url += `?locationUid=${locationUid}`;
         }

@@ -73,7 +73,7 @@ function ForecastDashboardContent() {
 
   // Fetch locations
   useEffect(() => {
-    fetch('http://localhost:4000/api/locations?level=2')
+    fetch('/api/locations?level=2')
       .then(res => res.json())
       .then(data => {
         if (data.success) {
@@ -85,7 +85,7 @@ function ForecastDashboardContent() {
 
   // Fetch diseases grouped by category
   useEffect(() => {
-    fetch('http://localhost:4000/api/diseases/categories')
+    fetch('/api/diseases/categories')
       .then(res => res.json())
       .then(data => {
         if (data.success) {

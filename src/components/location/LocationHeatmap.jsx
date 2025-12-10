@@ -44,7 +44,7 @@ const LocationHeatmap = ({ filters, adminLevel = 2 }) => {
         setError(null);
 
         // Load case data from API (includes geometry)
-        const heatmapRes = await axios.get("http://localhost:4000/api/analytics/heatmap", {
+        const heatmapRes = await axios.get("/api/analytics/heatmap", {
           params: {
             startDate: filters.startDate,
             endDate: filters.endDate,

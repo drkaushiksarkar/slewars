@@ -15,7 +15,7 @@ const ChiefdomDrillDown = ({ district, filters, onBack }) => {
         setLoading(true);
         setError(null);
         const response = await axios.get(
-          `http://localhost:4000/api/locations/districts/${district.uid}/chiefdoms`,
+          `/api/locations/districts/${district.uid}/chiefdoms`,
           {
             params: {
               startDate: filters.startDate,

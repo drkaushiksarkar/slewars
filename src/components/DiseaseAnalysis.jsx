@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Calendar, MapPin, Activity, Filter } from "lucide-react";
 import DiseaseSummaryCard from "./disease/DiseaseSummaryCard";
 import FacilityPerformanceTable from "./disease/FacilityPerformanceTable";
+import { apiFetch } from "@/utils/api";
 
 const DiseaseAnalysis = () => {
   const [diseasesByCategory, setDiseasesByCategory] = useState({});
@@ -21,15 +22,13 @@ const DiseaseAnalysis = () => {
         setLoading(true);
 
         // Fetch diseases grouped by category
-        const diseasesRes = await fetch("http://localhost:4000/api/diseases/categories");
-        const diseasesData = await diseasesRes.json();
+        const diseasesData = await apiFetch("diseases/categories");
         if (diseasesData.success) {
           setDiseasesByCategory(diseasesData.data);
         }
 
         // Fetch locations (districts)
-        const locationsRes = await fetch("http://localhost:4000/api/locations?level=2");
-        const locationsData = await locationsRes.json();
+        const locationsData = await apiFetch("locations?level=2");
         if (locationsData.success) {
           setLocations(locationsData.data);
         }
