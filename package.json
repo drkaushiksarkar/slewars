@@ -9,7 +9,7 @@
     "preview": "vite preview --host :: --port 3000",
     "db:init": "npx tsx server/scripts/init-db.ts",
     "server-dev": "npm run db:init && npx --yes tsx watch server/src/index.ts",
-    "server:build": "tsc -p server/tsconfig.json",
+    "server:build": "tsc -p server/tsconfig.json && cp server/package.json server/dist/package.json",
     "server:start": "npm run db:init && node server/dist/index.js",
     "ml:start": "cd server/ml-service && ./start.sh",
     "dev:full": "npm run db:init && concurrently -n \"API,FRONTEND,ML\" -c \"blue,green,yellow\" \"npx --yes tsx watch server/src/index.ts\" \"npm run dev\" \"npm run ml:start\"",

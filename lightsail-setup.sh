@@ -182,8 +182,8 @@ POSTGRES_DB=ewars_db
 POSTGRES_USER=ewars_user
 POSTGRES_PASSWORD=ewars_password_2024
 
-# Data Source (synthetic, dhis2, or hybrid)
-DASHBOARD_DATA_SOURCE=synthetic
+# Data Source (postgres for DHIS2 database, synthetic for demo data)
+DASHBOARD_DATA_SOURCE=postgres
 
 # DHIS2 Configuration (Optional - configure if using DHIS2)
 DHIS2_BASE_URL=

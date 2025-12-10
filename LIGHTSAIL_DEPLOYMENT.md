@@ -8,6 +8,30 @@ Complete, tested deployment guide for deploying the EWARS Platform on AWS Lights
 
 ---
 
+## 🔥 CRITICAL FIXES APPLIED (December 2025)
+
+### Issue 1: Backend Module System Error (FIXED)
+**Error**: `SyntaxError: Cannot use import statement outside a module`
+
+**Root Cause**: Backend code uses ES module syntax but `server/package.json` was set to `"type":"commonjs"`
+
+**Fix Applied**:
+- Changed `server/package.json` to `{"type":"module"}` (server/package.json:1)
+- Updated build script to copy package.json to dist folder (package.json:12)
+
+**Action Required**: After pulling latest code, run `npm run build:full` and restart backend
+
+### Issue 2: Using Synthetic Data Instead of DHIS2 (FIXED)
+**Error**: Application shows synthetic/demo data instead of real DHIS2 data
+
+**Root Cause**: `lightsail-setup.sh` was setting `DASHBOARD_DATA_SOURCE=synthetic` by default
+
+**Fix Applied**: Updated `lightsail-setup.sh` line 186 to use `DASHBOARD_DATA_SOURCE=postgres`
+
+**Action Required**: Update `.env` file on Lightsail to set `DASHBOARD_DATA_SOURCE=postgres` and provide correct DHIS2 database credentials
+
+---
+
 ## Table of Contents
 
 1. [Prerequisites](#prerequisites)
