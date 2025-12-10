@@ -1,35 +1,38 @@
-import { Router } from "express";
-import { z } from "zod";
-import { mlService } from "../services/ml/mlService.js";
-const predictSchema = z.object({
-    cases: z.number(),
-    rainfall: z.number(),
-    temperature: z.number(),
-    humidity: z.number()
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.mlRouter = void 0;
+const express_1 = require("express");
+const zod_1 = require("zod");
+const mlService_js_1 = require("../services/ml/mlService.js");
+const predictSchema = zod_1.z.object({
+    cases: zod_1.z.number(),
+    rainfall: zod_1.z.number(),
+    temperature: zod_1.z.number(),
+    humidity: zod_1.z.number()
 });
-const anomalySchema = z.object({
-    timeSeries: z
-        .array(z.object({
-        date: z.string(),
-        cases: z.number(),
-        rainfall: z.number().optional(),
-        temperature: z.number().optional(),
-        humidity: z.number().optional()
+const anomalySchema = zod_1.z.object({
+    timeSeries: zod_1.z
+        .array(zod_1.z.object({
+        date: zod_1.z.string(),
+        cases: zod_1.z.number(),
+        rainfall: zod_1.z.number().optional(),
+        temperature: zod_1.z.number().optional(),
+        humidity: zod_1.z.number().optional()
     }))
         .min(2)
 });
-export const mlRouter = Router();
-mlRouter.post("/predict", async (req, res, next) => {
+exports.mlRouter = (0, express_1.Router)();
+exports.mlRouter.post("/predict", async (req, res, next) => {
     try {
         const features = predictSchema.parse(req.body);
-        const prediction = await mlService.predictRisk(features);
+        const prediction = await mlService_js_1.mlService.predictRisk(features);
         res.json(prediction);
     }
     catch (error) {
         next(error);
     }
 });
-mlRouter.post("/anomalies", (req, res, next) => {
+exports.mlRouter.post("/anomalies", (req, res, next) => {
     try {
         const payload = anomalySchema.parse(req.body);
         const normalizedSeries = payload.timeSeries.map((point) => ({
@@ -38,7 +41,7 @@ mlRouter.post("/anomalies", (req, res, next) => {
             temperature: point.temperature ?? 0,
             humidity: point.humidity ?? 0
         }));
-        const anomalies = mlService.detectAnomalies(normalizedSeries);
+        const anomalies = mlService_js_1.mlService.detectAnomalies(normalizedSeries);
         res.json(anomalies);
     }
     catch (error) {

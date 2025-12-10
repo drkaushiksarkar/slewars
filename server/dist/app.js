@@ -1,14 +1,20 @@
-import express from "express";
-import cors from "cors";
-import routes from "./routes/index.js";
-import logger from "./services/logger.js";
-export const app = express();
-app.use(cors({
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.app = void 0;
+const express_1 = __importDefault(require("express"));
+const cors_1 = __importDefault(require("cors"));
+const index_js_1 = __importDefault(require("./routes/index.js"));
+const logger_js_1 = __importDefault(require("./services/logger.js"));
+exports.app = (0, express_1.default)();
+exports.app.use((0, cors_1.default)({
     origin: "*"
 }));
-app.use(express.json({ limit: "1mb" }));
-app.use("/api", routes);
-app.use((err, _req, res, _next) => {
-    logger.error({ err }, "Unhandled error");
+exports.app.use(express_1.default.json({ limit: "1mb" }));
+exports.app.use("/api", index_js_1.default);
+exports.app.use((err, _req, res, _next) => {
+    logger_js_1.default.error({ err }, "Unhandled error");
     res.status(500).json({ message: err.message || "Internal server error" });
 });

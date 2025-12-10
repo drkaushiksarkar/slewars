@@ -1,17 +1,23 @@
-import { postgresService } from "./postgresService.js";
-import logger from "./logger.js";
-import { DISEASE_DATA_ELEMENTS } from "./diseaseService.js";
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.analyticsService = void 0;
+const postgresService_js_1 = require("./postgresService.js");
+const logger_js_1 = __importDefault(require("./logger.js"));
+const diseaseService_js_1 = require("./diseaseService.js");
 class AnalyticsService {
     /**
      * Get overview metrics (KPIs)
      */
     async getOverviewMetrics(locationUid, days = 30, diseaseId) {
         try {
-            logger.debug({ locationUid, days, diseaseId }, "Fetching overview metrics");
+            logger_js_1.default.debug({ locationUid, days, diseaseId }, "Fetching overview metrics");
             // Build case UIDs array based on disease filter
             // Use ALL diseases for accurate overview metrics
-            const allCaseUIDs = Object.values(DISEASE_DATA_ELEMENTS).map((d) => d.cases);
-            const allDeathUIDs = Object.values(DISEASE_DATA_ELEMENTS)
+            const allCaseUIDs = Object.values(diseaseService_js_1.DISEASE_DATA_ELEMENTS).map((d) => d.cases);
+            const allDeathUIDs = Object.values(diseaseService_js_1.DISEASE_DATA_ELEMENTS)
                 .filter((d) => 'deaths' in d && d.deaths)
                 .map((d) => 'deaths' in d ? d.deaths : '')
                 .filter(Boolean);
@@ -52,7 +58,7 @@ class AnalyticsService {
                 casesParams.push(locationUid);
                 paramIndex++;
             }
-            const casesResult = await postgresService.query(casesQuery, casesParams);
+            const casesResult = await postgresService_js_1.postgresService.query(casesQuery, casesParams);
             // Get total deaths
             let deathsQuery = `
         SELECT
@@ -82,7 +88,7 @@ class AnalyticsService {
                 deathsParams.push(locationUid);
                 paramIndex++;
             }
-            const deathsResult = await postgresService.query(deathsQuery, deathsParams);
+            const deathsResult = await postgresService_js_1.postgresService.query(deathsQuery, deathsParams);
             // Get active alerts
             const alerts = await this.detectOutbreaks(locationUid, diseaseId);
             const activeAlerts = alerts.filter((a) => a.alertLevel !== "NORMAL").length;
@@ -193,7 +199,7 @@ class AnalyticsService {
                 highRiskParams.push(locationUid);
                 paramIndex++;
             }
-            const highRiskResult = await postgresService.query(highRiskDistrictsQuery, highRiskParams);
+            const highRiskResult = await postgresService_js_1.postgresService.query(highRiskDistrictsQuery, highRiskParams);
             // Get total districts count for national risk calculation
             let totalDistrictsQuery = `
         SELECT COUNT(DISTINCT ou.uid) as total_districts
@@ -205,7 +211,7 @@ class AnalyticsService {
                 totalDistrictsQuery += ` AND ou.path LIKE '%' || $1 || '%'`;
                 totalDistrictsParams.push(locationUid);
             }
-            const totalDistrictsResult = await postgresService.query(totalDistrictsQuery, totalDistrictsParams);
+            const totalDistrictsResult = await postgresService_js_1.postgresService.query(totalDistrictsQuery, totalDistrictsParams);
             return {
                 totalCases: parseInt(casesResult.rows[0]?.total_cases) || 0,
                 totalDeaths: parseInt(deathsResult.rows[0]?.total_deaths) || 0,
@@ -217,7 +223,7 @@ class AnalyticsService {
             };
         }
         catch (error) {
-            logger.error({ error }, "Error fetching overview metrics");
+            logger_js_1.default.error({ error }, "Error fetching overview metrics");
             throw error;
         }
     }
@@ -246,7 +252,7 @@ class AnalyticsService {
         const disease = diseaseMap[diseaseId.toLowerCase()];
         if (!disease) {
             // If not found, return empty array - will show all diseases
-            logger.warn({ diseaseId }, 'Disease ID not found in mapping, showing all diseases');
+            logger_js_1.default.warn({ diseaseId }, 'Disease ID not found in mapping, showing all diseases');
             return [];
         }
         if (type === 'deaths' && disease.deaths) {
@@ -259,7 +265,7 @@ class AnalyticsService {
      */
     async detectOutbreaks(locationUid, diseaseId) {
         try {
-            logger.debug({ locationUid, diseaseId }, "Detecting outbreaks");
+            logger_js_1.default.debug({ locationUid, diseaseId }, "Detecting outbreaks");
             // Build disease UIDs array based on filter
             const caseUIDs = diseaseId && diseaseId !== 'all'
                 ? this.getDiseaseUIDsByName(diseaseId, 'cases')
@@ -328,7 +334,7 @@ class AnalyticsService {
         ORDER BY alert_level DESC, percent_change DESC NULLS LAST
       `;
             const params = locationUid && locationUid !== 'all' ? [caseUIDs, locationUid] : [caseUIDs];
-            const result = await postgresService.query(query, params);
+            const result = await postgresService_js_1.postgresService.query(query, params);
             return result.rows.map((row) => ({
                 disease: row.disease,
                 location: row.location,
@@ -341,7 +347,7 @@ class AnalyticsService {
             }));
         }
         catch (error) {
-            logger.error({ error }, "Error detecting outbreaks");
+            logger_js_1.default.error({ error }, "Error detecting outbreaks");
             throw error;
         }
     }
@@ -350,7 +356,7 @@ class AnalyticsService {
      */
     async getTrendData(weeks = 12, locationUid, diseaseId) {
         try {
-            logger.debug({ weeks, locationUid, diseaseId }, "Fetching trend data");
+            logger_js_1.default.debug({ weeks, locationUid, diseaseId }, "Fetching trend data");
             // Build disease UIDs array based on filter
             const caseUIDs = diseaseId && diseaseId !== 'all'
                 ? this.getDiseaseUIDsByName(diseaseId, 'cases')
@@ -388,7 +394,7 @@ class AnalyticsService {
         GROUP BY week, de.name
         ORDER BY week, de.name
       `;
-            const result = await postgresService.query(query, params);
+            const result = await postgresService_js_1.postgresService.query(query, params);
             return result.rows.map((row) => ({
                 week: row.week,
                 disease: row.disease,
@@ -396,7 +402,7 @@ class AnalyticsService {
             }));
         }
         catch (error) {
-            logger.error({ error }, "Error fetching trend data");
+            logger_js_1.default.error({ error }, "Error fetching trend data");
             throw error;
         }
     }
@@ -406,7 +412,7 @@ class AnalyticsService {
      */
     async getGeographicHeatMap(days = 90, startDate, endDate, diseaseFilter, locationFilter, adminLevel = 2) {
         try {
-            logger.debug({ days, startDate, endDate, diseaseFilter, locationFilter, adminLevel }, "Fetching geographic heat map data");
+            logger_js_1.default.debug({ days, startDate, endDate, diseaseFilter, locationFilter, adminLevel }, "Fetching geographic heat map data");
             // Disease case data element UIDs - filter by specific disease if provided
             let diseaseUIDs = ['vq2qO3eTrNi', 'YazgqXbizv1', 'Cj5rTc9nEvl', 'XWU1Huh0Luy', 'UsSUX0cpKsH', 'NCteyX2xpMf'];
             if (diseaseFilter && diseaseFilter !== 'all') {
@@ -498,7 +504,7 @@ class AnalyticsService {
         HAVING SUM(lc.cases) > 0
         ORDER BY total_cases DESC
       `;
-            const result = await postgresService.query(query, params);
+            const result = await postgresService_js_1.postgresService.query(query, params);
             return result.rows.map((row) => {
                 const totalCases = parseInt(row.total_cases) || 0;
                 const casesByDisease = row.cases_by_disease || {};
@@ -535,7 +541,7 @@ class AnalyticsService {
             });
         }
         catch (error) {
-            logger.error({ error }, "Error fetching geographic heat map data");
+            logger_js_1.default.error({ error }, "Error fetching geographic heat map data");
             throw error;
         }
     }
@@ -544,7 +550,7 @@ class AnalyticsService {
      */
     async getDataQualityMetrics() {
         try {
-            logger.debug("Fetching data quality metrics");
+            logger_js_1.default.debug("Fetching data quality metrics");
             const query = `
         WITH expected_reports AS (
           SELECT
@@ -583,7 +589,7 @@ class AnalyticsService {
         GROUP BY er.district
         ORDER BY completeness_pct DESC
       `;
-            const result = await postgresService.query(query);
+            const result = await postgresService_js_1.postgresService.query(query);
             return result.rows.map((row) => ({
                 district: row.district,
                 totalFacilities: parseInt(row.total_facilities) || 0,
@@ -593,9 +599,9 @@ class AnalyticsService {
             }));
         }
         catch (error) {
-            logger.error({ error }, "Error fetching data quality metrics");
+            logger_js_1.default.error({ error }, "Error fetching data quality metrics");
             throw error;
         }
     }
 }
-export const analyticsService = new AnalyticsService();
+exports.analyticsService = new AnalyticsService();

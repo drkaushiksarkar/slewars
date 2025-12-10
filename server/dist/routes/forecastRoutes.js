@@ -1,7 +1,12 @@
-import { Router } from 'express';
-import forecastService from '../services/forecastService';
-import logger from '../services/logger';
-const router = Router();
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const forecastService_1 = __importDefault(require("../services/forecastService"));
+const logger_1 = __importDefault(require("../services/logger"));
+const router = (0, express_1.Router)();
 /**
  * POST /api/forecast/generate
  * Generate new forecast for disease and location
@@ -15,8 +20,8 @@ router.post('/generate', async (req, res) => {
                 error: 'disease and location_uid are required'
             });
         }
-        logger.info(`Forecast generation request: ${disease} in ${location_uid} (force_retrain: ${force_retrain})`);
-        const result = await forecastService.generateForecast({
+        logger_1.default.info(`Forecast generation request: ${disease} in ${location_uid} (force_retrain: ${force_retrain})`);
+        const result = await forecastService_1.default.generateForecast({
             disease,
             location_uid,
             horizon,
@@ -29,7 +34,7 @@ router.post('/generate', async (req, res) => {
         });
     }
     catch (error) {
-        logger.error({ error }, 'Error in POST /api/forecast/generate');
+        logger_1.default.error({ error }, 'Error in POST /api/forecast/generate');
         res.status(500).json({
             success: false,
             error: 'Failed to generate forecast',
@@ -46,15 +51,15 @@ router.get('/anomaly-detection/:disease', async (req, res) => {
     try {
         const { disease } = req.params;
         const { level = '2', start_date, end_date, location_uid } = req.query;
-        logger.info(`Anomaly detection request for ${disease} at level ${level}${location_uid ? ` for location ${location_uid}` : ''}`);
-        const result = await forecastService.detectAnomalies(disease, parseInt(level), start_date, end_date, location_uid);
+        logger_1.default.info(`Anomaly detection request for ${disease} at level ${level}${location_uid ? ` for location ${location_uid}` : ''}`);
+        const result = await forecastService_1.default.detectAnomalies(disease, parseInt(level), start_date, end_date, location_uid);
         res.json({
             success: true,
             data: result
         });
     }
     catch (error) {
-        logger.error({ error }, 'Error in GET /api/forecast/anomaly-detection');
+        logger_1.default.error({ error }, 'Error in GET /api/forecast/anomaly-detection');
         res.status(500).json({
             success: false,
             error: 'Failed to detect anomalies',
@@ -70,10 +75,10 @@ router.get('/:disease/:locationUid', async (req, res) => {
     try {
         const { disease, locationUid } = req.params;
         const { regenerate } = req.query;
-        logger.info(`Fetching forecast: ${disease} in ${locationUid}`);
+        logger_1.default.info(`Fetching forecast: ${disease} in ${locationUid}`);
         // If regenerate=true, generate new forecast
         if (regenerate === 'true') {
-            const result = await forecastService.generateForecast({
+            const result = await forecastService_1.default.generateForecast({
                 disease,
                 location_uid: locationUid,
                 horizon: 4,
@@ -86,7 +91,7 @@ router.get('/:disease/:locationUid', async (req, res) => {
             });
         }
         // Otherwise, get latest stored forecast
-        const forecast = await forecastService.getLatestForecast(disease, locationUid);
+        const forecast = await forecastService_1.default.getLatestForecast(disease, locationUid);
         if (!forecast) {
             return res.status(404).json({
                 success: false,
@@ -100,7 +105,7 @@ router.get('/:disease/:locationUid', async (req, res) => {
         });
     }
     catch (error) {
-        logger.error({ error }, 'Error in GET /api/forecast/:disease/:locationUid');
+        logger_1.default.error({ error }, 'Error in GET /api/forecast/:disease/:locationUid');
         res.status(500).json({
             success: false,
             error: 'Failed to fetch forecast',
@@ -121,8 +126,8 @@ router.post('/train', async (req, res) => {
                 error: 'disease and location_uid are required'
             });
         }
-        logger.info(`Model training request: ${disease} in ${location_uid}`);
-        const result = await forecastService.trainModel({
+        logger_1.default.info(`Model training request: ${disease} in ${location_uid}`);
+        const result = await forecastService_1.default.trainModel({
             disease,
             location_uid,
             start_date,
@@ -131,7 +136,7 @@ router.post('/train', async (req, res) => {
         res.json(result);
     }
     catch (error) {
-        logger.error({ error }, 'Error in POST /api/forecast/train');
+        logger_1.default.error({ error }, 'Error in POST /api/forecast/train');
         res.status(500).json({
             success: false,
             error: 'Failed to train model',
@@ -147,8 +152,8 @@ router.post('/train', async (req, res) => {
 router.get('/performance/:disease/:locationUid', async (req, res) => {
     try {
         const { disease, locationUid } = req.params;
-        logger.info(`Fetching model performance for unified model (disease: ${disease}, location: ${locationUid})`);
-        const performance = await forecastService.getModelPerformance(disease, locationUid);
+        logger_1.default.info(`Fetching model performance for unified model (disease: ${disease}, location: ${locationUid})`);
+        const performance = await forecastService_1.default.getModelPerformance(disease, locationUid);
         if (!performance) {
             // Return default metrics if not found
             return res.json({
@@ -171,7 +176,7 @@ router.get('/performance/:disease/:locationUid', async (req, res) => {
         });
     }
     catch (error) {
-        logger.error({ error }, 'Error in GET /api/forecast/performance');
+        logger_1.default.error({ error }, 'Error in GET /api/forecast/performance');
         res.status(500).json({
             success: false,
             error: 'Failed to fetch model performance',
@@ -192,12 +197,12 @@ router.post('/batch', async (req, res) => {
                 error: 'disease is required'
             });
         }
-        logger.info(`Batch forecast request for ${disease}`);
-        const result = await forecastService.batchForecastAllDistricts(disease, horizon);
+        logger_1.default.info(`Batch forecast request for ${disease}`);
+        const result = await forecastService_1.default.batchForecastAllDistricts(disease, horizon);
         res.json(result);
     }
     catch (error) {
-        logger.error({ error }, 'Error in POST /api/forecast/batch');
+        logger_1.default.error({ error }, 'Error in POST /api/forecast/batch');
         res.status(500).json({
             success: false,
             error: 'Failed to generate batch forecasts',
@@ -212,7 +217,7 @@ router.post('/batch', async (req, res) => {
 router.get('/districts', async (req, res) => {
     try {
         const { disease } = req.query;
-        const districts = await forecastService.getDistrictsWithForecasts(disease);
+        const districts = await forecastService_1.default.getDistrictsWithForecasts(disease);
         res.json({
             success: true,
             data: districts,
@@ -220,7 +225,7 @@ router.get('/districts', async (req, res) => {
         });
     }
     catch (error) {
-        logger.error({ error }, 'Error in GET /api/forecast/districts');
+        logger_1.default.error({ error }, 'Error in GET /api/forecast/districts');
         res.status(500).json({
             success: false,
             error: 'Failed to fetch districts',
@@ -235,8 +240,8 @@ router.get('/districts', async (req, res) => {
 router.get('/risk-analysis/:disease', async (req, res) => {
     try {
         const { disease } = req.params;
-        logger.info(`Risk analysis request for ${disease}`);
-        const analysis = await forecastService.getRiskAnalysis(disease);
+        logger_1.default.info(`Risk analysis request for ${disease}`);
+        const analysis = await forecastService_1.default.getRiskAnalysis(disease);
         res.json({
             success: true,
             data: analysis,
@@ -244,7 +249,7 @@ router.get('/risk-analysis/:disease', async (req, res) => {
         });
     }
     catch (error) {
-        logger.error({ error }, 'Error in GET /api/forecast/risk-analysis');
+        logger_1.default.error({ error }, 'Error in GET /api/forecast/risk-analysis');
         res.status(500).json({
             success: false,
             error: 'Failed to fetch risk analysis',
@@ -258,7 +263,7 @@ router.get('/risk-analysis/:disease', async (req, res) => {
  */
 router.get('/health', async (req, res) => {
     try {
-        const isHealthy = await forecastService.checkMLServiceHealth();
+        const isHealthy = await forecastService_1.default.checkMLServiceHealth();
         res.json({
             success: true,
             ml_service_healthy: isHealthy,
@@ -266,11 +271,11 @@ router.get('/health', async (req, res) => {
         });
     }
     catch (error) {
-        logger.error({ error }, 'Error in GET /api/forecast/health');
+        logger_1.default.error({ error }, 'Error in GET /api/forecast/health');
         res.status(500).json({
             success: false,
             error: 'Failed to check ML service health'
         });
     }
 });
-export default router;
+exports.default = router;

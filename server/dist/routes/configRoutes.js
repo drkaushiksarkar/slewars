@@ -1,18 +1,21 @@
-import { Router } from "express";
-import { getCountryConfig, getCountryConfigs } from "../config/countryConfig.js";
-export const configRouter = Router();
-configRouter.get("/countries", async (_req, res, next) => {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.configRouter = void 0;
+const express_1 = require("express");
+const countryConfig_js_1 = require("../config/countryConfig.js");
+exports.configRouter = (0, express_1.Router)();
+exports.configRouter.get("/countries", async (_req, res, next) => {
     try {
-        const configs = await getCountryConfigs();
+        const configs = await (0, countryConfig_js_1.getCountryConfigs)();
         res.json(configs);
     }
     catch (error) {
         next(error);
     }
 });
-configRouter.get("/countries/:id", async (req, res, next) => {
+exports.configRouter.get("/countries/:id", async (req, res, next) => {
     try {
-        const country = await getCountryConfig(req.params.id);
+        const country = await (0, countryConfig_js_1.getCountryConfig)(req.params.id);
         if (!country) {
             return res.status(404).json({ message: "Country not found" });
         }

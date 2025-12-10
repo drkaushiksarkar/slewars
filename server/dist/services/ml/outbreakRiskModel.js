@@ -1,6 +1,9 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.OutbreakRiskModel = void 0;
 const FEATURE_KEYS = ["cases", "rainfall", "temperature", "humidity"];
 const sigmoid = (value) => 1 / (1 + Math.exp(-value));
-export class OutbreakRiskModel {
+class OutbreakRiskModel {
     constructor() {
         this.weights = Array(FEATURE_KEYS.length).fill(0.01);
         this.bias = 0;
@@ -78,3 +81,4 @@ export class OutbreakRiskModel {
         return input.reduce((sum, value, index) => sum + value * this.weights[index], 0);
     }
 }
+exports.OutbreakRiskModel = OutbreakRiskModel;
